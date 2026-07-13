@@ -1,141 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Desconectar — Mis Usuarios{% endblock %}
+{% block title %}Desconectar — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-plug text-red-400 mr-2"></i>Desconectar
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">Tus usuarios que exceden sus conexiones máximas</p>
-        </div>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div><h1 class="text-xl font-bold text-white"><i class="fas fa-plug text-danger mr-2"></i>Desconectar</h1><p class="text-sm text-muted mt-0.5">Usuarios que exceden sus límites</p></div>
+        <div class="flex items-center gap-2 text-sm"><span class="w-2 h-2 rounded-full {% if excedeed_count > 0 %}bg-danger animate-pulse{% else %}bg-success{% endif %}"></span><span class="text-muted">{{ excedeed_count }} excediendo</span></div>
     </div>
-
     {% if excedeed_count > 0 %}
-    <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
-            </div>
-            <div class="flex-1">
-                <p class="text-red-400 font-semibold">{{ excedeed_count }} usuario(s) exceden su límite</p>
-            </div>
-            <button onclick="openModal('blockAllModal')" class="btn-danger">
-                <i class="fas fa-ban mr-2"></i>Desconectar y Bloquear Todos
-            </button>
+    <div class="card p-4 mb-5 border-danger/30 bg-danger/5">
+        <div class="flex flex-wrap items-center gap-3">
+            <i class="fas fa-exclamation-triangle text-danger"></i>
+            <span class="flex-1 text-danger text-sm font-semibold">{{ excedeed_count }} usuario(s) exceden su límite</span>
+            <button onclick="openModal('blockAllModal')" class="btn btn-danger btn-sm"><i class="fas fa-ban"></i>Desconectar y Bloquear Todos</button>
         </div>
     </div>
-
-    {% for ou in online_users %}
-    <div class="glass-card p-4 mb-3 border-l-4 border-red-500">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
-                    <i class="fas fa-user-slash text-red-400 text-xl"></i>
+    <div class="space-y-3">
+        {% for ou in online_users %}
+        <div class="card p-4 border-l-[3px] border-l-danger">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg bg-danger/15 flex items-center justify-center"><i class="fas fa-user-slash text-danger"></i></div><div><p class="text-white font-semibold text-sm">{{ ou.username }}</p><div class="flex items-center gap-2 text-xs text-muted"><span class="text-danger font-semibold">{{ ou.connections }} conex.</span><span>Máx: {{ ou.max_connections }}</span></div></div></div>
+                <div class="flex gap-1.5">
+                    <form method="POST" action="{{ url_for('reseller.reseller_disconnect_run') }}" class="inline"><input type="hidden" name="username" value="{{ ou.username }}"><input type="hidden" name="block" value="false"><button class="btn btn-warning btn-xs"><i class="fas fa-power-off"></i>Desconectar</button></form>
+                    <form method="POST" action="{{ url_for('reseller.reseller_disconnect_run') }}" class="inline"><input type="hidden" name="username" value="{{ ou.username }}"><input type="hidden" name="block" value="true"><button class="btn btn-danger btn-xs"><i class="fas fa-ban"></i>Bloquear</button></form>
                 </div>
-                <div>
-                    <h3 class="text-white font-bold">{{ ou.username }}</h3>
-                    <p class="text-sm text-red-400">{{ ou.connections }} conexiones · Máx: {{ ou.max_connections }} · <span class="badge badge-red">+{{ ou.connections - ou.max_connections }} extra</span></p>
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="openModal('discModal{{ loop.index }}')" class="btn-warning text-sm">
-                    <i class="fas fa-power-off mr-1"></i>Solo Desconectar
-                </button>
-                <button onclick="openModal('discBlockModal{{ loop.index }}')" class="btn-danger text-sm">
-                    <i class="fas fa-ban mr-1"></i>Desconectar y Bloquear
-                </button>
             </div>
         </div>
+        {% endfor %}
     </div>
-
-    <!-- Modal Solo Desconectar -->
-    <div class="modal-overlay" id="discModal{{ loop.index }}">
-        <div class="modal-content">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-xl font-bold text-white"><i class="fas fa-power-off text-yellow-400 mr-2"></i>Desconectar Usuario</h3>
-                <button onclick="closeModal('discModal{{ loop.index }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="text-center py-4">
-                <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-power-off text-yellow-400 text-3xl"></i>
-                </div>
-                <p class="text-white text-lg font-medium mb-2">¿Desconectar usuario?</p>
-                <p class="text-gray-400 text-sm">El usuario <strong class="text-white">{{ ou.username }}</strong> será desconectado.</p>
-                <p class="text-gray-500 text-xs mt-1">Podrá volver a conectarse después.</p>
-            </div>
-            <form method="POST" action="{{ url_for('reseller.reseller_disconnect_run') }}">
-                <input type="hidden" name="username" value="{{ ou.username }}">
-                <input type="hidden" name="block" value="false">
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('discModal{{ loop.index }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                    <button type="submit" class="btn-warning flex-1 py-3"><i class="fas fa-power-off mr-2"></i>Desconectar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Desconectar y Bloquear -->
-    <div class="modal-overlay" id="discBlockModal{{ loop.index }}">
-        <div class="modal-content">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-xl font-bold text-white"><i class="fas fa-ban text-red-400 mr-2"></i>Desconectar y Bloquear</h3>
-                <button onclick="closeModal('discBlockModal{{ loop.index }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="text-center py-4">
-                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-ban text-red-400 text-3xl"></i>
-                </div>
-                <p class="text-white text-lg font-medium mb-2">¿Desconectar y bloquear?</p>
-                <p class="text-gray-400 text-sm mb-1">El usuario <strong class="text-white">{{ ou.username }}</strong> será desconectado y bloqueado.</p>
-                <p class="text-red-400 text-xs font-medium"><i class="fas fa-exclamation-circle mr-1"></i>Para desbloquear, ve a Mis Usuarios</p>
-            </div>
-            <form method="POST" action="{{ url_for('reseller.reseller_disconnect_run') }}">
-                <input type="hidden" name="username" value="{{ ou.username }}">
-                <input type="hidden" name="block" value="true">
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('discBlockModal{{ loop.index }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                    <button type="submit" class="btn-danger flex-1 py-3"><i class="fas fa-ban mr-2"></i>Desconectar y Bloquear</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    {% endfor %}
-
-    <!-- Modal Bloquear Todos -->
-    <div class="modal-overlay" id="blockAllModal">
-        <div class="modal-content">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-xl font-bold text-white"><i class="fas fa-ban text-red-400 mr-2"></i>Acción Masiva</h3>
-                <button onclick="closeModal('blockAllModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="text-center py-4">
-                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
-                </div>
-                <p class="text-white text-lg font-medium mb-2">¿Desconectar y bloquear a todos?</p>
-                <p class="text-gray-400 text-sm">{{ excedeed_count }} usuario(s) serán afectados.</p>
-            </div>
-            <form method="POST" action="{{ url_for('reseller.reseller_disconnect_block_all') }}">
-                <input type="hidden" name="usernames" value="{{ exceeded_usernames|join(',') }}">
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('blockAllModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                    <button type="submit" class="btn-danger flex-1 py-3"><i class="fas fa-ban mr-2"></i>Bloquear Todos</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <div class="modal-overlay" id="blockAllModal"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-ban text-danger mr-2"></i>Acción Masiva</h3><p class="text-sm text-muted mb-4">{{ excedeed_count }} usuario(s) serán desconectados y bloqueados.</p><form method="POST" action="{{ url_for('reseller.reseller_disconnect_block_all') }}"><input type="hidden" name="usernames" value="{{ exceeded_usernames|join(',') }}"><div class="flex gap-3"><button type="button" onclick="closeModal('blockAllModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-danger flex-1"><i class="fas fa-ban"></i>Confirmar</button></div></form></div></div>
     {% else %}
-    <div class="glass-card p-12 text-center">
-        <div class="text-gray-500">
-            <div class="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-check-circle text-green-400 text-4xl"></i>
-            </div>
-            <p class="text-xl text-white font-medium">¡Todo en orden!</p>
-            <p class="text-sm mt-2 text-gray-400">Ninguno de tus usuarios excede su límite de conexiones</p>
-        </div>
-    </div>
+    <div class="card p-12 text-center"><div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4"><i class="fas fa-check-circle text-success text-3xl"></i></div><p class="text-white font-medium text-lg">¡Todo en orden!</p><p class="text-sm text-muted mt-1">No hay usuarios que excedan sus límites.</p></div>
     {% endif %}
 </div>
 {% endblock %}

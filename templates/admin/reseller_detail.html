@@ -1,161 +1,24 @@
 {% extends "base.html" %}
-{% block title %}{{ reseller.username }} — Detalle Revendedor{% endblock %}
+{% block title %}{{ reseller.username }} — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-            <a href="{{ url_for('admin.resellers') }}" class="text-gray-500 hover:text-white transition-colors">
-                <i class="fas fa-arrow-left text-xl"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold text-white">
-                    <i class="fas fa-store text-purple-400 mr-2"></i>{{ reseller.username }}
-                </h1>
-                <p class="text-gray-500 text-sm mt-1">Detalle completo del revendedor</p>
-            </div>
-        </div>
-        <div class="flex gap-2">
-            <a href="{{ url_for('admin.reseller_edit', reseller_id=reseller.id) }}" class="btn-ghost">
-                <i class="fas fa-edit mr-2"></i>Editar
-            </a>
+    <a href="{{ url_for('admin.resellers') }}" class="text-muted hover:text-white text-sm mb-4 inline-flex items-center gap-1"><i class="fas fa-arrow-left"></i>Volver</a>
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+        <div class="flex items-center gap-3"><div class="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center"><i class="fas fa-user-tie text-accent text-xl"></i></div><div><h1 class="text-xl font-bold text-white">{{ reseller.username }}</h1><p class="text-sm text-muted">{{ reseller.email or 'Sin email' }}</p></div></div>
+        <div class="flex items-center gap-4">
+            <div class="text-center"><p class="text-xl font-bold text-warning">{{ reseller.credits }}</p><p class="text-2xs text-muted">Créditos</p></div>
+            <div class="text-center"><p class="text-xl font-bold text-white">{{ users|length }}</p><p class="text-2xs text-muted">Usuarios</p></div>
+            <div class="text-center"><p class="text-xl font-bold text-success">{{ active }}</p><p class="text-2xs text-muted">Activos</p></div>
+            <div class="text-center"><p class="text-xl font-bold text-danger">{{ blocked }}</p><p class="text-2xs text-muted">Bloq.</p></div>
+            <div class="text-center"><p class="text-xl font-bold text-muted">{{ expired }}</p><p class="text-2xs text-muted">Exp.</p></div>
         </div>
     </div>
-
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card purple">
-            <p class="text-3xl font-bold text-white">{{ total_users }}</p>
-            <p class="text-sm text-gray-500 mt-1">Usuarios Creados</p>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="card p-5"><h3 class="text-white font-semibold text-sm mb-3"><i class="fas fa-users text-accent mr-2"></i>Usuarios</h3>
+            <div class="space-y-1">{% for u in users %}<div class="flex items-center justify-between p-2 rounded hover:bg-white/[0.03]"><span class="text-sm">{{ u.username }}</span><span class="badge {% if u.is_blocked %}badge-danger{% elif u.is_expired() %}badge-warning{% else %}badge-success{% endif %} text-2xs">{{ 'Bloqueado' if u.is_blocked else ('Expirado' if u.is_expired() else 'Activo') }}</span></div>{% else %}<p class="text-sm text-muted text-center py-4">Sin usuarios</p>{% endfor %}</div>
         </div>
-        <div class="stat-card green">
-            <p class="text-3xl font-bold text-white">{{ active }}</p>
-            <p class="text-sm text-gray-500 mt-1">Activos</p>
-        </div>
-        <div class="stat-card yellow">
-            <p class="text-3xl font-bold text-white">{{ expired }}</p>
-            <p class="text-sm text-gray-500 mt-1">Expirados</p>
-        </div>
-        <div class="stat-card red">
-            <p class="text-3xl font-bold text-white">{{ blocked }}</p>
-            <p class="text-sm text-gray-500 mt-1">Bloqueados</p>
-        </div>
-    </div>
-
-    <!-- Info + Credits -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="glass-card p-5">
-            <h3 class="text-white font-semibold mb-4"><i class="fas fa-info-circle text-neon-blue mr-2"></i>Información</h3>
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Usuario</span>
-                    <span class="text-white">{{ reseller.username }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Email</span>
-                    <span class="text-gray-300">{{ reseller.email or '—' }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Registro</span>
-                    <span class="text-gray-300">{{ reseller.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Estado</span>
-                    {% if reseller.is_active %}
-                    <span class="badge badge-green">Activo</span>
-                    {% else %}
-                    <span class="badge badge-red">Inactivo</span>
-                    {% endif %}
-                </div>
-                <div class="flex justify-between py-2">
-                    <span class="text-gray-400">Notas</span>
-                    <span class="text-gray-300 text-right max-w-[200px]">{{ reseller.notes or '—' }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card p-5">
-            <h3 class="text-white font-semibold mb-4"><i class="fas fa-coins text-yellow-400 mr-2"></i>Créditos</h3>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="bg-dark-800 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-bold text-neon-blue">{{ reseller.credits }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Créditos Actuales</p>
-                </div>
-                <div class="bg-dark-800 rounded-lg p-4 text-center">
-                    <p class="text-3xl font-bold text-green-400">{{ reseller.total_credits_received or 0 }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Total Recibidos</p>
-                </div>
-            </div>
-
-            {% if credit_logs %}
-            <p class="text-sm text-gray-400 mb-2 font-medium">Historial de asignaciones:</p>
-            <div class="space-y-1 max-h-40 overflow-y-auto">
-                {% for log in credit_logs %}
-                <div class="text-xs flex justify-between py-1 border-b border-white/5">
-                    <span class="text-gray-400">{{ log.created_at.strftime('%d/%m/%Y') }}</span>
-                    <span class="text-green-400">{{ log.description }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Últimas actividades -->
-    <div class="glass-card p-5 mb-6">
-        <h3 class="text-white font-semibold mb-4"><i class="fas fa-history text-purple-400 mr-2"></i>Últimas Actividades</h3>
-        {% if logs %}
-        <div class="space-y-2">
-            {% for log in logs %}
-            <div class="flex items-start gap-3 text-sm p-2 rounded-lg hover:bg-white/5">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs
-                    {% if log.action in ('create','renew','unblock') %}bg-green-500/20 text-green-400
-                    {% elif log.action in ('block','disconnect') %}bg-red-500/20 text-red-400
-                    {% else %}bg-blue-500/20 text-blue-400{% endif %}">
-                    <i class="fas fa-{% if log.action == 'create' %}plus{% elif log.action == 'renew' %}sync{% elif log.action == 'block' %}ban{% elif log.action == 'unblock' %}check{% elif log.action == 'disconnect' %}power-off{% else %}circle{% endif %}"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-gray-300 truncate">{{ log.description }}</p>
-                    <p class="text-gray-600 text-xs">{{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-gray-500 text-sm text-center py-4">Sin actividad registrada</p>
-        {% endif %}
-    </div>
-
-    <!-- Usuarios -->
-    <div class="glass-card overflow-hidden">
-        <div class="p-4 border-b border-white/5 flex justify-between items-center">
-            <h3 class="text-white font-semibold"><i class="fas fa-users text-neon-blue mr-2"></i>Usuarios ({{ total_users }})</h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Expira</th>
-                        <th>Días Rest.</th>
-                        <th>Conex.</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td><span class="text-white font-medium">{{ user.username }}</span></td>
-                        <td class="text-sm {% if user.is_expired() %}text-red-400{% else %}text-gray-300{% endif %}">{{ user.expires_at.strftime('%Y-%m-%d') }}</td>
-                        <td>{% if user.is_expired() %}<span class="badge badge-red">Expirado</span>{% else %}<span class="text-sm text-gray-300">{{ user.days_remaining() }}d</span>{% endif %}</td>
-                        <td class="text-sm text-gray-300">{{ user.max_connections }}</td>
-                        <td>{% if user.is_blocked %}<span class="badge badge-red">Bloqueado</span>{% elif user.is_expired() %}<span class="badge badge-yellow">Expirado</span>{% else %}<span class="badge badge-green">Activo</span>{% endif %}</td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="5" class="text-center py-8 text-gray-500">No tiene usuarios</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card p-5"><h3 class="text-white font-semibold text-sm mb-3"><i class="fas fa-history text-accent mr-2"></i>Actividad Reciente</h3>
+            <div class="space-y-2">{% for log in logs %}<div class="text-sm"><span class="badge {% if log.action in ('create','renew') %}badge-success{% elif log.action in ('delete','block') %}badge-danger{% else %}badge-info{% endif %} text-2xs mr-2">{{ log.action|replace('_',' ')|title }}</span><span class="text-muted text-xs font-mono">{{ log.created_at.strftime('%d/%m %H:%M') }}</span></div>{% else %}<p class="text-sm text-muted text-center py-4">Sin actividad</p>{% endfor %}</div>
         </div>
     </div>
 </div>

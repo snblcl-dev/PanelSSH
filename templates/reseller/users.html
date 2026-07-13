@@ -1,276 +1,48 @@
 {% extends "base.html" %}
-{% block title %}Mis Usuarios — Revendedor{% endblock %}
+{% block title %}Mis Usuarios — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-users text-purple-400 mr-2"></i>Mis Usuarios
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">Usuarios creados por ti como revendedor</p>
-        </div>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div><h1 class="text-xl font-bold text-white"><i class="fas fa-users text-accent mr-2"></i>Mis Usuarios</h1><p class="text-sm text-muted mt-0.5">Gestiona tus usuarios</p></div>
         <div class="flex items-center gap-3">
-            <div class="glass-card px-3 py-1.5 flex items-center gap-1.5 text-sm">
-                <i class="fas fa-coins text-yellow-400"></i>
-                <span class="text-white font-bold">{{ current_user.credits }}</span>
-                <span class="text-gray-500">créditos</span>
-            </div>
-            <button onclick="openModal('createUserModal')" class="btn-primary">
-                <i class="fas fa-plus mr-2"></i>Nuevo Usuario
-            </button>
+            <div class="card px-3 py-1.5 flex items-center gap-1.5 text-sm"><i class="fas fa-coins text-warning"></i><span class="text-white font-bold">{{ current_user.credits }}</span><span class="text-muted">créd.</span></div>
+            <button onclick="openModal('createUserModal')" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>Nuevo</button>
         </div>
     </div>
-
-    <!-- Filtros -->
-    <div class="glass-card p-4 mb-6">
-        <form method="GET" class="flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[200px]">
-                <input type="text" name="search" class="input-field" placeholder="Buscar..." value="{{ search }}">
-            </div>
-            <select name="status" class="input-field w-auto" onchange="this.form.submit()">
-                <option value="">Todos</option>
-                <option value="active" {{ 'selected' if status_filter == 'active' }}>Activos</option>
-                <option value="blocked" {{ 'selected' if status_filter == 'blocked' }}>Bloqueados</option>
-                <option value="expired" {{ 'selected' if status_filter == 'expired' }}>Expirados</option>
-            </select>
-            <button type="submit" class="btn-ghost"><i class="fas fa-search mr-2"></i>Filtrar</button>
+    <div class="card p-4 mb-5">
+        <form method="GET" class="flex flex-wrap items-center gap-3">
+            <div class="flex-1 min-w-[180px]"><input type="text" name="search" class="input" placeholder="Buscar..." value="{{ search }}"></div>
+            <select name="status" class="input w-auto" onchange="this.form.submit()"><option value="">Todos</option><option value="active" {{ 'selected' if status_filter == 'active' }}>Activos</option><option value="blocked" {{ 'selected' if status_filter == 'blocked' }}>Bloqueados</option><option value="expired" {{ 'selected' if status_filter == 'expired' }}>Expirados</option></select>
+            <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-search"></i>Filtrar</button>
         </form>
     </div>
-
-    <div class="glass-card overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Contraseña</th>
-                        <th>Expira</th>
-                        <th>Días Rest.</th>
-                        <th>Servidor</th>
-                        <th>Estado</th>
-                        <th class="text-right">Acciones</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Usuario</th><th>Contraseña</th><th>Expira</th><th>Días</th><th>Servidor</th><th>Estado</th><th class="text-right">Acciones</th></tr></thead>
                 <tbody>
                     {% for user in users %}
                     <tr>
+                        <td><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-accent/15 flex items-center justify-center"><span class="text-accent text-xs font-semibold font-mono">{{ user.username[0]|upper }}</span></div><span class="font-medium text-sm">{{ user.username }}</span></div></td>
+                        <td><span class="font-mono text-xs bg-surface-deep px-2 py-0.5 rounded text-muted">{{ user.password_plain }}</span></td>
+                        <td class="text-sm font-mono text-muted">{{ user.expires_at.strftime('%d/%m/%Y') }}</td>
+                        <td>{% set r = user.days_remaining() %}<span class="text-sm font-mono font-semibold {% if r <= 3 %}text-danger{% elif r <= 7 %}text-warning{% else %}text-success{% endif %}">{{ r }}d</span></td>
+                        <td class="text-sm text-muted">{% if user.server %}{{ user.server.name }}{% else %}Local{% endif %}</td>
+                        <td>{% if user.is_blocked %}<span class="badge badge-danger"><i class="fas fa-lock text-2xs"></i>Bloq.</span>{% elif user.is_expired() %}<span class="badge badge-warning"><i class="fas fa-clock text-2xs"></i>Exp.</span>{% else %}<span class="badge badge-success">Activo</span>{% endif %}</td>
                         <td>
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-lg {% if user.is_blocked %}bg-red-500/20{% elif user.is_expired() %}bg-yellow-500/20{% else %}bg-green-500/20{% endif %} flex items-center justify-center">
-                                    <i class="fas fa-user text-sm {% if user.is_blocked %}text-red-400{% elif user.is_expired() %}text-yellow-400{% else %}text-green-400{% endif %}"></i>
-                                </div>
-                                <span class="text-white font-medium">{{ user.username }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <code class="text-sm text-gray-400 bg-dark-800 px-2 py-1 rounded font-mono">{{ user.password_plain }}</code>
-                        </td>
-                        <td class="text-sm {% if user.is_expired() %}text-red-400{% else %}text-gray-300{% endif %}">
-                            {{ user.expires_at.strftime('%Y-%m-%d') }}
-                        </td>
-                        <td>
-                            {% if user.is_expired() %}
-                            <span class="badge badge-red">Expirado</span>
-                            {% elif user.days_remaining() <= 3 %}
-                            <span class="badge badge-yellow">{{ user.days_remaining() }}d</span>
-                            {% else %}
-                            <span class="text-sm text-gray-300">{{ user.days_remaining() }}d</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-sm">
-                            {% if user.server %}
-                            <span class="text-cyan-400">
-                                <i class="fas fa-server mr-1"></i>{{ user.server.name }}
-                            </span>
-                            {% else %}
-                            <span class="text-gray-500">
-                                <i class="fas fa-home mr-1"></i>Local
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user.is_blocked %}
-                            <span class="badge badge-red">Bloqueado</span>
-                            {% elif user.is_expired() %}
-                            <span class="badge badge-yellow">Expirado</span>
-                            {% else %}
-                            <span class="badge badge-green">Activo</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-right">
                             <div class="flex items-center justify-end gap-1">
-                                {% if not user.is_blocked and not user.is_expired() %}
-                                <button onclick="openModal('renewModal{{ user.id }}')" class="btn-ghost text-xs px-2 py-1" title="Renovar">
-                                    <i class="fas fa-sync text-green-400"></i>
-                                </button>
-                                {% endif %}
+                                <button onclick="openRenewModal({{ user.id }},'{{ user.username }}',{{ user.days_duration }},{{ user.max_connections }})" class="btn btn-ghost btn-xs text-success" title="Renovar"><i class="fas fa-sync-alt"></i></button>
+                                <form method="POST" action="{{ url_for('reseller.user_change_password') }}" class="inline"><input type="hidden" name="user_id" value="{{ user.id }}"><button class="btn btn-ghost btn-xs text-warning" title="Contraseña"><i class="fas fa-key"></i></button></form>
                                 {% if user.is_blocked %}
-                                <button onclick="openModal('unblockModal{{ user.id }}')" class="btn-ghost text-xs px-2 py-1" title="Desbloquear">
-                                    <i class="fas fa-unlock text-green-400"></i>
-                                </button>
+                                <form method="POST" action="{{ url_for('reseller.user_unblock', user_id=user.id) }}" class="inline"><button class="btn btn-ghost btn-xs text-success" title="Desbloquear"><i class="fas fa-unlock"></i></button></form>
                                 {% else %}
-                                <button onclick="openModal('blockModal{{ user.id }}')" class="btn-ghost text-xs px-2 py-1" title="Bloquear">
-                                    <i class="fas fa-ban text-yellow-400"></i>
-                                </button>
+                                <form method="POST" action="{{ url_for('reseller.user_block', user_id=user.id) }}" class="inline" onsubmit="return confirm('¿Bloquear {{ user.username }}?')"><button class="btn btn-ghost btn-xs text-warning" title="Bloquear"><i class="fas fa-ban"></i></button></form>
                                 {% endif %}
-                                <button onclick="openModal('passModal{{ user.id }}')" class="btn-ghost text-xs px-2 py-1" title="Cambiar contraseña">
-                                    <i class="fas fa-key text-neon-blue"></i>
-                                </button>
                             </div>
                         </td>
                     </tr>
-
-                    <!-- Modal Renew -->
-                    <div class="modal-overlay" id="renewModal{{ user.id }}">
-                        <div class="modal-content">
-                            <div class="flex items-center justify-between mb-5">
-                                <h3 class="text-xl font-bold text-white">
-                                    <i class="fas fa-sync text-green-400 mr-2"></i>Renovar: {{ user.username }}
-                                </h3>
-                                <button onclick="closeModal('renewModal{{ user.id }}')" class="text-gray-500 hover:text-white">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                            <form method="POST" action="{{ url_for('reseller.user_renew') }}" class="space-y-4">
-                                <input type="hidden" name="user_id" value="{{ user.id }}">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-400 mb-2">Días adicionales</label>
-                                    <input type="number" name="extra_days" class="input-field" placeholder="Dias extra" min="1" max="365"
-                                           onchange="updateRCost({{ user.id }}, {{ user.max_connections }})" id="rDays{{ user.id }}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-400 mb-2">Nuevas conexiones (máx {{ max_connections }})</label>
-                                    <input type="number" name="new_max_connections" class="input-field" 
-                                           placeholder="Actual: {{ user.max_connections }}" min="1" max="{{ max_connections }}"
-                                           onchange="updateRCost({{ user.id }}, this.value || {{ user.max_connections }})" id="rConns{{ user.id }}">
-                                </div>
-                                <div class="bg-dark-800 rounded-lg p-4 border border-yellow-500/20">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-400">Costo:</span>
-                                        <span class="text-yellow-400 font-bold" id="rCost{{ user.id }}">— créditos</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm mt-1">
-                                        <span class="text-gray-400">Tus créditos:</span>
-                                        <span class="text-white font-bold">{{ current_user.credits }}</span>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn-success w-full py-3">
-                                    <i class="fas fa-sync mr-2"></i>Renovar
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Modal Block -->
-                    <div class="modal-overlay" id="blockModal{{ user.id }}">
-                        <div class="modal-content">
-                            <div class="flex items-center justify-between mb-5">
-                                <h3 class="text-xl font-bold text-white">
-                                    <i class="fas fa-ban text-yellow-400 mr-2"></i>Bloquear Usuario
-                                </h3>
-                                <button onclick="closeModal('blockModal{{ user.id }}')" class="text-gray-500 hover:text-white">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                            <div class="text-center py-4">
-                                <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl"></i>
-                                </div>
-                                <p class="text-white text-lg font-medium mb-2">¿Bloquear usuario?</p>
-                                <p class="text-gray-400 text-sm mb-1">
-                                    El usuario <strong class="text-white">{{ user.username }}</strong> será bloqueado.
-                                </p>
-                                <p class="text-gray-500 text-xs">No podrá conectarse hasta que sea desbloqueado.</p>
-                            </div>
-                            <form method="POST" action="{{ url_for('reseller.user_block', user_id=user.id) }}">
-                                <div class="flex gap-3">
-                                    <button type="button" onclick="closeModal('blockModal{{ user.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                                    <button type="submit" class="btn-warning flex-1 py-3">
-                                        <i class="fas fa-ban mr-2"></i>Bloquear
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Modal Unblock -->
-                    <div class="modal-overlay" id="unblockModal{{ user.id }}">
-                        <div class="modal-content">
-                            <div class="flex items-center justify-between mb-5">
-                                <h3 class="text-xl font-bold text-white">
-                                    <i class="fas fa-unlock text-green-400 mr-2"></i>Desbloquear Usuario
-                                </h3>
-                                <button onclick="closeModal('unblockModal{{ user.id }}')" class="text-gray-500 hover:text-white">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                            <div class="text-center py-4">
-                                <div class="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-lock-open text-green-400 text-3xl"></i>
-                                </div>
-                                <p class="text-white text-lg font-medium mb-2">¿Desbloquear usuario?</p>
-                                <p class="text-gray-400 text-sm">
-                                    El usuario <strong class="text-white">{{ user.username }}</strong> podrá conectarse nuevamente.
-                                </p>
-                            </div>
-                            <form method="POST" action="{{ url_for('reseller.user_unblock', user_id=user.id) }}">
-                                <div class="flex gap-3">
-                                    <button type="button" onclick="closeModal('unblockModal{{ user.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                                    <button type="submit" class="btn-success flex-1 py-3">
-                                        <i class="fas fa-unlock mr-2"></i>Desbloquear
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Modal Change Password -->
-                    <div class="modal-overlay" id="passModal{{ user.id }}">
-                        <div class="modal-content">
-                            <div class="flex items-center justify-between mb-5">
-                                <h3 class="text-xl font-bold text-white">
-                                    <i class="fas fa-key text-neon-blue mr-2"></i>Cambiar Contraseña
-                                </h3>
-                                <button onclick="closeModal('passModal{{ user.id }}')" class="text-gray-500 hover:text-white">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                            <div class="text-center py-4">
-                                <div class="w-16 h-16 rounded-full bg-neon-blue/20 flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-key text-neon-blue text-3xl"></i>
-                                </div>
-                                <p class="text-white text-lg font-medium mb-2">¿Generar nueva contraseña?</p>
-                                <p class="text-gray-400 text-sm mb-1">
-                                    Usuario: <strong class="text-white">{{ user.username }}</strong>
-                                </p>
-                                <p class="text-gray-500 text-xs">Se generará una contraseña aleatoria automáticamente.</p>
-                            </div>
-                            <form method="POST" action="{{ url_for('reseller.user_change_password') }}">
-                                <input type="hidden" name="user_id" value="{{ user.id }}">
-                                <div class="flex gap-3">
-                                    <button type="button" onclick="closeModal('passModal{{ user.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                                    <button type="submit" class="btn-primary flex-1 py-3">
-                                        <i class="fas fa-key mr-2"></i>Generar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                                    <i class="fas fa-sync mr-2"></i>Renovar
-                                </button>
-                            </form>
-                        </div>
-                    </div>
                     {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center py-12">
-                            <div class="text-gray-500">
-                                <i class="fas fa-users text-4xl mb-3 block opacity-30"></i>
-                                <p class="text-lg">No tienes usuarios aún</p>
-                                <p class="text-sm mt-1">Crea tu primer usuario para empezar a vender</p>
-                            </div>
-                        </td>
-                    </tr>
+                    <tr><td colspan="7" class="text-center py-10 text-muted text-sm"><i class="fas fa-inbox text-3xl mb-2 block opacity-20"></i>No hay usuarios</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -278,77 +50,30 @@
     </div>
 </div>
 
-<!-- Modal Crear -->
 <div class="modal-overlay" id="createUserModal">
-    <div class="modal-content">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white"><i class="fas fa-user-plus text-neon-blue mr-2"></i>Nuevo Usuario</h3>
-            <button onclick="closeModal('createUserModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-user-plus text-accent mr-2"></i>Nuevo Usuario</h3><button onclick="closeModal('createUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
         <form method="POST" action="{{ url_for('reseller.user_create') }}" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Usuario</label>
-                <input type="text" name="username" class="input-field" required>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Días</label>
-                    <input type="number" name="days" class="input-field" placeholder="Dias" min="1" max="365" id="cDays" onchange="updateCCost()">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Conexiones (max {{ max_connections }})</label>
-                    <input type="number" name="max_connections" class="input-field" placeholder="Conexiones" min="1" max="{{ max_connections }}" id="cConns" onchange="updateCCost()">
-                </div>
-            </div>
-            {% if servers %}
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Servidor</label>
-                <select name="server_id" class="input-field" onchange="updateCCost()">
-                    <option value="">Local</option>
-                    {% for s in servers %}
-                    <option value="{{ s.id }}">{{ s.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
-            <div class="bg-dark-800 rounded-lg p-4 border border-yellow-500/20">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-400">Costo:</span>
-                    <span class="text-yellow-400 font-bold" id="cCost">30 créditos</span>
-                </div>
-                <div class="flex justify-between text-sm mt-1">
-                    <span class="text-gray-400">Tus créditos:</span>
-                    <span class="text-white font-bold">{{ current_user.credits }}</span>
-                </div>
-            </div>
-            <button type="submit" class="btn-primary w-full py-3"><i class="fas fa-plus mr-2"></i>Crear</button>
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Usuario</label><input type="text" name="username" class="input" required></div>
+            <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Días</label><input type="number" name="days" class="input" value="30"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" class="input" value="1"></div></div>
+            {% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-xs text-muted/60">(opcional)</span></label><select name="server_id" class="input"><option value="">Local</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>{% endif %}
+            <button type="submit" class="btn btn-primary w-full justify-center py-2.5"><i class="fas fa-plus"></i>Crear ({{ credit_config.calculate_cost(30,1) }} créd.)</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="renewUserModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-sync-alt text-success mr-2"></i>Renovar <span id="renewUsername" class="text-accent"></span></h3><button onclick="closeModal('renewUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+        <form method="POST" action="{{ url_for('reseller.user_renew') }}" class="space-y-4">
+            <input type="hidden" name="user_id" id="renewUserId">
+            <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Días extra</label><input type="number" name="extra_days" id="renewDays" class="input" value="30"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" placeholder="Sin cambio"></div></div>
+            <button type="submit" class="btn btn-success w-full justify-center py-2.5"><i class="fas fa-sync-alt"></i>Renovar</button>
         </form>
     </div>
 </div>
 
 <script>
-function getBaseCost(days) {
-    {% if credit_config.mode == 'per_user' %}
-        return {{ credit_config.cost_per_user }};
-    {% else %}
-        return days * {{ credit_config.cost_per_day }};
-    {% endif %}
-}
-function getExtraCost(conns) {
-    if (conns > 1) return (conns - 1) * {{ credit_config.cost_per_extra_connection }};
-    return 0;
-}
-function updateCCost() {
-    let d = parseInt(document.getElementById('cDays').value) || 1;
-    let c = parseInt(document.getElementById('cConns').value) || 1;
-    let cost = getBaseCost(d) + getExtraCost(c);
-    document.getElementById('cCost').textContent = cost + ' creditos';
-}
-function updateRCost(id, maxc) {
-    let d = parseInt(document.getElementById('rDays' + id).value) || 1;
-    let c = parseInt(document.getElementById('rConns' + id).value) || parseInt(maxc) || 1;
-    let cost = getBaseCost(d) + getExtraCost(c);
-    document.getElementById('rCost' + id).textContent = cost + ' creditos';
-}
+function openRenewModal(id,username,days,max){document.getElementById('renewUserId').value=id;document.getElementById('renewUsername').textContent=username;document.getElementById('renewDays').value=days;document.getElementById('renewMaxConn').value=max;openModal('renewUserModal');}
 </script>
 {% endblock %}

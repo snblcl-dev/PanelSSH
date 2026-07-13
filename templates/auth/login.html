@@ -1,81 +1,76 @@
 {% extends "base.html" %}
-{% block title %}Iniciar Sesión — SSH Panel{% endblock %}
+{% block title %}Iniciar Sesión — PanelSSH{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center">
+<div class="min-h-[90vh] flex items-center justify-center">
     <div class="w-full max-w-md fade-in">
         <!-- Logo -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-neon-blue to-blue-600 mb-4 shadow-lg shadow-neon-blue/20">
-                <i class="fas fa-terminal text-white text-3xl"></i>
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-accent mb-4">
+                <i class="fas fa-terminal text-white text-2xl"></i>
             </div>
-            <h1 class="text-3xl font-bold text-white">SSH Panel</h1>
-            <p class="text-gray-500 mt-1">Administración de Usuarios Dropbear</p>
+            <h1 class="text-2xl font-bold text-white">PanelSSH</h1>
+            <p class="text-sm text-muted mt-1">Administración de Usuarios Dropbear</p>
         </div>
 
-        <!-- Login Card -->
-        <div class="glass-card p-8">
+        <!-- Card -->
+        <div class="card p-8">
             <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-5">
-                <!-- Tipo de usuario -->
-                <div class="flex bg-dark-800 rounded-lg p-1 border border-white/5">
-                    <button type="button" onclick="switchLogin('admin')" 
-                            id="btn-admin" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-neon-blue text-white shadow-sm">
-                        <i class="fas fa-shield-alt mr-2"></i>Admin
+                <!-- Role toggle -->
+                <div class="flex bg-surface-hover rounded-lg p-1 border border-white/5">
+                    <button type="button" onclick="switchLogin('admin')"
+                            id="btn-admin"
+                            class="flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all bg-accent text-white">
+                        <i class="fas fa-shield-alt mr-1.5"></i>Admin
                     </button>
-                    <button type="button" onclick="switchLogin('reseller')" 
-                            id="btn-reseller" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-500">
-                        <i class="fas fa-store mr-2"></i>Revendedor
+                    <button type="button" onclick="switchLogin('reseller')"
+                            id="btn-reseller"
+                            class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-muted">
+                        <i class="fas fa-store mr-1.5"></i>Revendedor
                     </button>
                 </div>
                 <input type="hidden" name="login_as" id="login_as" value="admin">
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">
-                        <i class="fas fa-user mr-1"></i>Usuario
-                    </label>
-                    <input type="text" name="username" class="input-field" placeholder="Ingresa tu usuario" required autofocus>
+                    <label class="block text-sm font-medium text-muted mb-1.5">Usuario</label>
+                    <input type="text" name="username" class="input" placeholder="Ingresa tu usuario" required autofocus>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">
-                        <i class="fas fa-lock mr-1"></i>Contraseña
-                    </label>
-                    <input type="password" name="password" class="input-field" placeholder="Ingresa tu contraseña" required>
+                    <label class="block text-sm font-medium text-muted mb-1.5">Contraseña</label>
+                    <input type="password" name="password" class="input" placeholder="Ingresa tu contraseña" required>
                 </div>
 
-                <button type="submit" class="btn-primary w-full py-3 text-base">
-                    <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+                <button type="submit" class="btn btn-primary w-full justify-center py-2.5 text-sm">
+                    <i class="fas fa-sign-in-alt"></i>Iniciar Sesión
                 </button>
             </form>
 
             <div class="mt-6 text-center">
-                <p class="text-sm text-gray-500">
-                    ¿Eres revendedor y no tienes cuenta?
-                    <a href="{{ url_for('auth.register') }}" class="text-neon-blue hover:underline font-medium">
-                        Regístrate aquí
+                <p class="text-sm text-muted">
+                    ¿No tienes cuenta?
+                    <a href="{{ url_for('auth.register') }}" class="text-accent hover:underline font-medium">
+                        Regístrate como revendedor
                     </a>
                 </p>
             </div>
         </div>
 
-        <p class="text-center text-xs text-gray-600 mt-6">
-            SSH Panel v2.0 &mdash; Desarrollado para gestión de usuarios Dropbear
-        </p>
+        <p class="text-center text-2xs text-muted mt-6">PanelSSH &mdash; v2.0</p>
     </div>
 </div>
 
 <script>
 function switchLogin(type) {
     document.getElementById('login_as').value = type;
-    const adminBtn = document.getElementById('btn-admin');
-    const resellerBtn = document.getElementById('btn-reseller');
-    
+    const ab = document.getElementById('btn-admin');
+    const rb = document.getElementById('btn-reseller');
     if (type === 'admin') {
-        adminBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-neon-blue text-white shadow-sm';
-        resellerBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-500';
+        ab.className = 'flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all bg-accent text-white';
+        rb.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-muted';
     } else {
-        resellerBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all bg-neon-blue text-white shadow-sm';
-        adminBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-500';
+        rb.className = 'flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all bg-accent text-white';
+        ab.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-muted';
     }
 }
 </script>

@@ -1,86 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Mi Perfil — SSH Panel{% endblock %}
+{% block title %}Perfil — PanelSSH{% endblock %}
 {% block content %}
-<div class="fade-in">
-    <div class="max-w-2xl mx-auto">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-neon-blue to-blue-600 mb-4 shadow-lg shadow-neon-blue/20">
-                <span class="text-white text-3xl font-bold">{{ current_user.username[0]|upper }}</span>
-            </div>
-            <h1 class="text-2xl font-bold text-white">Mi Perfil</h1>
-            <p class="text-gray-500 text-sm mt-1">{{ current_user.username }} · Administrador</p>
-        </div>
-
-        <div class="glass-card p-6 mb-6">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
-                <i class="fas fa-info-circle text-neon-blue"></i>
-                Información de la Cuenta
-            </h3>
-            {% if current_user.must_change_password %}
-            <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4 flex items-center gap-3">
-                <i class="fas fa-shield-alt text-red-400 text-xl"></i>
-                <div>
-                    <p class="text-red-400 font-medium">Debes cambiar tu contraseña</p>
-                    <p class="text-red-400/70 text-sm">Por seguridad, cambia la contraseña por defecto antes de continuar.</p>
-                </div>
-            </div>
-            {% endif %}
-            <div class="space-y-3">
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Usuario</span>
-                    <span class="text-white font-medium">{{ current_user.username }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Email</span>
-                    <span class="text-gray-300">{{ current_user.email or 'No configurado' }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-white/5">
-                    <span class="text-gray-400">Rol</span>
-                    <span class="badge badge-blue">Super Administrador</span>
-                </div>
-                <div class="flex justify-between py-2">
-                    <span class="text-gray-400">Miembro desde</span>
-                    <span class="text-gray-300">{{ current_user.created_at.strftime('%d/%m/%Y') }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card p-6">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
-                <i class="fas fa-lock text-yellow-400"></i>
-                Cambiar Contraseña
-            </h3>
-            <form method="POST" action="{{ url_for('admin.change_password') }}" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Contraseña Actual</label>
-                    <input type="password" name="current_password" class="input-field" placeholder="Ingresa tu contraseña actual" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Nueva Contraseña</label>
-                    <input type="password" name="new_password" class="input-field" placeholder="Mínimo 6 caracteres" required minlength="6">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Confirmar Nueva Contraseña</label>
-                    <input type="password" name="confirm_password" class="input-field" placeholder="Repite la nueva contraseña" required minlength="6">
-                </div>
-                <div class="bg-dark-800 rounded-lg p-4 border border-yellow-500/20">
-                    <div class="flex items-start gap-3">
-                        <i class="fas fa-shield-alt text-yellow-400 mt-0.5"></i>
-                        <div class="text-sm text-gray-400">
-                            <p class="text-yellow-400 font-medium mb-1">Recomendaciones</p>
-                            <ul class="list-disc list-inside space-y-1">
-                                <li>Usa al menos 8 caracteres</li>
-                                <li>Combina letras, números y símbolos</li>
-                                <li>No uses contraseñas que ya hayas usado antes</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="btn-primary w-full py-3">
-                    <i class="fas fa-save mr-2"></i>Cambiar Contraseña
-                </button>
-            </form>
-        </div>
+<div class="fade-in max-w-lg mx-auto">
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-accent mb-3"><span class="text-white text-2xl font-bold">{{ current_user.username[0]|upper }}</span></div>
+        <h1 class="text-xl font-bold text-white">Mi Perfil</h1><p class="text-sm text-muted mt-1">{{ current_user.username }}</p>
+    </div>
+    <div class="card p-6">
+        <form method="POST" action="{{ url_for('admin.change_password') }}" class="space-y-4">
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Contraseña Actual</label><input type="password" name="current_password" class="input" required></div>
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Nueva Contraseña</label><input type="password" name="new_password" class="input" required minlength="6"></div>
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Confirmar</label><input type="password" name="confirm_password" class="input" required minlength="6"></div>
+            <button type="submit" class="btn btn-primary w-full justify-center"><i class="fas fa-save"></i>Cambiar Contraseña</button>
+        </form>
     </div>
 </div>
 {% endblock %}

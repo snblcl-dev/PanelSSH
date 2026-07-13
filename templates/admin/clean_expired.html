@@ -1,171 +1,48 @@
 {% extends "base.html" %}
-{% block title %}Limpiar Expirados — SSH Panel{% endblock %}
+{% block title %}Limpiar Expirados — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-broom text-yellow-400 mr-2"></i>Limpiar Usuarios Expirados
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">Elimina usuarios que no renovaron su cuenta</p>
-        </div>
-        {% if users %}
-        <button onclick="openModal('cleanAllModal')" class="btn-danger">
-            <i class="fas fa-trash mr-2"></i>Eliminar Todos ({{ users|length }})
-        </button>
-        {% endif %}
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div><h1 class="text-xl font-bold text-white"><i class="fas fa-broom text-warning mr-2"></i>Limpiar Expirados</h1><p class="text-sm text-muted mt-0.5">Elimina usuarios que no renovaron</p></div>
+        {% if users %}<button onclick="openModal('cleanAllModal')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i>Eliminar Todos ({{ users|length }})</button>{% endif %}
     </div>
-
     {% if users %}
-    <div class="glass-card">
-        <div class="p-4 border-b border-white/5">
-            <p class="text-gray-400 text-sm">
-                <i class="fas fa-info-circle text-yellow-400 mr-2"></i>
-                Se encontraron <strong class="text-white">{{ users|length }}</strong> usuario(s) expirado(s)
-            </p>
-        </div>
+    <div class="card overflow-hidden">
+        <div class="p-4 border-b border-white/5"><p class="text-sm text-muted"><i class="fas fa-info-circle text-warning mr-2"></i><strong class="text-white">{{ users|length }}</strong> usuario(s) expirado(s)</p></div>
         <div class="overflow-x-auto">
             <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>
-                            <input type="checkbox" id="selectAll" onchange="toggleAll()" class="rounded border-gray-600">
-                        </th>
-                        <th>Usuario</th>
-                        <th>Expiro el</th>
-                        <th>Dias vencido</th>
-                        <th>Conexiones</th>
-                        <th>Estado</th>
-                        <th class="text-right">Acciones</th>
-                    </tr>
-                </thead>
+                <thead><tr><th><input type="checkbox" id="selectAll" onchange="toggleAll()"></th><th>Usuario</th><th>Expiró</th><th>Días vencido</th><th>Estado</th><th class="text-right">Acción</th></tr></thead>
                 <tbody>
                     {% for user in users %}
                     <tr>
-                        <td>
-                            <input type="checkbox" name="user_ids" value="{{ user.id }}" form="cleanForm" checked
-                                   class="rounded border-gray-600">
-                        </td>
-                        <td>
-                            <span class="text-white font-medium">{{ user.username }}</span>
-                        </td>
-                        <td class="text-red-400 text-sm">{{ user.expires_at.strftime('%Y-%m-%d') }}</td>
-                        <td>
-                            <span class="badge badge-red">{{ user.days_remaining() * -1 }} dias</span>
-                        </td>
-                        <td class="text-sm text-gray-300">{{ user.max_connections }}</td>
-                        <td>
-                            <span class="badge badge-red">Expirado</span>
-                        </td>
+                        <td><input type="checkbox" name="user_ids" value="{{ user.id }}" form="cleanForm" checked></td>
+                        <td><span class="text-white font-medium text-sm">{{ user.username }}</span></td>
+                        <td class="text-danger text-sm font-mono">{{ user.expires_at.strftime('%Y-%m-%d') }}</td>
+                        <td><span class="badge badge-danger">{{ user.days_remaining() * -1 }} días</span></td>
+                        <td><span class="badge badge-danger">Expirado</span></td>
                         <td class="text-right">
-                            <button onclick="openModal('deleteUserModal{{ user.id }}')" class="btn-ghost text-xs px-3 py-1.5">
-                                <i class="fas fa-trash text-red-400"></i>
-                            </button>
+                            <form method="POST" action="{{ url_for('admin.user_delete', user_id=user.id) }}" class="inline" onsubmit="return confirm('¿Eliminar {{ user.username }}?')">
+                                <button class="btn btn-ghost btn-xs text-danger"><i class="fas fa-trash"></i></button>
+                            </form>
                         </td>
                     </tr>
-
-                    <!-- Modal eliminar individual -->
-                    <div class="modal-overlay" id="deleteUserModal{{ user.id }}">
-                        <div class="modal-content">
-                            <div class="flex items-center justify-between mb-5">
-                                <h3 class="text-xl font-bold text-white"><i class="fas fa-trash text-red-400 mr-2"></i>Eliminar Usuario</h3>
-                                <button onclick="closeModal('deleteUserModal{{ user.id }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-                            </div>
-                            <div class="text-center py-4">
-                                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-trash text-red-400 text-3xl"></i>
-                                </div>
-                                <p class="text-white text-lg font-medium mb-2">Eliminar a {{ user.username }}?</p>
-                                <p class="text-gray-400 text-sm">El usuario sera eliminado permanentemente.</p>
-                            </div>
-                            <form method="POST" action="{{ url_for('admin.user_delete', user_id=user.id) }}">
-                                <div class="flex gap-3">
-                                    <button type="button" onclick="closeModal('deleteUserModal{{ user.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                                    <button type="submit" class="btn-danger flex-1 py-3"><i class="fas fa-trash mr-2"></i>Eliminar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         <div class="p-4 border-t border-white/5 flex justify-between items-center">
-            <p class="text-sm text-gray-500">{{ users|length }} usuario(s) expirado(s)</p>
-            <button onclick="openModal('cleanSelectedModal')" class="btn-danger">
-                <i class="fas fa-trash mr-2"></i>Eliminar Seleccionados
-            </button>
+            <p class="text-sm text-muted">{{ users|length }} expirado(s)</p>
+            <button onclick="openModal('cleanSelectedModal')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i>Eliminar Seleccionados</button>
         </div>
     </div>
     {% else %}
-    <div class="glass-card p-12 text-center">
-        <div class="text-gray-500">
-            <i class="fas fa-check-circle text-5xl mb-4 text-green-400 opacity-50"></i>
-            <p class="text-xl text-white font-medium">Todo limpio!</p>
-            <p class="text-sm mt-2">No hay usuarios expirados en este momento</p>
-            <a href="{{ url_for('admin.users') }}" class="btn-ghost inline-block mt-4">
-                <i class="fas fa-arrow-left mr-2"></i>Volver a Usuarios
-            </a>
-        </div>
-    </div>
+    <div class="card p-12 text-center"><i class="fas fa-check-circle text-4xl mb-3 text-success block opacity-40"></i><p class="text-white font-medium text-lg">¡Todo limpio!</p><p class="text-sm text-muted mt-1">No hay usuarios expirados</p></div>
     {% endif %}
 </div>
 
 {% if users %}
-<!-- Modal Eliminar Todos -->
-<div class="modal-overlay" id="cleanAllModal">
-    <div class="modal-content">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white"><i class="fas fa-trash text-red-400 mr-2"></i>Eliminar Todos</h3>
-            <button onclick="closeModal('cleanAllModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="text-center py-4">
-            <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
-            </div>
-            <p class="text-white text-lg font-medium mb-2">Eliminar todos los usuarios expirados?</p>
-            <p class="text-red-400 text-sm font-medium">{{ users|length }} usuario(s) seran eliminados permanentemente.</p>
-        </div>
-        <form method="POST" action="{{ url_for('admin.clean_expired_run') }}">
-            {% for user in users %}
-            <input type="hidden" name="user_ids" value="{{ user.id }}">
-            {% endfor %}
-            <div class="flex gap-3">
-                <button type="button" onclick="closeModal('cleanAllModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                <button type="submit" class="btn-danger flex-1 py-3"><i class="fas fa-trash mr-2"></i>Eliminar Todos</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Eliminar Seleccionados -->
-<div class="modal-overlay" id="cleanSelectedModal">
-    <div class="modal-content">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white"><i class="fas fa-trash text-red-400 mr-2"></i>Eliminar Seleccionados</h3>
-            <button onclick="closeModal('cleanSelectedModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="text-center py-4">
-            <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-trash text-red-400 text-3xl"></i>
-            </div>
-            <p class="text-white text-lg font-medium mb-2">Eliminar los usuarios seleccionados?</p>
-            <p class="text-gray-400 text-sm">Los usuarios seleccionados seran eliminados permanentemente.</p>
-        </div>
-        <form method="POST" action="{{ url_for('admin.clean_expired_run') }}" id="cleanForm">
-            <div class="flex gap-3">
-                <button type="button" onclick="closeModal('cleanSelectedModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                <button type="submit" class="btn-danger flex-1 py-3"><i class="fas fa-trash mr-2"></i>Eliminar</button>
-            </div>
-        </form>
-    </div>
-</div>
+<div class="modal-overlay" id="cleanAllModal"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-trash text-danger"></i>Eliminar Todos</h3><p class="text-sm text-muted mb-4"><strong class="text-danger">{{ users|length }} usuario(s)</strong> serán eliminados permanentemente.</p><form method="POST" action="{{ url_for('admin.clean_expired_run') }}">{% for user in users %}<input type="hidden" name="user_ids" value="{{ user.id }}">{% endfor %}<div class="flex gap-3"><button type="button" onclick="closeModal('cleanAllModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-danger flex-1"><i class="fas fa-trash"></i>Eliminar</button></div></form></div></div>
+<div class="modal-overlay" id="cleanSelectedModal"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-trash text-danger"></i>Eliminar Seleccionados</h3><p class="text-sm text-muted mb-4">Los usuarios marcados serán eliminados.</p><form method="POST" action="{{ url_for('admin.clean_expired_run') }}" id="cleanForm"><div class="flex gap-3"><button type="button" onclick="closeModal('cleanSelectedModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-danger flex-1"><i class="fas fa-trash"></i>Eliminar</button></div></form></div></div>
 {% endif %}
-
-<script>
-function toggleAll() {
-    const checked = document.getElementById('selectAll').checked;
-    document.querySelectorAll('input[name="user_ids"]').forEach(cb => cb.checked = checked);
-}
-</script>
+<script>function toggleAll(){document.querySelectorAll('input[name="user_ids"]').forEach(c=>c.checked=document.getElementById('selectAll').checked);}</script>
 {% endblock %}

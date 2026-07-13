@@ -1,208 +1,218 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — SSH Panel{% endblock %}
+{% block title %}Dashboard — PanelSSH{% endblock %}
+
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-white">Dashboard</h1>
-            <p class="text-gray-500 text-sm mt-1">Panel de control general del servidor SSH</p>
+            <h1 class="text-xl font-bold text-white">Dashboard</h1>
+            <p class="text-sm text-muted mt-0.5">Panel de control general</p>
         </div>
-        <div class="flex items-center gap-3 text-sm text-gray-500">
-            <i class="fas fa-sync-alt text-neon-blue"></i>
+        <div class="flex items-center gap-2 text-sm text-muted font-mono">
+            <i class="fas fa-sync-alt text-accent text-xs"></i>
             <span id="live-time"></span>
         </div>
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="stat-card blue">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-neon-blue/10 flex items-center justify-center">
-                    <i class="fas fa-users text-neon-blue text-xl"></i>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <!-- Total -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-accent/10 text-accent">
+                    <i class="fas fa-users"></i>
                 </div>
-                <span class="badge badge-blue">Total</span>
+                <span class="badge badge-info">Total</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ total_users }}</p>
-            <p class="text-sm text-gray-500 mt-1">Usuarios Registrados</p>
+            <p class="text-2xl font-bold text-white">{{ total_users }}</p>
+            <p class="text-xs text-muted mt-0.5">Usuarios Registrados</p>
         </div>
 
-        <div class="stat-card green">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <i class="fas fa-check-circle text-[#00ff88] text-xl"></i>
+        <!-- Active -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-success/10 text-success">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <span class="badge badge-green">Activos</span>
+                <span class="badge badge-success">Activos</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ active_users }}</p>
-            <p class="text-sm text-gray-500 mt-1">Usuarios Activos</p>
+            <p class="text-2xl font-bold text-white">{{ active_users }}</p>
+            <p class="text-xs text-muted mt-0.5">Usuarios Activos</p>
         </div>
 
-        <div class="stat-card red">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center">
-                    <i class="fas fa-ban text-[#ff3366] text-xl"></i>
+        <!-- Blocked -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-danger/10 text-danger">
+                    <i class="fas fa-ban"></i>
                 </div>
-                <span class="badge badge-red">Bloqueados</span>
+                <span class="badge badge-danger">Bloqueados</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ blocked_users }}</p>
-            <p class="text-sm text-gray-500 mt-1">Usuarios Bloqueados</p>
+            <p class="text-2xl font-bold text-white">{{ blocked_users }}</p>
+            <p class="text-xs text-muted mt-0.5">Usuarios Bloqueados</p>
         </div>
 
-        <div class="stat-card yellow">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                    <i class="fas fa-clock text-[#fbbf24] text-xl"></i>
+        <!-- Expiring -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-warning/10 text-warning">
+                    <i class="fas fa-clock"></i>
                 </div>
-                <span class="badge badge-yellow">Próximos</span>
+                <span class="badge badge-warning">Próximos</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ expiring_soon }}</p>
-            <p class="text-sm text-gray-500 mt-1">Vencen en 3 días</p>
+            <p class="text-2xl font-bold text-white">{{ expiring_soon }}</p>
+            <p class="text-xs text-muted mt-0.5">Vencen en 3 días</p>
         </div>
 
-        <div class="stat-card purple">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <i class="fas fa-skull text-[#8b5cf6] text-xl"></i>
+        <!-- Expired -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-muted/15 text-muted">
+                    <i class="fas fa-skull"></i>
                 </div>
-                <span class="badge badge-gray">Expirados</span>
+                <span class="badge badge-muted">Expirados</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ expired_users }}</p>
-            <p class="text-sm text-gray-500 mt-1">Usuarios Expirados</p>
+            <p class="text-2xl font-bold text-white">{{ expired_users }}</p>
+            <p class="text-xs text-muted mt-0.5">Usuarios Expirados</p>
         </div>
 
-        <div class="stat-card cyan">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                    <i class="fas fa-wifi text-[#06b6d4] text-xl"></i>
+        <!-- Online -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-success/10 text-success">
+                    <i class="fas fa-wifi"></i>
                 </div>
-                <span class="badge badge-blue">Online</span>
+                <span class="badge badge-success">Online</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ online_users_count }}</p>
-            <p class="text-sm text-gray-500 mt-1">Usuarios Conectados</p>
+            <p class="text-2xl font-bold text-white">{{ online_users_count }}</p>
+            <p class="text-xs text-muted mt-0.5">Usuarios Conectados</p>
         </div>
 
-        <div class="stat-card green">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <i class="fas fa-calendar-day text-[#00ff88] text-xl"></i>
+        <!-- Created Today -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-accent/10 text-accent">
+                    <i class="fas fa-calendar-day"></i>
                 </div>
-                <span class="badge badge-green">Hoy</span>
+                <span class="badge badge-info">Hoy</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ created_today }}</p>
-            <p class="text-sm text-gray-500 mt-1">Creados Hoy</p>
+            <p class="text-2xl font-bold text-white">{{ created_today }}</p>
+            <p class="text-xs text-muted mt-0.5">Creados Hoy</p>
         </div>
 
-        <div class="stat-card purple">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <i class="fas fa-store text-[#8b5cf6] text-xl"></i>
+        <!-- Resellers -->
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-2.5">
+                <div class="stat-icon bg-accent/10 text-accent">
+                    <i class="fas fa-store"></i>
                 </div>
-                <span class="badge badge-gray">Revendedores</span>
+                <span class="badge badge-muted">Revendedores</span>
             </div>
-            <p class="text-3xl font-bold text-white">{{ active_resellers }}/{{ total_resellers }}</p>
-            <p class="text-sm text-gray-500 mt-1">Activos / Totales</p>
+            <p class="text-2xl font-bold text-white">{{ active_resellers }}/{{ total_resellers }}</p>
+            <p class="text-xs text-muted mt-0.5">Activos / Totales</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Actividad Reciente -->
-        <div class="glass-card p-5">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
-                <i class="fas fa-history text-neon-blue"></i>
-                Actividad Reciente
+    <!-- Bottom row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Recent Activity -->
+        <div class="card p-5">
+            <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
+                <i class="fas fa-history text-accent"></i>Actividad Reciente
             </h3>
-            <div class="space-y-3">
+            <div class="space-y-1">
                 {% for log in recent_logs %}
-                <div class="flex items-start gap-3 text-sm p-2 rounded-lg hover:bg-white/5 transition-colors">
+                <div class="flex items-start gap-3 text-sm p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs
-                        {% if log.action in ('create','renew','unblock','login') %}bg-green-500/20 text-green-400
-                        {% elif log.action in ('delete','block','disconnect') %}bg-red-500/20 text-red-400
-                        {% else %}bg-blue-500/20 text-blue-400{% endif %}">
+                        {% if log.action in ('create','renew','unblock','login') %}bg-success/15 text-success
+                        {% elif log.action in ('delete','block','disconnect') %}bg-danger/15 text-danger
+                        {% else %}bg-accent/15 text-accent{% endif %}">
                         <i class="fas fa-{% if log.action == 'create' %}plus{% elif log.action == 'renew' %}sync{% elif log.action == 'delete' %}trash{% elif log.action == 'block' %}ban{% elif log.action == 'unblock' %}check{% elif log.action == 'disconnect' %}power-off{% elif log.action == 'login' %}sign-in-alt{% else %}circle{% endif %}"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-gray-300 truncate">{{ log.description }}</p>
-                        <p class="text-gray-600 text-xs mt-0.5">
-                            <span class="text-neon-blue">{{ log.performed_by }}</span>
-                            · {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}
+                        <p class="text-foreground truncate text-sm">{{ log.description }}</p>
+                        <p class="text-muted text-xs mt-0.5 font-mono">
+                            {{ log.performed_by }} · {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}
                         </p>
                     </div>
                 </div>
                 {% else %}
-                <p class="text-gray-500 text-sm text-center py-4">No hay actividad registrada aún</p>
+                <p class="text-muted text-sm text-center py-6">No hay actividad registrada aún</p>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Acciones Rápidas -->
-        <div class="glass-card p-5">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
-                <i class="fas fa-bolt text-yellow-400"></i>
-                Acciones Rápidas
+        <!-- Quick Actions -->
+        <div class="card p-5">
+            <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
+                <i class="fas fa-bolt text-warning"></i>Acciones Rápidas
             </h3>
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="openModal('createUserModal')" 
-                        class="flex flex-col items-center gap-2 p-4 rounded-lg bg-dark-800 border border-white/5 hover:border-neon-blue/30 transition-all group">
-                    <div class="w-12 h-12 rounded-lg bg-neon-blue/10 flex items-center justify-center group-hover:bg-neon-blue/20 transition-all">
-                        <i class="fas fa-user-plus text-neon-blue text-xl"></i>
+                <button onclick="openModal('createUserModal')"
+                        class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-white/5 hover:border-accent/30 transition-all group">
+                    <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                        <i class="fas fa-user-plus text-accent text-lg"></i>
                     </div>
-                    <span class="text-sm text-gray-300 font-medium">Nuevo Usuario</span>
+                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Nuevo Usuario</span>
                 </button>
-                <a href="{{ url_for('admin.clean_expired') }}" 
-                   class="flex flex-col items-center gap-2 p-4 rounded-lg bg-dark-800 border border-white/5 hover:border-red-500/30 transition-all group">
-                    <div class="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-all">
-                        <i class="fas fa-broom text-red-400 text-xl"></i>
+                <a href="{{ url_for('admin.clean_expired') }}"
+                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-white/5 hover:border-danger/30 transition-all group">
+                    <div class="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center group-hover:bg-danger/20 transition-colors">
+                        <i class="fas fa-broom text-danger text-lg"></i>
                     </div>
-                    <span class="text-sm text-gray-300 font-medium">Limpiar Expirados</span>
+                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Limpiar Expirados</span>
                 </a>
-                <a href="{{ url_for('admin.online') }}" 
-                   class="flex flex-col items-center gap-2 p-4 rounded-lg bg-dark-800 border border-white/5 hover:border-cyan-500/30 transition-all group">
-                    <div class="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-all">
-                        <i class="fas fa-wifi text-cyan-400 text-xl"></i>
+                <a href="{{ url_for('admin.online') }}"
+                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-white/5 hover:border-accent/30 transition-all group">
+                    <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
+                        <i class="fas fa-wifi text-success text-lg"></i>
                     </div>
-                    <span class="text-sm text-gray-300 font-medium">Ver Online</span>
+                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Ver Online</span>
                 </a>
-                <a href="{{ url_for('admin.users') }}" 
-                   class="flex flex-col items-center gap-2 p-4 rounded-lg bg-dark-800 border border-white/5 hover:border-purple-500/30 transition-all group">
-                    <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-all">
-                        <i class="fas fa-users text-purple-400 text-xl"></i>
+                <a href="{{ url_for('admin.users') }}"
+                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-white/5 hover:border-accent/30 transition-all group">
+                    <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                        <i class="fas fa-users text-accent text-lg"></i>
                     </div>
-                    <span class="text-sm text-gray-300 font-medium">Ver Usuarios</span>
+                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Ver Usuarios</span>
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Crear Usuario -->
+<!-- Modal: Create User -->
 <div class="modal-overlay" id="createUserModal">
-    <div class="modal-content">
+    <div class="modal-card">
         <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white">
-                <i class="fas fa-user-plus text-neon-blue mr-2"></i>Nuevo Usuario
+            <h3 class="text-lg font-bold text-white">
+                <i class="fas fa-user-plus text-accent mr-2"></i>Nuevo Usuario
             </h3>
-            <button onclick="closeModal('createUserModal')" class="text-gray-500 hover:text-white transition-colors">
-                <i class="fas fa-times text-xl"></i>
+            <button onclick="closeModal('createUserModal')" class="text-muted hover:text-white transition-colors">
+                <i class="fas fa-times text-lg"></i>
             </button>
         </div>
         <form method="POST" action="{{ url_for('admin.user_create') }}" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Nombre de Usuario</label>
-                <input type="text" name="username" class="input-field" placeholder="Ej: usuario1" required>
+                <label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label>
+                <input type="text" name="username" class="input" placeholder="Ej: usuario1" required>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Días de Duración</label>
-                    <input type="number" name="days" class="input-field" placeholder="Dias" min="1" max="365">
+                    <label class="block text-sm font-medium text-muted mb-1.5">Días</label>
+                    <input type="number" name="days" class="input" value="30" min="1" max="365">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Conexiones Máximas</label>
-                    <input type="number" name="max_connections" class="input-field" placeholder="Conexiones" min="1" max="10">
+                    <label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label>
+                    <input type="number" name="max_connections" class="input" value="1" min="1" max="10">
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Asignar a Revendedor <span class="text-gray-600">(opcional)</span></label>
-                <select name="assign_reseller" class="input-field">
+                <label class="block text-sm font-medium text-muted mb-1.5">
+                    Revendedor <span class="text-xs text-muted/60">(opcional)</span>
+                </label>
+                <select name="assign_reseller" class="input">
                     <option value="">Sin revendedor</option>
                     {% for r in resellers %}
                     <option value="{{ r.id }}">{{ r.username }}</option>
@@ -211,17 +221,19 @@
             </div>
             {% if servers %}
             <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Servidor <span class="text-gray-600">(opcional)</span></label>
-                <select name="server_id" class="input-field">
+                <label class="block text-sm font-medium text-muted mb-1.5">
+                    Servidor <span class="text-xs text-muted/60">(opcional)</span>
+                </label>
+                <select name="server_id" class="input">
                     <option value="">Local (este servidor)</option>
                     {% for s in servers %}
-                    <option value="{{ s.id }}">{{ s.name }} {% if s.location %}· {{ s.location }}{% endif %}</option>
+                    <option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>
                     {% endfor %}
                 </select>
             </div>
             {% endif %}
-            <button type="submit" class="btn-primary w-full py-3">
-                <i class="fas fa-plus mr-2"></i>Crear Usuario
+            <button type="submit" class="btn btn-primary w-full justify-center py-2.5">
+                <i class="fas fa-plus"></i>Crear Usuario
             </button>
         </form>
     </div>
@@ -231,11 +243,10 @@
 function updateTime() {
     const now = new Date();
     document.getElementById('live-time').textContent = now.toLocaleString('es-ES', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
+        weekday:'long', year:'numeric', month:'long', day:'numeric',
+        hour:'2-digit', minute:'2-digit', second:'2-digit'
     });
 }
-updateTime();
-setInterval(updateTime, 1000);
+updateTime(); setInterval(updateTime, 1000);
 </script>
 {% endblock %}

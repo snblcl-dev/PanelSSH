@@ -1,59 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Online — Mis Usuarios{% endblock %}
+{% block title %}Online — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-wifi text-cyan-400 mr-2"></i>Usuarios Online
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">Tus usuarios conectados actualmente</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full {% if online_users %}bg-green-400 animate-pulse{% else %}bg-gray-500{% endif %}"></div>
-            <span class="text-sm text-gray-400">{{ online_users|length }} conectados</span>
-        </div>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div><h1 class="text-xl font-bold text-white"><i class="fas fa-wifi text-success mr-2"></i>Online</h1><p class="text-sm text-muted mt-0.5">Tus usuarios conectados</p></div>
+        <div class="flex items-center gap-2 text-sm"><span class="w-2 h-2 rounded-full {% if online_users %}bg-success animate-pulse{% else %}bg-muted{% endif %}"></span><span class="text-muted">{{ online_users|length }} conectados</span></div>
     </div>
-
-    <div class="glass-card overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Conexiones Activas</th>
-                        <th>Máx. Permitido</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Usuario</th><th>Conexiones</th><th>Máximo</th><th>Estado</th></tr></thead>
                 <tbody>
                     {% for ou in online_users %}
-                    <tr>
-                        <td>
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-green-400"></div>
-                                <span class="text-white font-medium">{{ ou.username }}</span>
-                            </div>
-                        </td>
-                        <td><span class="text-white font-bold text-lg">{{ ou.connections }}</span> <span class="text-gray-500 text-sm">sesiones</span></td>
-                        <td class="text-gray-300">{{ ou.max_connections }}</td>
-                        <td>
-                            {% if ou.get('exceeded') %}
-                            <span class="badge badge-red"><i class="fas fa-exclamation-circle mr-1"></i>Excede límite</span>
-                            {% else %}
-                            <span class="badge badge-green"><i class="fas fa-check mr-1"></i>Normal</span>
-                            {% endif %}
-                        </td>
-                    </tr>
+                    <tr><td><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-success/15 flex items-center justify-center"><span class="text-success text-xs font-semibold font-mono">{{ ou.username[0]|upper }}</span></div><span class="font-medium text-sm">{{ ou.username }}</span></div></td><td class="font-mono text-sm font-semibold">{{ ou.connections }}</td><td class="text-sm text-muted">{{ ou.max_connections }}</td><td>{% if ou.exceeded %}<span class="badge badge-danger">Excedido</span>{% else %}<span class="badge badge-success">OK</span>{% endif %}</td></tr>
                     {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center py-12">
-                            <div class="text-gray-500">
-                                <i class="fas fa-wifi text-4xl mb-3 block opacity-30"></i>
-                                <p class="text-lg">No tienes usuarios conectados</p>
-                            </div>
-                        </td>
-                    </tr>
+                    <tr><td colspan="4" class="text-center py-10 text-muted text-sm"><i class="fas fa-wifi text-3xl mb-2 block opacity-20"></i>No hay usuarios conectados</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

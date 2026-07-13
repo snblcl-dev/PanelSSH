@@ -1,151 +1,77 @@
 {% extends "base.html" %}
-{% block title %}Registro de Actividades — SSH Panel{% endblock %}
+{% block title %}Registro — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
         <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-clipboard-list text-purple-400 mr-2"></i>Registro de Actividades
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">Bitácora completa de todas las acciones realizadas</p>
+            <h1 class="text-xl font-bold text-white"><i class="fas fa-clipboard-list text-accent mr-2"></i>Registro de Actividades</h1>
+            <p class="text-sm text-muted mt-0.5">Bitácora completa de acciones</p>
         </div>
     </div>
 
-    <div class="glass-card p-4 mb-6">
-        <form method="GET" class="flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[200px]">
-                <input type="text" name="search" class="input-field" placeholder="Buscar en registros..." value="{{ search }}">
-            </div>
-            <select name="action" class="input-field w-auto" onchange="this.form.submit()">
+    <!-- Filters -->
+    <div class="card p-4 mb-5">
+        <form method="GET" class="flex flex-wrap items-center gap-3">
+            <div class="flex-1 min-w-[180px]"><input type="text" name="search" class="input" placeholder="Buscar..." value="{{ search }}"></div>
+            <select name="action" class="input w-auto" onchange="this.form.submit()">
                 <option value="">Todas las acciones</option>
-                {% for a in actions %}
-                <option value="{{ a }}" {{ 'selected' if action_filter == a }}>{{ a|replace('_', ' ')|title }}</option>
-                {% endfor %}
+                {% for a in actions %}<option value="{{ a }}" {{ 'selected' if action_filter == a }}>{{ a|replace('_', ' ')|title }}</option>{% endfor %}
             </select>
-            <button type="submit" class="btn-ghost">
-                <i class="fas fa-search mr-2"></i>Buscar
-            </button>
-            {% if search or action_filter %}
-            <a href="{{ url_for('admin.logs') }}" class="text-sm text-neon-blue hover:underline">
-                <i class="fas fa-times mr-1"></i>Limpiar
-            </a>
-            {% endif %}
+            <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-search"></i>Buscar</button>
+            {% if search or action_filter %}<a href="{{ url_for('admin.logs') }}" class="text-sm text-accent hover:underline"><i class="fas fa-times mr-1"></i>Limpiar</a>{% endif %}
         </form>
     </div>
 
-    <!-- Limpieza de registros -->
-    <div class="glass-card p-4 mb-6 border border-red-500/20">
+    <!-- Maintenance -->
+    <div class="card p-4 mb-5 border-danger/20">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-                    <i class="fas fa-trash text-red-400"></i>
-                </div>
-                <div>
-                    <p class="text-white font-medium text-sm">Mantenimiento de registros</p>
-                    <p class="text-gray-500 text-xs">Elimina registros antiguos para mantener el panel ligero</p>
-                </div>
+                <div class="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center"><i class="fas fa-trash text-danger"></i></div>
+                <div><p class="text-white font-medium text-sm">Mantenimiento</p><p class="text-xs text-muted">Elimina registros antiguos</p></div>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="openModal('cleanLogsModal')" class="btn-warning text-sm">
-                    <i class="fas fa-trash mr-1"></i>Limpiar
-                </button>
-                <button onclick="openModal('deleteAllLogsModal')" class="btn-danger text-sm">
-                    <i class="fas fa-trash-alt mr-1"></i>Eliminar Todo
-                </button>
+            <div class="flex items-center gap-2">
+                <button onclick="openModal('cleanLogsModal')" class="btn btn-warning btn-xs"><i class="fas fa-trash"></i>Limpiar</button>
+                <button onclick="openModal('deleteAllLogsModal')" class="btn btn-danger btn-xs"><i class="fas fa-trash-alt"></i>Eliminar Todo</button>
             </div>
         </div>
     </div>
 
-    <div class="glass-card overflow-hidden">
+    <!-- Table -->
+    <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="table-custom">
-                <thead>
-                    <tr>
-                        <th>Fecha/Hora</th>
-                        <th>Acción</th>
-                        <th>Descripción</th>
-                        <th>Realizado por</th>
-                        <th>IP</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Fecha/Hora</th><th>Acción</th><th>Descripción</th><th>Realizado por</th><th>IP</th></tr></thead>
                 <tbody>
                     {% for log in logs.items %}
                     <tr>
-                        <td class="text-sm text-gray-400 whitespace-nowrap">
-                            {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}
-                        </td>
-                        <td>
-                            <span class="badge 
-                                {% if log.action in ('create','renew','unblock','login','reseller_activate') %}badge-green
-                                {% elif log.action in ('delete','block','disconnect','clean_expired','reseller_delete') %}badge-red
-                                {% elif log.action in ('reseller_credits','reseller_register') %}badge-blue
-                                {% else %}badge-yellow{% endif %}">
-                                {{ log.action|replace('_', ' ')|title }}
-                            </span>
-                        </td>
-                        <td class="text-sm text-gray-300 max-w-md truncate">{{ log.description }}</td>
-                        <td class="text-sm">
-                            <span class="{% if log.performed_by_type == 'admin' %}text-neon-blue{% else %}text-purple-400{% endif %}">
-                                <i class="fas fa-{% if log.performed_by_type == 'admin' %}shield-alt{% else %}store{% endif %} mr-1"></i>
-                                {{ log.performed_by }}
-                            </span>
-                        </td>
-                        <td class="text-sm text-gray-500 font-mono">{{ log.ip_address or '—' }}</td>
+                        <td class="text-sm text-muted font-mono whitespace-nowrap">{{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}</td>
+                        <td><span class="badge {% if log.action in ('create','renew','unblock','login') %}badge-success{% elif log.action in ('delete','block','disconnect') %}badge-danger{% else %}badge-info{% endif %}">{{ log.action|replace('_', ' ')|title }}</span></td>
+                        <td class="text-sm max-w-md truncate">{{ log.description }}</td>
+                        <td class="text-sm"><span class="{% if log.performed_by_type == 'admin' %}text-accent{% else %}text-warning{% endif %}"><i class="fas fa-{% if log.performed_by_type == 'admin' %}shield-alt{% else %}store{% endif %} mr-1"></i>{{ log.performed_by }}</span></td>
+                        <td class="text-sm text-muted font-mono">{{ log.ip_address or '—' }}</td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-12">
-                            <div class="text-gray-500">
-                                <i class="fas fa-clipboard-list text-4xl mb-3 block opacity-30"></i>
-                                <p class="text-lg">No hay registros disponibles</p>
-                            </div>
-                        </td>
-                    </tr>
+                    <tr><td colspan="5" class="text-center py-10 text-muted text-sm"><i class="fas fa-clipboard-list text-3xl mb-2 block opacity-20"></i>No hay registros</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        
         {% if logs.pages > 1 %}
         <div class="p-4 border-t border-white/5">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p class="text-sm text-gray-500">
-                    <i class="fas fa-list mr-1"></i>
-                    Página <strong class="text-white">{{ logs.page }}</strong> de <strong class="text-white">{{ logs.pages }}</strong>
-                    <span class="text-gray-600"> · {{ logs.total }} registros</span>
-                </p>
+            <div class="flex items-center justify-between gap-3">
+                <p class="text-sm text-muted">Página <strong class="text-white">{{ logs.page }}</strong> de <strong class="text-white">{{ logs.pages }}</strong> · {{ logs.total }} registros</p>
                 <div class="flex items-center gap-1">
                     {% if logs.has_prev %}
-                    <a href="{{ url_for('admin.logs', page=1, action=action_filter, search=search) }}" 
-                       class="btn-ghost text-xs px-2 py-1" title="Primera página">
-                        <i class="fas fa-angle-double-left"></i>
-                    </a>
-                    <a href="{{ url_for('admin.logs', page=logs.prev_num, action=action_filter, search=search) }}" 
-                       class="btn-ghost text-sm">
-                        <i class="fas fa-chevron-left mr-1"></i>Anterior
-                    </a>
+                    <a href="{{ url_for('admin.logs', page=1, action=action_filter, search=search) }}" class="btn btn-ghost btn-xs"><i class="fas fa-angle-double-left"></i></a>
+                    <a href="{{ url_for('admin.logs', page=logs.prev_num, action=action_filter, search=search) }}" class="btn btn-ghost btn-xs"><i class="fas fa-chevron-left"></i></a>
                     {% endif %}
-
-                    {% set start_page = [1, logs.page - 2] | max %}
-                    {% set end_page = [logs.pages, logs.page + 2] | min %}
-                    {% for p in range(start_page, end_page + 1) %}
-                    {% if p == logs.page %}
-                    <span class="w-8 h-8 rounded-lg bg-neon-blue/20 text-neon-blue text-sm font-bold flex items-center justify-center">{{ p }}</span>
-                    {% else %}
-                    <a href="{{ url_for('admin.logs', page=p, action=action_filter, search=search) }}" 
-                       class="w-8 h-8 rounded-lg text-gray-400 text-sm hover:bg-white/5 hover:text-white flex items-center justify-center transition-all">{{ p }}</a>
-                    {% endif %}
+                    {% for p in range([1, logs.page-2]|max, [logs.pages, logs.page+2]|min + 1) %}
+                    {% if p == logs.page %}<span class="w-7 h-7 rounded bg-accent/15 text-accent text-xs font-bold flex items-center justify-center">{{ p }}</span>
+                    {% else %}<a href="{{ url_for('admin.logs', page=p, action=action_filter, search=search) }}" class="w-7 h-7 rounded text-muted text-xs hover:bg-white/5 flex items-center justify-center">{{ p }}</a>{% endif %}
                     {% endfor %}
-
                     {% if logs.has_next %}
-                    <a href="{{ url_for('admin.logs', page=logs.next_num, action=action_filter, search=search) }}" 
-                       class="btn-ghost text-sm">
-                        Siguiente<i class="fas fa-chevron-right ml-1"></i>
-                    </a>
-                    <a href="{{ url_for('admin.logs', page=logs.pages, action=action_filter, search=search) }}" 
-                       class="btn-ghost text-xs px-2 py-1" title="Última página">
-                        <i class="fas fa-angle-double-right"></i>
-                    </a>
+                    <a href="{{ url_for('admin.logs', page=logs.next_num, action=action_filter, search=search) }}" class="btn btn-ghost btn-xs"><i class="fas fa-chevron-right"></i></a>
+                    <a href="{{ url_for('admin.logs', page=logs.pages, action=action_filter, search=search) }}" class="btn btn-ghost btn-xs"><i class="fas fa-angle-double-right"></i></a>
                     {% endif %}
                 </div>
             </div>
@@ -154,59 +80,6 @@
     </div>
 </div>
 
-<!-- Modal Limpiar registros antiguos -->
-<div class="modal-overlay" id="cleanLogsModal">
-    <div class="modal-content">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white"><i class="fas fa-trash text-yellow-400 mr-2"></i>Limpiar registros</h3>
-            <button onclick="closeModal('cleanLogsModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="text-center py-4">
-            <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-trash text-yellow-400 text-3xl"></i>
-            </div>
-            <p class="text-white text-lg font-medium mb-2">Eliminar registros antiguos</p>
-            <p class="text-gray-400 text-sm">Se eliminaran los registros anteriores a los dias seleccionados.</p>
-        </div>
-        <form method="POST" action="{{ url_for('admin.logs_delete_old') }}" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Eliminar registros &gt;</label>
-                <select name="days" class="input-field">
-                    <option value="7">7 dias</option>
-                    <option value="15">15 dias</option>
-                    <option value="30" selected>30 dias</option>
-                    <option value="60">60 dias</option>
-                    <option value="90">90 dias</option>
-                </select>
-            </div>
-            <div class="flex gap-3">
-                <button type="button" onclick="closeModal('cleanLogsModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                <button type="submit" class="btn-warning flex-1 py-3"><i class="fas fa-trash mr-2"></i>Limpiar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Eliminar Todo -->
-<div class="modal-overlay" id="deleteAllLogsModal">
-    <div class="modal-content">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white"><i class="fas fa-trash-alt text-red-400 mr-2"></i>Eliminar todos los registros</h3>
-            <button onclick="closeModal('deleteAllLogsModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="text-center py-4">
-            <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
-            </div>
-            <p class="text-white text-lg font-medium mb-2">Eliminar TODOS los registros</p>
-            <p class="text-red-400 text-sm font-medium"><i class="fas fa-exclamation-circle mr-1"></i>Esta accion no se puede deshacer</p>
-        </div>
-        <form method="POST" action="{{ url_for('admin.logs_delete_all') }}">
-            <div class="flex gap-3">
-                <button type="button" onclick="closeModal('deleteAllLogsModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                <button type="submit" class="btn-danger flex-1 py-3"><i class="fas fa-trash-alt mr-2"></i>Eliminar Todo</button>
-            </div>
-        </form>
-    </div>
-</div>
+<div class="modal-overlay" id="cleanLogsModal"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-trash text-warning mr-2"></i>Limpiar registros</h3><form method="POST" action="{{ url_for('admin.logs_delete_old') }}" class="space-y-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Eliminar registros ></label><select name="days" class="input"><option value="7">7 días</option><option value="15">15 días</option><option value="30" selected>30 días</option><option value="60">60 días</option><option value="90">90 días</option></select></div><div class="flex gap-3"><button type="button" onclick="closeModal('cleanLogsModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-warning flex-1"><i class="fas fa-trash"></i>Limpiar</button></div></form></div></div>
+<div class="modal-overlay" id="deleteAllLogsModal"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-trash-alt text-danger mr-2"></i>Eliminar Todos</h3><p class="text-sm text-muted mb-4">Esta acción no se puede deshacer.</p><form method="POST" action="{{ url_for('admin.logs_delete_all') }}"><div class="flex gap-3"><button type="button" onclick="closeModal('deleteAllLogsModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-danger flex-1"><i class="fas fa-trash-alt"></i>Eliminar Todo</button></div></form></div></div>
 {% endblock %}
