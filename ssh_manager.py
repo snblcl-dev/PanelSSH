@@ -7,6 +7,8 @@ Soporta dos modos:
 import subprocess
 import os
 import sys
+import re
+import shlex
 from datetime import datetime
 from flask import current_app
 
@@ -14,6 +16,22 @@ from flask import current_app
 if sys.platform.startswith('linux') or sys.platform == 'darwin':
     import pwd
     import grp
+
+# Patrón seguro para nombres de usuario Linux
+_USERNAME_RE = re.compile(r'^[a-z_][a-z0-9_-]{1,31}$')
+
+
+def _validate_username(username):
+    """
+    Valida que el username solo contenga caracteres seguros.
+    Lanza ValueError si no cumple el formato.
+    """
+    if not _USERNAME_RE.match(username):
+        raise ValueError(
+            f"Nombre de usuario inválido: '{username}'. "
+            "Solo se permiten minúsculas, números, guiones y guiones bajos (máx 32 caracteres)."
+        )
+    return username
 
 
 def _run_command(cmd, timeout=10):
@@ -120,24 +138,32 @@ def system_set_expiry(username, expires_at):
 # ================ IMPLEMENTACIÓN LOCAL (Linux con Dropbear) ================
 
 def _local_create_user(username, password, expires_at, max_connections, shell):
+    _validate_username(username)
+    u = shlex.quote(username)
+    p = shlex.quote(password)
+    s = shlex.quote(shell)
+    expiry = shlex.quote(expires_at.strftime("%Y-%m-%d"))
+
     commands = [
-        f'useradd -M -s {shell} {username} 2>/dev/null',
-        f'echo "{username}:{password}" | chpasswd',
-        f'chage -E {expires_at.strftime("%Y-%m-%d")} {username}',
+        f'useradd -M -s {s} {u} 2>/dev/null',
+        f'echo {u}:{p} | chpasswd',
+        f'chage -E {expiry} {u}',
     ]
-    
+
     for cmd in commands:
         r = _run_command(cmd)
-        if not r['success']:
+        if not r['success'] and 'already exists' not in r['stderr']:
             return r
-    
+
     return {'success': True, 'stdout': f'Usuario {username} creado exitosamente', 'stderr': '', 'returncode': 0}
 
 
 def _local_delete_user(username):
+    _validate_username(username)
+    u = shlex.quote(username)
     commands = [
-        f'pkill -u {username} 2>/dev/null',
-        f'userdel {username} 2>/dev/null',
+        f'pkill -u {u} 2>/dev/null',
+        f'userdel {u} 2>/dev/null',
     ]
     for cmd in commands:
         _run_command(cmd)
@@ -146,11 +172,13 @@ def _local_delete_user(username):
 
 def _local_block_user(username):
     """Bloquea un usuario: bloquea contraseña, expira cuenta y mata sesiones"""
+    _validate_username(username)
+    u = shlex.quote(username)
     commands = [
-        f'passwd -l {username} 2>/dev/null',                    # Bloquear contraseña
-        f'usermod -e 1 {username} 2>/dev/null',                  # Expirar cuenta
-        f'pkill -u {username} 2>/dev/null',                      # Matar procesos
-        f"ss -tnp 2>/dev/null | grep dropbear | awk '{{print $6}}' | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill 2>/dev/null",  # Matar conexiones dropbear
+        f'passwd -l {u} 2>/dev/null',
+        f'usermod -e 1 {u} 2>/dev/null',
+        f'pkill -u {u} 2>/dev/null',
+        f"ss -tnp 2>/dev/null | grep dropbear | awk '{{print $6}}' | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill 2>/dev/null",
     ]
     for cmd in commands:
         _run_command(cmd)
@@ -159,14 +187,16 @@ def _local_block_user(username):
 
 def _local_unblock_user(username, shell):
     """Desbloquea un usuario: desbloquea contraseña y remueve expiración"""
-    # Determinar shell (si el panel usa /bin/false, lo dejamos)
+    _validate_username(username)
     if not shell or shell == '/usr/sbin/nologin':
         shell = '/bin/false'
-    
+
+    u = shlex.quote(username)
+    s = shlex.quote(shell)
     commands = [
-        f'passwd -u {username} 2>/dev/null',                     # Desbloquear contraseña
-        f'usermod -e -1 {username} 2>/dev/null',                 # Remover expiración
-        f'usermod -s {shell} {username} 2>/dev/null',            # Restaurar shell
+        f'passwd -u {u} 2>/dev/null',
+        f'usermod -e -1 {u} 2>/dev/null',
+        f'usermod -s {s} {u} 2>/dev/null',
     ]
     for cmd in commands:
         _run_command(cmd)
@@ -175,10 +205,12 @@ def _local_unblock_user(username, shell):
 
 def _local_disconnect_user(username):
     """Desconecta todas las sesiones de un usuario"""
+    _validate_username(username)
+    u = shlex.quote(username)
     commands = [
-        f'pkill -u {username} 2>/dev/null',                      # Matar todos sus procesos
-        f"kill $(ps -u {username} -o pid= 2>/dev/null) 2>/dev/null",  # Otra forma de matar
-        f"ss -tnp 2>/dev/null | grep dropbear | awk '{{print $6}}' | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill 2>/dev/null",  # Matar dropbear connections
+        f'pkill -u {u} 2>/dev/null',
+        f"kill $(ps -u {u} -o pid= 2>/dev/null) 2>/dev/null",
+        f"ss -tnp 2>/dev/null | grep dropbear | awk '{{print $6}}' | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill 2>/dev/null",
     ]
     for cmd in commands:
         _run_command(cmd)
@@ -186,7 +218,10 @@ def _local_disconnect_user(username):
 
 
 def _local_change_password(username, new_password):
-    r = _run_command(f'echo "{username}:{new_password}" | chpasswd')
+    _validate_username(username)
+    u = shlex.quote(username)
+    p = shlex.quote(new_password)
+    r = _run_command(f'echo {u}:{p} | chpasswd')
     return r
 
 
@@ -234,9 +269,9 @@ done | sort | uniq -c | sort -rn
 
 
 # ============================================================
+# ============================================================
 # FUNCIONES REMOTAS (Multi-servidor via SSH con paramiko)
 # ============================================================
-import shlex
 
 def _get_remote_server(server_id):
     """Obtiene objeto Server por ID"""
@@ -273,7 +308,7 @@ def _remote_create_user(server, username, password, expires_at, max_connections,
     s = shlex.quote(shell)
     commands = [
         f'useradd -M -s {s} {u}',
-        f'echo "{u}:{p}" | chpasswd',
+        f'echo {u}:{p} | chpasswd',
         f'chage -E {expires_at.strftime("%Y-%m-%d")} {u}',
     ]
     for cmd in commands:
@@ -315,7 +350,7 @@ def _remote_unblock_user(server, username):
 def _remote_change_password(server, username, new_password):
     u = shlex.quote(username)
     p = shlex.quote(new_password)
-    return _execute_remote(server, f'echo "{u}:{p}" | chpasswd')
+    return _execute_remote(server, f'echo {u}:{p} | chpasswd')
 
 
 def _remote_disconnect_user(server, username):
@@ -417,39 +452,55 @@ def system_get_online_all():
 
 
 def _local_set_expiry(username, expires_at):
-    r = _run_command(f'chage -E {expires_at.strftime("%Y-%m-%d")} {username}')
+    _validate_username(username)
+    u = shlex.quote(username)
+    expiry = shlex.quote(expires_at.strftime("%Y-%m-%d"))
+    r = _run_command(f'chage -E {expiry} {u}')
     return r
 
 
 # ================ IMPLEMENTACIÓN POR SCRIPT EXTERNO ================
 
 def _script_create_user(username, password, expires_at, max_connections, shell):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} create {username} {password} {expires_at.strftime("%Y-%m-%d")} {max_connections}')
+    u = shlex.quote(username)
+    p = shlex.quote(password)
+    expiry = shlex.quote(expires_at.strftime("%Y-%m-%d"))
+    r = _run_command(f'{script} create {u} {p} {expiry} {max_connections}')
     return r
 
 
 def _script_delete_user(username):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} delete {username}')
+    u = shlex.quote(username)
+    r = _run_command(f'{script} delete {u}')
     return r
 
 
 def _script_block_user(username):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} block {username}')
+    u = shlex.quote(username)
+    r = _run_command(f'{script} block {u}')
     return r
 
 
 def _script_unblock_user(username, shell):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} unblock {username}')
+    u = shlex.quote(username)
+    r = _run_command(f'{script} unblock {u}')
     return r
 
 
 def _script_change_password(username, new_password):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} passwd {username} {new_password}')
+    u = shlex.quote(username)
+    p = shlex.quote(new_password)
+    r = _run_command(f'{script} passwd {u} {p}')
     return r
 
 
@@ -460,12 +511,17 @@ def _script_get_online_users():
 
 
 def _script_disconnect_user(username):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} disconnect {username}')
+    u = shlex.quote(username)
+    r = _run_command(f'{script} disconnect {u}')
     return r
 
 
 def _script_set_expiry(username, expires_at):
+    _validate_username(username)
     script = current_app.config.get('SSH_SCRIPT_PATH', '/usr/local/bin/ssh-manager.sh')
-    r = _run_command(f'{script} expiry {username} {expires_at.strftime("%Y-%m-%d")}')
+    u = shlex.quote(username)
+    expiry = shlex.quote(expires_at.strftime("%Y-%m-%d"))
+    r = _run_command(f'{script} expiry {u} {expiry}')
     return r

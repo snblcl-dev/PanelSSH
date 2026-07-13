@@ -115,27 +115,44 @@ class SSHUser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     password = db.Column(db.String(255), nullable=False)
-    password_plain = db.Column(db.String(255), nullable=False)  # Almacenada para mostrar al admin/reseller
-    
+
+    # Almacenamiento interno encriptado — NO acceder directamente,
+    # usar la propiedad password_plain (getter/setter)
+    _password_encrypted = db.Column('password_plain', db.String(255), nullable=False)
+
+    @property
+    def password_plain(self):
+        """Desencripta y devuelve la contraseña en texto plano."""
+        val = decrypt_password(self._password_encrypted)
+        if val is None:
+            # Contraseña legacy sin encriptar — devolver tal cual
+            return self._password_encrypted
+        return val
+
+    @password_plain.setter
+    def password_plain(self, value):
+        """Encripta la contraseña antes de guardar en BD."""
+        self._password_encrypted = encrypt_password(value)
+
     max_connections = db.Column(db.Integer, default=1)
     days_duration = db.Column(db.Integer, default=30)
-    
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     last_renewed_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     is_active = db.Column(db.Boolean, default=True)
     is_blocked = db.Column(db.Boolean, default=False)
     server_id = db.Column(db.Integer, db.ForeignKey('servers.id'), nullable=True)
-    
+
     server = db.relationship('Server', backref='users')
 
     # Relacion: quien creo el usuario
     created_by_admin = db.Column(db.Integer, db.ForeignKey('admins.id'), nullable=True)
     created_by_reseller = db.Column(db.Integer, db.ForeignKey('resellers.id'), nullable=True)
-    
+
     creator_admin = db.relationship('Admin', backref='created_users')
-    
+
     def is_expired(self):
         return datetime.utcnow() > self.expires_at
 
@@ -151,13 +168,13 @@ class SSHUser(db.Model):
             self.expires_at = datetime.utcnow() + timedelta(days=extra_days)
         else:
             self.expires_at += timedelta(days=extra_days)
-        
+
         if new_max_connections is not None:
             self.max_connections = new_max_connections
-        
+
         if self.is_blocked:
             self.is_blocked = False
-        
+
         self.is_active = True
         self.last_renewed_at = datetime.utcnow()
 
@@ -165,7 +182,7 @@ class SSHUser(db.Model):
         """Genera una nueva contraseña automáticamente"""
         chars = string.ascii_letters + string.digits
         new_pass = ''.join(random.choice(chars) for _ in range(10))
-        self.password_plain = new_pass
+        self.password_plain = new_pass  # El setter encripta automáticamente
         self.password = generate_password_hash(new_pass)
         return new_pass
 
@@ -385,7 +402,27 @@ def init_db():
             db.session.commit()
     except Exception:
         db.session.rollback()
-    
+
+    # Migracion: encriptar contraseñas SSH existentes
+    try:
+        from sqlalchemy import text as sql_text
+        users_plain = db.session.execute(
+            sql_text("SELECT id, password_plain FROM ssh_users WHERE password_plain IS NOT NULL AND password_plain != ''")
+        ).fetchall()
+        count = 0
+        for uid, plain in users_plain:
+            if decrypt_password(plain) is None:
+                encrypted = encrypt_password(plain)
+                db.session.execute(
+                    sql_text("UPDATE ssh_users SET password_plain = :enc WHERE id = :id"),
+                    {'enc': encrypted, 'id': uid}
+                )
+                count += 1
+        if count > 0:
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
     # Crear admin por defecto si no existe
     if not Admin.query.filter_by(username='admin').first():
         admin = Admin(username='admin', email='admin@sshpanel.local', must_change_password=True)
