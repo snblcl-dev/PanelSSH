@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Revendedor{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-white">
+                <i class="fas fa-store text-purple-400 mr-2"></i>Mi Panel
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">Bienvenido, {{ current_user.username }}</p>
+        </div>
+        <div class="glass-card px-4 py-2 flex items-center gap-2">
+            <i class="fas fa-coins text-yellow-400"></i>
+            <span class="text-white font-bold text-xl">{{ credits }}</span>
+            <span class="text-gray-500 text-sm">créditos</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card blue">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-12 h-12 rounded-lg bg-neon-blue/10 flex items-center justify-center">
+                    <i class="fas fa-users text-neon-blue text-xl"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-white">{{ total_users }}</p>
+            <p class="text-sm text-gray-500 mt-1">Mis Usuarios</p>
+        </div>
+
+        <div class="stat-card green">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <i class="fas fa-check-circle text-[#00ff88] text-xl"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-white">{{ active_users }}</p>
+            <p class="text-sm text-gray-500 mt-1">Activos</p>
+        </div>
+
+        <div class="stat-card red">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <i class="fas fa-ban text-[#ff3366] text-xl"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-white">{{ blocked_users }}</p>
+            <p class="text-sm text-gray-500 mt-1">Bloqueados</p>
+        </div>
+
+        <div class="stat-card yellow">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                    <i class="fas fa-clock text-[#fbbf24] text-xl"></i>
+                </div>
+            </div>
+            <p class="text-3xl font-bold text-white">{{ expired_users }}</p>
+            <p class="text-sm text-gray-500 mt-1">Expirados</p>
+        </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="glass-card p-5">
+        <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
+            <i class="fas fa-bolt text-yellow-400"></i>
+            Acciones Rápidas
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button onclick="openModal('createUserModal')" 
+                    class="flex items-center gap-3 p-4 rounded-lg bg-dark-800 border border-white/5 hover:border-neon-blue/30 transition-all group">
+                <div class="w-12 h-12 rounded-lg bg-neon-blue/10 flex items-center justify-center group-hover:bg-neon-blue/20">
+                    <i class="fas fa-user-plus text-neon-blue text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-white font-medium">Crear Usuario</p>
+                    <p class="text-xs text-gray-500">Consume créditos según días y conexiones</p>
+                </div>
+            </button>
+            <a href="{{ url_for('reseller.users') }}" 
+               class="flex items-center gap-3 p-4 rounded-lg bg-dark-800 border border-white/5 hover:border-purple-500/30 transition-all group">
+                <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20">
+                    <i class="fas fa-users text-purple-400 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-white font-medium">Mis Usuarios</p>
+                    <p class="text-xs text-gray-500">Administra tus usuarios</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Usuario (Reseller) -->
+<div class="modal-overlay" id="createUserModal">
+    <div class="modal-content">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="text-xl font-bold text-white">
+                <i class="fas fa-user-plus text-neon-blue mr-2"></i>Nuevo Usuario
+            </h3>
+            <button onclick="closeModal('createUserModal')" class="text-gray-500 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('reseller.user_create') }}" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Nombre de Usuario</label>
+                <input type="text" name="username" class="input-field" placeholder="Ej: cliente1" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Días</label>
+                    <input type="number" name="days" class="input-field" placeholder="Dias" min="1" max="365"
+                           onchange="updateCost()" id="rDays">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Conexiones (máx {{ max_connections }})</label>
+                    <input type="number" name="max_connections" class="input-field" placeholder="Conexiones" min="1" max="{{ max_connections }}"
+                           onchange="updateCost()" id="rConns">
+                </div>
+            </div>
+            {% if servers %}
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Servidor</label>
+                <select name="server_id" class="input-field" onchange="updateCost()" id="rServer">
+                    <option value="">Local</option>
+                    {% for s in servers %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="bg-dark-800 rounded-lg p-4 border border-yellow-500/20">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-400">Costo estimado:</span>
+                    <span class="text-yellow-400 font-bold" id="rCost">30 créditos</span>
+                </div>
+                <div class="flex items-center justify-between text-sm mt-1">
+                    <span class="text-gray-400">Tus créditos:</span>
+                    <span class="text-white font-bold">{{ credits }}</span>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary w-full py-3">
+                <i class="fas fa-plus mr-2"></i>Crear Usuario
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateCost() {
+    const days = parseInt(document.getElementById('rDays').value) || 1;
+    const conns = parseInt(document.getElementById('rConns').value) || 1;
+    let cost;
+    {% if credit_config.mode == 'per_user' %}
+        cost = {{ credit_config.cost_per_user }};
+    {% else %}
+        cost = days * {{ credit_config.cost_per_day }};
+    {% endif %}
+    if (conns > 1) cost += (conns - 1) * {{ credit_config.cost_per_extra_connection }};
+    document.getElementById('rCost').textContent = cost + ' creditos';
+}
+</script>
+{% endblock %}

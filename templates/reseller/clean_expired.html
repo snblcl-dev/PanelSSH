@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Limpiar Expirados — Mis Usuarios{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-white">
+                <i class="fas fa-broom text-yellow-400 mr-2"></i>Limpiar Usuarios Expirados
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">Tus usuarios que no renovaron su cuenta</p>
+        </div>
+    </div>
+
+    {% if users %}
+    <div class="glass-card">
+        <div class="p-4 border-b border-white/5">
+            <p class="text-gray-400 text-sm">
+                <i class="fas fa-info-circle text-yellow-400 mr-2"></i>
+                Tienes <strong class="text-white">{{ users|length }}</strong> usuario(s) expirado(s)
+            </p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleAll()" class="rounded border-gray-600"></th>
+                        <th>Usuario</th>
+                        <th>Expiró el</th>
+                        <th>Días vencido</th>
+                        <th class="text-right">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><input type="checkbox" name="user_ids" value="{{ user.id }}" form="cleanForm" checked class="rounded border-gray-600"></td>
+                        <td><span class="text-white font-medium">{{ user.username }}</span></td>
+                        <td class="text-red-400 text-sm">{{ user.expires_at.strftime('%Y-%m-%d') }}</td>
+                        <td><span class="badge badge-red">{{ user.days_remaining() * -1 }} días</span></td>
+                        <td class="text-right">
+                            <form method="POST" action="{{ url_for('admin.user_delete', user_id=user.id) }}" class="inline">
+                                <button type="submit" class="btn-ghost text-xs px-3 py-1.5" onclick="return confirm('¿Eliminar a {{ user.username }}?')">
+                                    <i class="fas fa-trash text-red-400"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-4 border-t border-white/5 flex justify-between items-center">
+            <p class="text-sm text-gray-500">{{ users|length }} usuario(s)</p>
+            <form method="POST" action="{{ url_for('reseller.reseller_clean_expired_run') }}" id="cleanForm"
+                  onsubmit="return confirm('¿Eliminar los usuarios seleccionados?')">
+                <button type="submit" class="btn-danger"><i class="fas fa-trash mr-2"></i>Eliminar Seleccionados</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card p-12 text-center">
+        <div class="text-gray-500">
+            <i class="fas fa-check-circle text-5xl mb-4 text-green-400 opacity-50"></i>
+            <p class="text-xl text-white font-medium">¡Todo limpio!</p>
+            <p class="text-sm mt-2">No tienes usuarios expirados</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<script>
+function toggleAll() {
+    const checked = document.getElementById('selectAll').checked;
+    document.querySelectorAll('input[name="user_ids"]').forEach(cb => cb.checked = checked);
+}
+</script>
+{% endblock %}

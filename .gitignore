@@ -1,0 +1,46 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Base de datos SQLite
+*.db
+*.sqlite3
+
+# Archivos sensibles
+.secret_key
+*.pem
+*.key
+
+# Archivos de entorno
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs y salidas
+flask_output.txt
+flask_error.txt
+*.log
+
+# Archivos de sistema
+instance/

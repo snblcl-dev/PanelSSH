@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}Revendedores — SSH Panel{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-white">
+                <i class="fas fa-store text-purple-400 mr-2"></i>Revendedores
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">Gestiona revendedores, créditos y usuarios</p>
+        </div>
+        <span class="text-sm text-gray-500">{{ resellers|length }} revendedor(es)</span>
+    </div>
+
+    {% for item in resellers %}
+    {% set r = item.reseller %}
+    <div class="glass-card p-5 mb-4 {% if not r.is_active %}opacity-60{% endif %}">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <!-- Info -->
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-700/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user-tie text-purple-400 text-2xl"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-white font-semibold text-lg">{{ r.username }}</h3>
+                        {% if r.is_active %}
+                        <span class="badge badge-green">Activo</span>
+                        {% else %}
+                        <span class="badge badge-red">Inactivo</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-500 mt-0.5">{{ r.email or 'Sin email' }}</p>
+                    {% if item.last_activity %}
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-clock mr-1"></i>Última actividad: {{ item.last_activity.strftime('%d/%m/%Y %H:%M') }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="bg-dark-800 rounded-lg px-4 py-2 text-center min-w-[70px]">
+                    <p class="text-lg font-bold text-white">{{ item.total_users }}</p>
+                    <p class="text-[10px] text-gray-500">Usuarios</p>
+                </div>
+                <div class="bg-dark-800 rounded-lg px-4 py-2 text-center min-w-[60px]">
+                    <p class="text-lg font-bold text-green-400">{{ item.active_users }}</p>
+                    <p class="text-[10px] text-gray-500">Activos</p>
+                </div>
+                <div class="bg-dark-800 rounded-lg px-4 py-2 text-center min-w-[60px]">
+                    <p class="text-lg font-bold text-yellow-400">{{ item.expired_users }}</p>
+                    <p class="text-[10px] text-gray-500">Vencidos</p>
+                </div>
+                <div class="bg-dark-800 rounded-lg px-4 py-2 text-center min-w-[65px]">
+                    <p class="text-lg font-bold text-red-400">{{ item.blocked_users }}</p>
+                    <p class="text-[10px] text-gray-500">Bloq.</p>
+                </div>
+                <div class="bg-dark-800 rounded-lg px-4 py-2 text-center min-w-[70px]">
+                    <p class="text-lg font-bold text-neon-blue">{{ r.credits }}</p>
+                    <p class="text-[10px] text-gray-500">Créditos</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col gap-1.5 min-w-[180px]">
+                <!-- Asignar/Restar creditos -->
+                <button onclick="openModal('creditsModal{{ r.id }}')" class="btn-success text-xs py-1.5 px-3 flex-1">
+                    <i class="fas fa-plus mr-1"></i>Asignar
+                </button>
+                <button onclick="openModal('deductModal{{ r.id }}')" class="btn-danger text-xs py-1.5 px-3 flex-1">
+                    <i class="fas fa-minus mr-1"></i>Restar
+                </button>
+                <div class="flex gap-1.5">
+                    <a href="{{ url_for('admin.reseller_detail', reseller_id=r.id) }}" class="btn-ghost text-xs py-1.5 px-3 flex-1 text-center">
+                        <i class="fas fa-chart-bar mr-1"></i>Detalle
+                    </a>
+                    <a href="{{ url_for('admin.reseller_edit', reseller_id=r.id) }}" class="btn-ghost text-xs py-1.5 px-3 flex-1 text-center">
+                        <i class="fas fa-edit mr-1"></i>Editar
+                    </a>
+                </div>
+                <div class="flex gap-1.5">
+                    <button onclick="openModal('toggleModal{{ r.id }}')" class="{% if r.is_active %}btn-warning{% else %}btn-primary{% endif %} text-xs py-1.5 px-3 flex-1">
+                        {% if r.is_active %}<i class="fas fa-pause mr-1"></i>Desactivar{% else %}<i class="fas fa-play mr-1"></i>Activar{% endif %}
+                    </button>
+                    <button onclick="openModal('deleteModal{{ r.id }}')" class="btn-danger text-xs py-1.5 px-3 flex-1">
+                        <i class="fas fa-trash mr-1"></i>Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Activar/Desactivar -->
+    <div class="modal-overlay" id="toggleModal{{ r.id }}">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-xl font-bold text-white">
+                    {% if r.is_active %}<i class="fas fa-pause text-yellow-400 mr-2"></i>Desactivar Revendedor{% else %}<i class="fas fa-play text-green-400 mr-2"></i>Activar Revendedor{% endif %}
+                </h3>
+                <button onclick="closeModal('toggleModal{{ r.id }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="text-center py-4">
+                <div class="w-16 h-16 rounded-full {% if r.is_active %}bg-yellow-500/20{% else %}bg-green-500/20{% endif %} flex items-center justify-center mx-auto mb-4">
+                    <i class="fas {% if r.is_active %}fa-pause text-yellow-400{% else %}fa-play text-green-400{% endif %} text-3xl"></i>
+                </div>
+                <p class="text-white text-lg font-medium mb-2">
+                    {% if r.is_active %}¿Desactivar revendedor?{% else %}¿Activar revendedor?{% endif %}
+                </p>
+                <p class="text-gray-400 text-sm">
+                    Revendedor: <strong class="text-white">{{ r.username }}</strong>
+                </p>
+                {% if r.is_active %}
+                <p class="text-gray-500 text-xs mt-1">No podrá iniciar sesión hasta que lo actives.</p>
+                {% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('admin.reseller_activate', reseller_id=r.id) }}">
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('toggleModal{{ r.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
+                    <button type="submit" class="{% if r.is_active %}btn-warning{% else %}btn-primary{% endif %} flex-1 py-3">
+                        {% if r.is_active %}<i class="fas fa-pause mr-2"></i>Desactivar{% else %}<i class="fas fa-play mr-2"></i>Activar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Asignar Créditos -->
+    <div class="modal-overlay" id="creditsModal{{ r.id }}">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-xl font-bold text-white">
+                    <i class="fas fa-coins text-yellow-400 mr-2"></i>Asignar Créditos
+                </h3>
+                <button onclick="closeModal('creditsModal{{ r.id }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="text-center py-4">
+                <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-coins text-yellow-400 text-3xl"></i>
+                </div>
+                <p class="text-white text-lg font-medium mb-2">¿Asignar créditos?</p>
+                <p class="text-gray-400 text-sm mb-1">
+                    Revendedor: <strong class="text-white">{{ r.username }}</strong>
+                </p>
+                <p class="text-gray-500 text-xs">Créditos actuales: <strong class="text-neon-blue">{{ r.credits }}</strong></p>
+            </div>
+            <form method="POST" action="{{ url_for('admin.reseller_add_credits', reseller_id=r.id) }}" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Cantidad de créditos</label>
+                    <input type="number" name="credits" class="input-field" value="100" min="1" required>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('creditsModal{{ r.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
+                    <button type="submit" class="btn-success flex-1 py-3">
+                        <i class="fas fa-check mr-2"></i>Asignar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Restar Creditos -->
+    <div class="modal-overlay" id="deductModal{{ r.id }}">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-xl font-bold text-white">
+                    <i class="fas fa-minus-circle text-red-400 mr-2"></i>Restar Creditos
+                </h3>
+                <button onclick="closeModal('deductModal{{ r.id }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="text-center py-4">
+                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-minus text-red-400 text-3xl"></i>
+                </div>
+                <p class="text-white text-lg font-medium mb-2">Restar creditos</p>
+                <p class="text-gray-400 text-sm mb-1">Revendedor: <strong class="text-white">{{ r.username }}</strong></p>
+                <p class="text-gray-500 text-xs">Creditos actuales: <strong class="text-neon-blue">{{ r.credits }}</strong></p>
+            </div>
+            <form method="POST" action="{{ url_for('admin.reseller_deduct_credits', reseller_id=r.id) }}" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Cantidad a restar</label>
+                    <input type="number" name="credits" class="input-field" value="10" min="1" max="{{ r.credits }}" required>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('deductModal{{ r.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
+                    <button type="submit" class="btn-danger flex-1 py-3">
+                        <i class="fas fa-minus mr-2"></i>Restar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Eliminar -->
+    <div class="modal-overlay" id="deleteModal{{ r.id }}">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-xl font-bold text-white">
+                    <i class="fas fa-trash text-red-400 mr-2"></i>Eliminar Revendedor
+                </h3>
+                <button onclick="closeModal('deleteModal{{ r.id }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="text-center py-4">
+                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <p class="text-white text-lg font-medium mb-2">¿Eliminar revendedor?</p>
+                <p class="text-gray-400 text-sm mb-1">
+                    <strong class="text-white">{{ r.username }}</strong>
+                </p>
+                {% if item.total_users > 0 %}
+                <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mt-3 text-left">
+                    <p class="text-yellow-400 text-xs font-medium mb-2">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Tiene {{ item.total_users }} usuario(s)
+                    </p>
+                    <p class="text-gray-400 text-xs mb-2">Puedes reasignarlos antes de eliminar:</p>
+                    <form method="POST" action="{{ url_for('admin.reseller_reassign', reseller_id=r.id) }}" class="space-y-1.5">
+                        <select name="target_reseller" class="input-field text-xs py-1">
+                            <option value="">Al administrador</option>
+                            {% for other in resellers %}
+                            {% if other.reseller.id != r.id and other.reseller.is_active %}
+                            <option value="{{ other.reseller.id }}">A {{ other.reseller.username }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="flex gap-1.5">
+                            <button type="submit" class="btn-warning text-xs py-1.5 flex-1">
+                                <i class="fas fa-exchange-alt mr-1"></i>Reasignar y Eliminar
+                            </button>
+                            <a href="{{ url_for('admin.reseller_detail', reseller_id=r.id) }}" class="btn-ghost text-xs py-1.5 flex-1 text-center">
+                                <i class="fas fa-eye mr-1"></i>Ver usuarios
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-xs mt-1">No tiene usuarios. Se eliminará permanentemente.</p>
+                {% endif %}
+            </div>
+            {% if item.total_users == 0 %}
+            <form method="POST" action="{{ url_for('admin.reseller_delete', reseller_id=r.id) }}">
+                <div class="flex gap-3 mt-4">
+                    <button type="button" onclick="closeModal('deleteModal{{ r.id }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
+                    <button type="submit" class="btn-danger flex-1 py-3">
+                        <i class="fas fa-trash mr-2"></i>Eliminar
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card p-12 text-center">
+        <div class="text-gray-500">
+            <i class="fas fa-store text-4xl mb-3 block opacity-30"></i>
+            <p class="text-lg">No hay revendedores registrados</p>
+            <p class="text-sm mt-1">Los revendedores se registran desde la página de login</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SSH Panel{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            50: '#f0f0f0',
+                            100: '#e0e0e0',
+                            200: '#c0c0c0',
+                            300: '#a0a0a0',
+                            400: '#808080',
+                            500: '#606060',
+                            600: '#404040',
+                            700: '#2a2a2e',
+                            800: '#1e1e22',
+                            900: '#141418',
+                            950: '#0a0a0e',
+                        },
+                        neon: {
+                            blue: '#00d4ff',
+                            green: '#00ff88',
+                            red: '#ff3366',
+                            purple: '#8b5cf6',
+                            yellow: '#fbbf24',
+                            cyan: '#06b6d4',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(0, 212, 255, 0.3)' },
+                            '100%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.6)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0e;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #141418; }
+        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #606060; }
+
+        .glass {
+            background: rgba(30, 30, 34, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(30, 30, 34, 0.9), rgba(20, 20, 24, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0088cc);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff3366, #cc0033);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 51, 102, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #0a0a0e;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0a0a0e;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-warning:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        }
+        .btn-ghost {
+            background: transparent;
+            color: #a0a0a0;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+        }
+        .input-field {
+            background: rgba(20, 20, 24, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #e0e0e0;
+            width: 100%;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+        }
+        .input-field::placeholder { color: #606060; }
+        .stat-card {
+            background: linear-gradient(145deg, rgba(30,30,34,0.9), rgba(20,20,24,0.9));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 12px 12px 0 0;
+        }
+        .stat-card.blue::before { background: linear-gradient(90deg, #00d4ff, #0088cc); }
+        .stat-card.green::before { background: linear-gradient(90deg, #00ff88, #00cc66); }
+        .stat-card.red::before { background: linear-gradient(90deg, #ff3366, #cc0033); }
+        .stat-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #6d28d9); }
+        .stat-card.yellow::before { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .stat-card.cyan::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #a0a0a0;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+        }
+        .sidebar-link.active {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .badge { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: rgba(0,255,136,0.15); color: #00ff88; }
+        .badge-red { background: rgba(255,51,102,0.15); color: #ff3366; }
+        .badge-yellow { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .badge-blue { background: rgba(0,212,255,0.15); color: #00d4ff; }
+        .badge-gray { background: rgba(160,160,160,0.15); color: #a0a0a0; }
+
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-custom th {
+            text-align: left;
+            padding: 12px 16px;
+            color: #808080;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .table-custom td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .table-custom tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #1e1e22;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            margin: auto;
+        }
+        /* Responsive sidebar */
+        .sidebar-text { transition: opacity 0.2s; }
+        .sidebar-collapsed .sidebar-text { 
+            display: none;
+        }
+        .sidebar-collapsed { width: 64px !important; }
+        .sidebar-collapsed .sidebar-link {
+            justify-content: center;
+            padding: 10px 0;
+        }
+        .sidebar-collapsed .sidebar-link i { margin: 0; }
+        .sidebar-collapsed .logo-text { display: none; }
+        .sidebar-collapsed .user-info { display: none; }
+        
+        @media (max-width: 1023px) {
+            .sidebar-desktop { width: 64px !important; }
+            .sidebar-desktop .sidebar-text { display: none; }
+            .sidebar-desktop .sidebar-link { justify-content: center; padding: 10px 0; }
+            .sidebar-desktop .sidebar-link i { margin: 0; font-size: 18px; }
+            .sidebar-desktop .logo-text { display: none; }
+            .sidebar-desktop .user-info { display: none; }
+            .sidebar-desktop .bottom-actions {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 4px !important;
+                padding: 8px !important;
+            }
+            .sidebar-desktop .bottom-actions .avatar-col {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 6px !important;
+            }
+        }
+        @media (max-width: 767px) {
+            .sidebar-desktop {
+                position: fixed;
+                top: 0; left: -100%;
+                width: 260px !important;
+                height: 100vh;
+                z-index: 50;
+                transition: left 0.3s ease;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+            }
+            .sidebar-desktop.open { left: 0; }
+            .sidebar-desktop .sidebar-text { display: inline; }
+            .sidebar-desktop .sidebar-link { justify-content: flex-start; padding: 10px 16px; }
+            .sidebar-desktop .sidebar-link i { margin-right: 12px; }
+            .sidebar-desktop .logo-text { display: block; }
+            .sidebar-desktop .user-info { display: block; }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 49;
+            }
+            .sidebar-overlay.active { display: block; }
+        }
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 60;
+            background: rgba(30,30,34,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+        @media (max-width: 767px) {
+            .sidebar-toggle { display: flex; align-items: center; gap: 8px; }
+            main { padding-top: 10px !important; }
+            main > div { padding-top: 40px !important; }
+        }
+    </style>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="dark">
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    
+    <!-- Mobile toggle button -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+        <span class="text-sm font-medium">SSH Panel</span>
+    </button>
+    
+    <div class="flex h-screen">
+        {% if current_user.is_authenticated %}
+        <!-- Sidebar -->
+        <aside class="w-64 bg-dark-900 border-r border-white/5 flex flex-col flex-shrink-0 sidebar-desktop" id="sidebar">
+            <div class="p-5 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-neon-blue to-blue-600 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-terminal text-white text-lg"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1 class="text-white font-bold text-lg">SSH Panel</h1>
+                        <p class="text-xs text-gray-500">v2.0 · Dropbear</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+                {% if current_user.is_authenticated and (current_user.__class__.__name__ == 'Admin' or current_user._sa_class_name == 'Admin') %}
+                <!-- Admin Sidebar -->
+                <a href="{{ url_for('admin.dashboard') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.dashboard' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-chart-pie w-5 text-center"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+                <a href="{{ url_for('admin.users') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.users' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-users w-5 text-center"></i>
+                    <span class="sidebar-text">Usuarios</span>
+                </a>
+                <a href="{{ url_for('admin.clients') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.clients' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-id-card w-5 text-center"></i>
+                    <span class="sidebar-text">Clientes</span>
+                </a>
+                <a href="{{ url_for('admin.servers') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.servers' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-server w-5 text-center text-cyan-400"></i>
+                    <span class="sidebar-text">Servidores</span>
+                </a>
+                <a href="{{ url_for('admin.online') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.online' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-wifi w-5 text-center"></i>
+                    <span class="sidebar-text">Online</span>
+                </a>
+                <a href="{{ url_for('admin.disconnect') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.disconnect' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-plug w-5 text-center text-red-400"></i>
+                    <span class="sidebar-text">Desconectar</span>
+                </a>
+                <a href="{{ url_for('admin.clean_expired') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.clean_expired' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-broom w-5 text-center"></i>
+                    <span class="sidebar-text">Limpiar Expirados</span>
+                </a>
+                <hr class="border-white/5 my-2">
+                <a href="{{ url_for('admin.resellers') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.resellers' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-store w-5 text-center"></i>
+                    <span class="sidebar-text">Revendedores</span>
+                </a>
+                <a href="{{ url_for('admin.credit_settings') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.credit_settings' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-coins w-5 text-center text-yellow-400"></i>
+                    <span class="sidebar-text">Creditos</span>
+                </a>
+                <hr class="border-white/5 my-2">
+                <a href="{{ url_for('admin.logs') }}" 
+                   class="sidebar-link {% if request.endpoint and 'admin.logs' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-clipboard-list w-5 text-center"></i>
+                    <span class="sidebar-text">Registro</span>
+                </a>
+                
+                {% elif current_user.__class__.__name__ == 'Reseller' %}
+                <!-- Reseller Sidebar -->
+                <a href="{{ url_for('reseller.reseller_dashboard') }}" 
+                   class="sidebar-link {% if request.endpoint and 'reseller.reseller_dashboard' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-chart-pie w-5 text-center"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+                <a href="{{ url_for('reseller.users') }}" 
+                   class="sidebar-link {% if request.endpoint and 'reseller.users' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-users w-5 text-center"></i>
+                    <span class="sidebar-text">Mis Usuarios</span>
+                </a>
+                <a href="{{ url_for('reseller.reseller_online') }}" 
+                   class="sidebar-link {% if request.endpoint and 'reseller.reseller_online' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-wifi w-5 text-center"></i>
+                    <span class="sidebar-text">Online</span>
+                </a>
+                <a href="{{ url_for('reseller.reseller_disconnect') }}" 
+                   class="sidebar-link {% if request.endpoint and 'reseller.reseller_disconnect' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-plug w-5 text-center text-red-400"></i>
+                    <span class="sidebar-text">Desconectar</span>
+                </a>
+                <a href="{{ url_for('reseller.reseller_clean_expired') }}" 
+                   class="sidebar-link {% if request.endpoint and 'reseller.reseller_clean_expired' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-broom w-5 text-center"></i>
+                    <span class="sidebar-text">Limpiar Expirados</span>
+                </a>
+                {% endif %}
+            </nav>
+            
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center gap-3 bottom-actions">
+                    <div class="flex items-center gap-3 avatar-col">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-neon-purple to-purple-700 flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-sm font-bold">{{ current_user.username[0]|upper }}</span>
+                    </div>
+                    <div class="flex-1 min-w-0 user-info">
+                        <p class="text-white text-sm font-medium truncate">{{ current_user.username }}</p>
+                        <p class="text-xs text-gray-500">
+                            {% if current_user.__class__.__name__ == 'Admin' %}Administrador{% else %}Revendedor{% endif %}
+                        </p>
+                    </div>
+                    </div>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        {% if current_user.__class__.__name__ == 'Admin' %}
+                        <a href="{{ url_for('admin.profile') }}" class="text-gray-500 hover:text-neon-blue transition-colors p-1" title="Mi Perfil">
+                            <i class="fas fa-cog"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="text-gray-500 hover:text-neon-red transition-colors p-1" title="Cerrar sesión">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        {% endif %}
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-dark-950">
+            <div class="p-6">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="space-y-2 mb-6">
+                    {% for category, message in messages %}
+                    <div class="fade-in flex items-center gap-3 px-4 py-3 rounded-lg border flash-alert
+                        {% if category == 'success' %}bg-green-900/20 border-green-500/30 text-green-400
+                        {% elif category == 'danger' %}bg-red-900/20 border-red-500/30 text-red-400
+                        {% elif category == 'warning' %}bg-yellow-900/20 border-yellow-500/30 text-yellow-400
+                        {% else %}bg-blue-900/20 border-blue-500/30 text-blue-400{% endif %}">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        <span class="flex-1 text-sm">{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" class="opacity-50 hover:opacity-100">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Auto-cerrar solo las alertas flash, no el contenido de la página
+        document.querySelectorAll('.flash-alert').forEach(el => {
+            setTimeout(() => {
+                if (el && el.parentElement) {
+                    el.style.opacity = '0';
+                    el.style.transition = 'opacity 0.5s';
+                    setTimeout(() => el.remove(), 500);
+                }
+            }, 8000);
+        });
+
+        // Funciones globales para modales
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        // Cerrar modal al hacer click fuera
+        document.querySelectorAll('.modal-overlay').forEach(el => {
+            el.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+        });
+
+        // Sidebar responsive toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('sidebar-collapsed');
+            }
+        }
+        // Cerrar sidebar al hacer click en un link (movil)
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                    document.getElementById('sidebarOverlay').classList.remove('active');
+                }
+            });
+        });
+
+        // CSRF Protection: inyectar token en todos los formularios POST
+        (function() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (!meta) return;
+            const token = meta.getAttribute('content');
+            document.querySelectorAll('form[method="POST"]').forEach(form => {
+                // Evitar duplicados
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.appendChild(input);
+                }
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

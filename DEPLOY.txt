@@ -1,0 +1,98 @@
+========================================
+  SSH PANEL - GUIA DE DESPLIEGUE
+========================================
+
+Requisitos:
+- Servidor Linux (Debian/Ubuntu)
+- Python 3.8+
+- Acceso root
+
+========================================
+  1. SUBIR ARCHIVOS AL SERVIDOR
+========================================
+
+Subir toda la carpeta del proyecto a /root/ssh-panel/
+Puedes usar FTP, SCP, o cualquier metodo.
+
+Ejemplo con SCP desde tu PC:
+  scp -r /ruta/local/ssh-panel/* root@IP:/root/ssh-panel/
+
+========================================
+  2. CONECTARSE AL SERVIDOR
+========================================
+
+  ssh root@IP_DEL_SERVIDOR
+
+========================================
+  3. DAR PERMISOS Y EJECUTAR INSTALACION
+========================================
+
+  cd /root/ssh-panel/
+  chmod +x install.sh
+  ./install.sh
+
+Esto hara automaticamente:
+  - Instala python3, pip y python3-venv si faltan
+  - Crea entorno virtual (venv)
+  - Instala dependencias (Flask, paramiko, cryptography, etc.)
+  - Crea la base de datos SQLite
+  - Configura e inicia el servicio systemd (sshpanel)
+
+========================================
+  4. ABRIR PUERTO EN FIREWALL
+========================================
+
+Si no puedes acceder desde el navegador:
+
+  # Verificar si hay firewall activo
+  ufw status
+
+  # Abrir puerto 5000
+  ufw allow 5000
+
+========================================
+  5. ACCEDER AL PANEL
+========================================
+
+  http://IP_DEL_SERVIDOR:5000
+
+  Usuario: admin
+  Password: admin
+
+  AL ENTRAR: cambiar la contrasena por seguridad.
+
+========================================
+  COMANDOS UTILES
+========================================
+
+Ver estado del servicio:
+  systemctl status sshpanel
+
+Ver logs en vivo:
+  journalctl -u sshpanel -f
+
+Reiniciar el servicio:
+  systemctl restart sshpanel
+
+Detener el servicio:
+  systemctl stop sshpanel
+
+Ver que puerto escucha:
+  ss -tlnp | grep 5000
+
+========================================
+  NOTAS IMPORTANTES
+========================================
+
+- La base de datos SQLite se crea en:
+  /root/ssh-panel/instance/sshpanel.db
+
+- Las contrasenas de servidores SSH se almacenan
+  encriptadas con Fernet (usando SECRET_KEY)
+
+- Para usar llave SSH personalizada, al crear un
+  servidor seleccionar "Llave SSH" y poner la ruta
+  completa, ej: /root/.ssh/id_rsa_personalizada
+
+- Para usar contrasena, seleccionar "Contrasena"
+  y escribir la contrasena del servidor remoto
