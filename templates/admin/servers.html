@@ -1,145 +1,56 @@
 {% extends "base.html" %}
-{% block title %}Servidores — SSH Panel{% endblock %}
+{% block title %}Servidores — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-server text-cyan-400 mr-2"></i>Servidores
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">Administra los servidores Dropbear remotos</p>
-        </div>
-        <button onclick="openModal('addServerModal')" class="btn-primary">
-            <i class="fas fa-plus mr-2"></i>Agregar Servidor
-        </button>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div><h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-server text-accent mr-2"></i>Servidores</h1><p class="text-xs md:text-sm text-muted mt-0.5">Administra los servidores Dropbear remotos</p></div>
+        <button onclick="openModal('addServerModal')" class="btn btn-primary btn-sm"><i class="fas fa-plus mr-1.5"></i>Agregar Servidor</button>
     </div>
 
     {% if servers %}
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {% for s in servers %}
-        <div class="glass-card p-5 {% if not s.is_active %}opacity-50{% endif %}">
-            <div class="flex items-start justify-between mb-4">
+        <div class="card p-5 {% if not s.is_active %}opacity-50{% endif %}">
+            <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl {% if s.is_active %}bg-green-500/20{% else %}bg-gray-500/20{% endif %} flex items-center justify-center">
-                        <i class="fas fa-server text-2xl {% if s.is_active %}text-green-400{% else %}text-gray-400{% endif %}"></i>
+                    <div class="w-10 h-10 rounded-xl {% if s.is_active %}bg-success/15{% else %}bg-muted/15{% endif %} flex items-center justify-center">
+                        <i class="fas fa-server text-lg {% if s.is_active %}text-success{% else %}text-muted{% endif %}"></i>
                     </div>
-                    <div>
-                        <h3 class="text-white font-bold">{{ s.name }}</h3>
-                        <p class="text-xs text-gray-500">{{ s.location }}</p>
-                    </div>
+                    <div><h3 class="text-white font-bold">{{ s.name }}</h3><p class="text-[11px] text-muted">{{ s.location }}</p></div>
                 </div>
-                <div class="w-2 h-2 rounded-full {% if s.is_active %}bg-green-400 animate-pulse{% else %}bg-gray-600{% endif %}"></div>
+                <span class="w-2.5 h-2.5 rounded-full {% if s.is_active %}bg-success animate-pulse{% else %}bg-muted{% endif %}"></span>
             </div>
-
-            <div class="space-y-2 text-sm mb-4">
-                <div class="flex justify-between"><span class="text-gray-500">Host</span><span class="text-gray-300 font-mono">{{ s.host }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Puerto SSH</span><span class="text-gray-300">{{ s.port }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Dropbear</span><span class="text-gray-300">{{ s.dropbear_port }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Usuario</span><span class="text-gray-300">{{ s.ssh_user }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Creado</span><span class="text-gray-300">{{ s.created_at.strftime('%d/%m/%Y') if s.created_at else '---' }}</span></div>
+            <div class="space-y-1.5 text-xs md:text-sm mb-4">
+                <div class="flex justify-between"><span class="text-muted">Host</span><span class="text-foreground font-mono">{{ s.host }}</span></div>
+                <div class="flex justify-between"><span class="text-muted">Puerto SSH</span><span class="text-foreground">{{ s.port }}</span></div>
+                <div class="flex justify-between"><span class="text-muted">Dropbear</span><span class="text-foreground">{{ s.dropbear_port }}</span></div>
+                <div class="flex justify-between"><span class="text-muted">Usuario</span><span class="text-foreground">{{ s.ssh_user }}</span></div>
+                <div class="flex justify-between"><span class="text-muted">Creado</span><span class="text-foreground">{{ s.created_at.strftime('%d/%m/%Y') if s.created_at else '---' }}</span></div>
             </div>
-
-            <div class="flex gap-2">
-                <a href="{{ url_for('admin.server_test', server_id=s.id) }}" class="btn-ghost text-xs flex-1 text-center py-2">
-                    <i class="fas fa-plug mr-1"></i>Probar
-                </a>
-                {% if s.is_active %}
-                <form method="POST" action="{{ url_for('admin.server_toggle', server_id=s.id) }}" class="flex-1">
-                    <button type="submit" class="btn-warning text-xs w-full py-2"><i class="fas fa-pause mr-1"></i>Desactivar</button>
-                </form>
-                {% else %}
-                <form method="POST" action="{{ url_for('admin.server_toggle', server_id=s.id) }}" class="flex-1">
-                    <button type="submit" class="btn-primary text-xs w-full py-2"><i class="fas fa-play mr-1"></i>Activar</button>
-                </form>
-                {% endif %}
-                <form method="POST" action="{{ url_for('admin.server_delete', server_id=s.id) }}" class="flex-1">
-                    <button type="submit" class="btn-danger text-xs w-full py-2" onclick="return confirm('Eliminar servidor {{ s.name }}?')"><i class="fas fa-trash mr-1"></i></button>
-                </form>
+            <div class="flex gap-1.5">
+                <a href="{{ url_for('admin.server_test', server_id=s.id) }}" class="btn btn-ghost btn-xs flex-1 justify-center"><i class="fas fa-plug mr-1"></i>Probar</a>
+                <form method="POST" action="{{ url_for('admin.server_toggle', server_id=s.id) }}" class="flex-1"><button class="btn btn-xs w-full justify-center {% if s.is_active %}btn-warning{% else %}btn-primary{% endif %}"><i class="fas fa-{% if s.is_active %}pause{% else %}play{% endif %} mr-1"></i>{% if s.is_active %}Desactivar{% else %}Activar{% endif %}</button></form>
+                <form method="POST" action="{{ url_for('admin.server_delete', server_id=s.id) }}" class="flex-1" onsubmit="return confirm('¿Eliminar servidor {{ s.name }}?')"><button class="btn btn-danger btn-xs w-full justify-center"><i class="fas fa-trash mr-1"></i></button></form>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="glass-card p-12 text-center">
-        <div class="text-gray-500">
-            <i class="fas fa-server text-5xl mb-4 block opacity-20"></i>
-            <p class="text-xl text-white font-medium">No hay servidores</p>
-            <p class="text-sm mt-2">Agrega servidores Dropbear remotos para gestionarlos desde este panel.</p>
-        </div>
-    </div>
+    <div class="card p-12 text-center text-muted"><i class="fas fa-server text-5xl mb-4 block opacity-15"></i><p class="text-xl text-white font-medium">No hay servidores</p><p class="text-sm mt-2">Agrega servidores Dropbear remotos para gestionarlos desde este panel.</p></div>
     {% endif %}
 </div>
 
-<!-- Modal Agregar Servidor -->
-<div class="modal-overlay" id="addServerModal">
-    <div class="modal-content">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-xl font-bold text-white"><i class="fas fa-plus-circle text-cyan-400 mr-2"></i>Nuevo Servidor</h3>
-            <button onclick="closeModal('addServerModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <form method="POST" action="{{ url_for('admin.server_create') }}" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Nombre</label>
-                    <input type="text" name="name" class="input-field" placeholder="Argentina" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Ubicacion</label>
-                    <input type="text" name="location" class="input-field" placeholder="Buenos Aires">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Host / IP</label>
-                <input type="text" name="host" class="input-field" placeholder="192.168.1.10" required>
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Puerto SSH</label>
-                    <input type="number" name="port" class="input-field" value="22" min="1" max="65535">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Dropbear</label>
-                    <input type="number" name="dropbear_port" class="input-field" value="22" min="1" max="65535">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Usuario SSH</label>
-                    <input type="text" name="ssh_user" class="input-field" value="root">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2">Autenticacion</label>
-                <div class="flex gap-4">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="auth_method" value="key" checked class="text-neon-blue" onchange="toggleAuth()">
-                        <span class="text-gray-300 text-sm">Llave SSH</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="auth_method" value="password" class="text-neon-blue" onchange="toggleAuth()">
-                        <span class="text-gray-300 text-sm">Contrasena</span>
-                    </label>
-                </div>
-            </div>
-            <div id="keyField">
-                <label class="block text-sm font-medium text-gray-400 mb-2">Ruta de llave SSH</label>
-                <input type="text" name="ssh_key_path" class="input-field" placeholder="~/.ssh/id_rsa">
-            </div>
-            <div id="passwordField" class="hidden">
-                <label class="block text-sm font-medium text-gray-400 mb-2">Contrasena SSH</label>
-                <input type="password" name="password" class="input-field" placeholder="Contrasena del servidor">
-            </div>
-            <div class="flex gap-3 pt-2">
-                <button type="button" onclick="closeModal('addServerModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                <button type="submit" class="btn-primary flex-1 py-3"><i class="fas fa-plus mr-2"></i>Agregar</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Modal: Add Server -->
+<div class="modal-overlay" id="addServerModal"><div class="modal-card"><div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-plus-circle text-accent mr-2"></i>Nuevo Servidor</h3><button onclick="closeModal('addServerModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+<form method="POST" action="{{ url_for('admin.server_create') }}" class="space-y-4">
+    <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Nombre</label><input type="text" name="name" class="input" placeholder="Argentina" required></div><div><label class="block text-sm font-medium text-muted mb-1.5">Ubicación</label><input type="text" name="location" class="input" placeholder="Buenos Aires"></div></div>
+    <div><label class="block text-sm font-medium text-muted mb-1.5">Host / IP</label><input type="text" name="host" class="input" placeholder="192.168.1.10" required></div>
+    <div class="grid grid-cols-3 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Puerto SSH</label><input type="number" name="port" class="input" value="22" min="1" max="65535"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Dropbear</label><input type="number" name="dropbear_port" class="input" value="22" min="1" max="65535"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Usuario SSH</label><input type="text" name="ssh_user" class="input" value="root"></div></div>
+    <div><label class="block text-sm font-medium text-muted mb-1.5">Autenticación</label><div class="flex gap-6"><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth_method" value="key" checked onchange="toggleAuth()"><span class="text-sm text-foreground">Llave SSH</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="auth_method" value="password" onchange="toggleAuth()"><span class="text-sm text-foreground">Contraseña</span></label></div></div>
+    <div id="keyField"><label class="block text-sm font-medium text-muted mb-1.5">Ruta de llave SSH</label><input type="text" name="ssh_key_path" class="input" placeholder="~/.ssh/id_rsa"></div>
+    <div id="passwordField" class="hidden"><label class="block text-sm font-medium text-muted mb-1.5">Contraseña SSH</label><input type="password" name="password" class="input" placeholder="Contraseña del servidor"></div>
+    <div class="flex gap-3 pt-2"><button type="button" onclick="closeModal('addServerModal')" class="btn btn-ghost flex-1 py-2.5">Cancelar</button><button type="submit" class="btn btn-primary flex-1 py-2.5"><i class="fas fa-plus mr-1.5"></i>Agregar</button></div>
+</form></div></div>
 
-<script>
-function toggleAuth() {
-    const isPassword = document.querySelector('input[name="auth_method"]:checked').value === 'password';
-    document.getElementById('passwordField').classList.toggle('hidden', !isPassword);
-    document.getElementById('keyField').classList.toggle('hidden', isPassword);
-}
-</script>
+<script>function toggleAuth(){const p=document.querySelector('input[name="auth_method"]:checked').value==='password';document.getElementById('passwordField').classList.toggle('hidden',!p);document.getElementById('keyField').classList.toggle('hidden',p)}</script>
 {% endblock %}

@@ -1,151 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Configuración de Créditos — SSH Panel{% endblock %}
+{% block title %}Créditos — PanelSSH{% endblock %}
 {% block content %}
-<div class="fade-in">
-    <div class="max-w-2xl mx-auto">
-        <div class="flex items-center gap-3 mb-6">
-            <a href="{{ url_for('admin.resellers') }}" class="text-gray-500 hover:text-white transition-colors">
-                <i class="fas fa-arrow-left text-xl"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold text-white">
-                    <i class="fas fa-coins text-yellow-400 mr-2"></i>Configuración de Créditos
-                </h1>
-                <p class="text-gray-500 text-sm mt-1">Define cómo se descuentan los créditos a los revendedores</p>
-            </div>
-        </div>
+<div class="fade-in max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-6"><a href="{{ url_for('admin.resellers') }}" class="text-muted hover:text-white"><i class="fas fa-arrow-left text-lg"></i></a><div><h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-coins text-warning mr-2"></i>Configuración de Créditos</h1><p class="text-xs md:text-sm text-muted mt-0.5">Sistema de costos para revendedores</p></div></div>
 
-        <div class="glass-card p-6 mb-6">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2">
-                <i class="fas fa-info-circle text-neon-blue"></i>
-                ¿Cómo funciona?
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div class="bg-dark-800 rounded-lg p-4">
-                    <p class="text-gray-300 font-medium mb-1">📆 Modo "Por día"</p>
-                    <p class="text-gray-500">Se descuenta X créditos por cada día de duración del usuario.</p>
-                    <p class="text-gray-500 mt-1">Ej: 30 días × 2 créditos = <strong class="text-yellow-400">60 créditos</strong></p>
-                </div>
-                <div class="bg-dark-800 rounded-lg p-4">
-                    <p class="text-gray-300 font-medium mb-1">👤 Modo "Por usuario"</p>
-                    <p class="text-gray-500">Se descuenta un costo fijo por cada usuario creado, sin importar los días.</p>
-                    <p class="text-gray-500 mt-1">Ej: 1 usuario = <strong class="text-yellow-400">X créditos</strong></p>
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card p-6">
-            <form method="POST" class="space-y-6">
-                <!-- Modo -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-3">Modo de descuento</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="{% if config.mode == 'per_day' %}bg-neon-blue/10 border-neon-blue/40{% else %}bg-dark-800 border-white/5{% endif %} border rounded-lg p-4 cursor-pointer hover:border-neon-blue/30 transition-all">
-                            <input type="radio" name="mode" value="per_day" {{ 'checked' if config.mode == 'per_day' }} class="sr-only" onchange="toggleMode()">
-                            <div class="text-center">
-                                <div class="w-10 h-10 rounded-lg bg-neon-blue/20 flex items-center justify-center mx-auto mb-2">
-                                    <i class="fas fa-calendar-day text-neon-blue"></i>
-                                </div>
-                                <p class="text-white font-medium text-sm">Por día</p>
-                                <p class="text-gray-500 text-xs mt-1">Créditos × días</p>
-                            </div>
-                        </label>
-                        <label class="{% if config.mode == 'per_user' %}bg-neon-blue/10 border-neon-blue/40{% else %}bg-dark-800 border-white/5{% endif %} border rounded-lg p-4 cursor-pointer hover:border-neon-blue/30 transition-all">
-                            <input type="radio" name="mode" value="per_user" {{ 'checked' if config.mode == 'per_user' }} class="sr-only" onchange="toggleMode()">
-                            <div class="text-center">
-                                <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mx-auto mb-2">
-                                    <i class="fas fa-user-plus text-purple-400"></i>
-                                </div>
-                                <p class="text-white font-medium text-sm">Por usuario</p>
-                                <p class="text-gray-500 text-xs mt-1">Costo fijo por usuario</p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Costos -->
-                <div id="perDayFields" class="space-y-4 {% if config.mode == 'per_user' %}hidden{% endif %}">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-2">
-                            <i class="fas fa-calendar-day text-neon-blue mr-1"></i>Créditos por día
-                        </label>
-                        <input type="number" name="cost_per_day" class="input-field" value="{{ config.cost_per_day }}" min="1" required>
-                        <p class="text-xs text-gray-500 mt-1">Ej: 2 créditos × 30 días = 60 créditos por usuario</p>
-                    </div>
-                </div>
-
-                <div id="perUserFields" class="space-y-4 {% if config.mode == 'per_day' %}hidden{% endif %}">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-2">
-                            <i class="fas fa-user-plus text-purple-400 mr-1"></i>Créditos por usuario
-                        </label>
-                        <input type="number" name="cost_per_user" class="input-field" value="{{ config.cost_per_user }}" min="1" required>
-                        <p class="text-xs text-gray-500 mt-1">Costo fijo sin importar los días de duración</p>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">
-                        <i class="fas fa-wifi text-yellow-400 mr-1"></i>Créditos por conexión extra
-                    </label>
-                    <input type="number" name="cost_per_extra_connection" class="input-field" value="{{ config.cost_per_extra_connection }}" min="1" required>
-                    <p class="text-xs text-gray-500 mt-1">Costo adicional por cada conexión extra (la 1ra conexión siempre es gratis)</p>
-                </div>
-
-                <!-- Vista previa -->
-                <div class="bg-dark-800 rounded-lg p-4 border border-yellow-500/20">
-                    <p class="text-sm text-gray-400 font-medium mb-2"><i class="fas fa-calculator text-yellow-400 mr-1"></i>Vista previa</p>
-                    <div class="space-y-1 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Usuario 30 días, 1 conexión:</span>
-                            <span class="text-yellow-400 font-bold" id="preview1">—</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Usuario 30 días, 2 conexiones:</span>
-                            <span class="text-yellow-400 font-bold" id="preview2">—</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Usuario 7 días, 3 conexiones:</span>
-                            <span class="text-yellow-400 font-bold" id="preview3">—</span>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-primary w-full py-3">
-                    <i class="fas fa-save mr-2"></i>Guardar Configuración
-                </button>
-            </form>
-        </div>
+    <div class="card p-6 mb-6">
+        <form method="POST" class="space-y-5">
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Modo de Cobro</label><select name="mode" class="input"><option value="per_day" {{ 'selected' if config.mode=='per_day' }}>Por Día (costo × días)</option><option value="per_user" {{ 'selected' if config.mode=='per_user' }}>Por Usuario (costo fijo)</option></select></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Costo por Día</label><input type="number" name="cost_per_day" class="input" value="{{ config.cost_per_day }}" min="1"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Costo por Usuario</label><input type="number" name="cost_per_user" class="input" value="{{ config.cost_per_user }}" min="1"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Costo Conexión Extra</label><input type="number" name="cost_per_extra_connection" class="input" value="{{ config.cost_per_extra_connection }}" min="1"></div></div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1.5"></i>Guardar Configuración</button>
+        </form>
     </div>
+
+    <!-- Guía -->
+    <div class="card p-6"><h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm"><i class="fas fa-info-circle text-accent"></i>¿Cómo funciona?</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm"><div class="rounded-lg p-4 bg-success/5 border border-success/20"><div class="flex items-center gap-2 mb-2"><i class="fas fa-calendar text-success"></i><span class="text-success font-semibold">Modo "Por día"</span></div><p class="text-muted">Se descuenta <strong class="text-warning">X créditos</strong> por cada día de duración del usuario.</p><p class="text-muted mt-2 font-mono text-xs">Ej: 30 días × {{ config.cost_per_day }} créditos = <strong class="text-warning">{{ 30 * config.cost_per_day }} créditos</strong></p></div><div class="rounded-lg p-4 bg-accent/5 border border-accent/20"><div class="flex items-center gap-2 mb-2"><i class="fas fa-user text-accent"></i><span class="text-accent font-semibold">Modo "Por usuario"</span></div><p class="text-muted">Se descuenta un <strong class="text-warning">costo fijo</strong> por cada usuario creado, sin importar los días.</p><p class="text-muted mt-2 font-mono text-xs">Ej: 1 usuario = <strong class="text-warning">{{ config.cost_per_user }} créditos</strong></p></div></div></div>
 </div>
-
-<script>
-function toggleMode() {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    document.getElementById('perDayFields').classList.toggle('hidden', mode !== 'per_day');
-    document.getElementById('perUserFields').classList.toggle('hidden', mode !== 'per_user');
-    updatePreview();
-}
-
-function updatePreview() {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    const cpd = parseInt(document.querySelector('input[name="cost_per_day"]').value) || 1;
-    const cpu = parseInt(document.querySelector('input[name="cost_per_user"]').value) || 30;
-    const cpe = parseInt(document.querySelector('input[name="cost_per_extra_connection"]').value) || 15;
-    
-    function calc(days, conns) {
-        let cost = mode === 'per_user' ? cpu : days * cpd;
-        if (conns > 1) cost += (conns - 1) * cpe;
-        return cost;
-    }
-    
-    document.getElementById('preview1').textContent = calc(30, 1) + ' créditos';
-    document.getElementById('preview2').textContent = calc(30, 2) + ' créditos';
-    document.getElementById('preview3').textContent = calc(7, 3) + ' créditos';
-}
-
-document.querySelectorAll('input').forEach(el => el.addEventListener('change', updatePreview));
-document.querySelectorAll('input').forEach(el => el.addEventListener('input', updatePreview));
-updatePreview();
-</script>
 {% endblock %}

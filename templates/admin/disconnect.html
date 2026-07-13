@@ -1,240 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Desconectar — SSH Panel{% endblock %}
+{% block title %}Desconectar — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-white">
-                <i class="fas fa-plug text-red-400 mr-2"></i>Desconectar
-            </h1>
-            <p class="text-gray-500 text-sm mt-1">
-                Usuarios que exceden sus conexiones máximas — desconéctalos y bloquéalos masivamente
-            </p>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-2 h-2 rounded-full {% if excedeed_count > 0 %}bg-red-400 animate-pulse{% else %}bg-green-400{% endif %}"></div>
-            <span class="text-sm text-gray-400">{{ excedeed_count }} excediendo límite</span>
-        </div>
-    </div>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5"><div><h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-plug text-danger mr-2"></i>Desconectar</h1><p class="text-xs md:text-sm text-muted mt-0.5">Usuarios que exceden sus conexiones máximas — desconéctalos y bloquéalos masivamente</p></div><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full {% if excedeed_count>0 %}bg-danger animate-pulse{% else %}bg-success{% endif %}"></span><span class="text-sm text-muted">{{ excedeed_count }} excediendo límite</span></div></div>
 
     {% if excedeed_count > 0 %}
-    <!-- Alerta de acción masiva -->
-    <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
-            </div>
-            <div class="flex-1">
-                <p class="text-red-400 font-semibold text-lg">{{ excedeed_count }} usuario(s) exceden su límite de conexiones</p>
-                <p class="text-red-400/70 text-sm mt-1">
-                    Desconectarlos y bloquearlos liberará recursos del servidor
-                </p>
-            </div>
-            <button onclick="openModal('blockAllModal')" class="btn-danger px-6 py-3 text-base">
-                <i class="fas fa-ban mr-2"></i>Desconectar y Bloquear Todos
-            </button>
-        </div>
-    </div>
+    <div class="card p-4 mb-6 border-danger/40 bg-danger/5"><div class="flex flex-wrap items-center gap-3"><div class="w-10 h-10 rounded-lg bg-danger/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-exclamation-triangle text-danger text-xl"></i></div><div class="flex-1"><p class="text-danger font-semibold text-base">{{ excedeed_count }} usuario(s) exceden su límite de conexiones</p><p class="text-danger/70 text-sm mt-1">Desconectarlos y bloquearlos liberará recursos del servidor</p></div><button onclick="openModal('blockAllModal')" class="btn btn-danger"><i class="fas fa-ban mr-2"></i>Desconectar y Bloquear Todos</button></div></div>
 
-    <!-- Lista de usuarios que exceden -->
     <div class="space-y-3 mb-6">
         {% for ou in online_users if ou.get('exceeded') %}
-        <div class="glass-card p-4 border-l-4 border-red-500">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center">
-                        <i class="fas fa-user-slash text-red-400 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-white font-bold text-lg">{{ ou.username }}</h3>
-                        <div class="flex items-center gap-3 mt-1">
-                            <span class="flex items-center gap-1 text-sm text-red-400">
-                                <i class="fas fa-wifi"></i>
-                                <strong>{{ ou.connections }}</strong> conexiones activas
-                            </span>
-                            <span class="text-gray-600">|</span>
-                            <span class="flex items-center gap-1 text-sm text-gray-400">
-                                <i class="fas fa-ban"></i>
-                                Máx: {{ ou.max_connections }}
-                            </span>
-                            <span class="text-gray-600">|</span>
-                            <span class="badge badge-red">
-                                <i class="fas fa-arrow-up mr-1"></i>+{{ ou.connections - ou.max_connections }} extra
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="openModal('discModal{{ loop.index }}')" class="btn-warning">
-                        <i class="fas fa-power-off mr-1"></i>Solo Desconectar
-                    </button>
-                    <button onclick="openModal('discBlockModal{{ loop.index }}')" class="btn-danger">
-                        <i class="fas fa-ban mr-1"></i>Desconectar y Bloquear
-                    </button>
-                </div>
-            </div>
-        </div>
+        <div class="card p-4 border-l-[3px] border-l-danger"><div class="flex flex-wrap items-center justify-between gap-3"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-danger/15 flex items-center justify-center"><i class="fas fa-user-slash text-danger text-xl"></i></div><div><h3 class="text-white font-bold">{{ ou.username }}</h3><div class="flex items-center gap-3 mt-1"><span class="flex items-center gap-1 text-sm text-danger"><i class="fas fa-wifi"></i><strong>{{ ou.connections }}</strong> conexiones activas</span><span class="text-muted/40">|</span><span class="flex items-center gap-1 text-sm text-muted"><i class="fas fa-ban"></i>Máx: {{ ou.max_connections }}</span><span class="text-muted/40">|</span><span class="badge badge-danger"><i class="fas fa-arrow-up mr-1"></i>+{{ ou.connections - ou.max_connections }} extra</span></div></div></div><div class="flex items-center gap-2"><button onclick="openModal('discModal{{ loop.index }}')" class="btn btn-warning btn-sm"><i class="fas fa-power-off mr-1"></i>Solo Desconectar</button><button onclick="openModal('discBlockModal{{ loop.index }}')" class="btn btn-danger btn-sm"><i class="fas fa-ban mr-1"></i>Desconectar y Bloquear</button></div></div></div>
 
-        <!-- Modal Solo Desconectar -->
-        <div class="modal-overlay" id="discModal{{ loop.index }}">
-            <div class="modal-content">
-                <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-xl font-bold text-white">
-                        <i class="fas fa-power-off text-yellow-400 mr-2"></i>Desconectar Usuario
-                    </h3>
-                    <button onclick="closeModal('discModal{{ loop.index }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-                </div>
-                <div class="text-center py-4">
-                    <div class="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-power-off text-yellow-400 text-3xl"></i>
-                    </div>
-                    <p class="text-white text-lg font-medium mb-2">¿Desconectar usuario?</p>
-                    <p class="text-gray-400 text-sm">El usuario <strong class="text-white">{{ ou.username }}</strong> será desconectado.</p>
-                    <p class="text-gray-500 text-xs mt-1">Podrá volver a conectarse después.</p>
-                </div>
-                <form method="POST" action="{{ url_for('admin.online_disconnect') }}">
-                    <input type="hidden" name="username" value="{{ ou.username }}">
-                    <div class="flex gap-3">
-                        <button type="button" onclick="closeModal('discModal{{ loop.index }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                        <button type="submit" class="btn-warning flex-1 py-3">
-                            <i class="fas fa-power-off mr-2"></i>Desconectar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal Desconectar y Bloquear -->
-        <div class="modal-overlay" id="discBlockModal{{ loop.index }}">
-            <div class="modal-content">
-                <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-xl font-bold text-white">
-                        <i class="fas fa-ban text-red-400 mr-2"></i>Desconectar y Bloquear
-                    </h3>
-                    <button onclick="closeModal('discBlockModal{{ loop.index }}')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-                </div>
-                <div class="text-center py-4">
-                    <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-ban text-red-400 text-3xl"></i>
-                    </div>
-                    <p class="text-white text-lg font-medium mb-2">¿Desconectar y bloquear?</p>
-                    <p class="text-gray-400 text-sm mb-1">El usuario <strong class="text-white">{{ ou.username }}</strong> será desconectado y bloqueado.</p>
-                    <p class="text-red-400 text-xs font-medium"><i class="fas fa-exclamation-circle mr-1"></i>Para desbloquear, ve a Usuarios → Bloquear/Desbloquear</p>
-                </div>
-                <form method="POST" action="{{ url_for('admin.online_disconnect_block') }}">
-                    <input type="hidden" name="usernames" value="{{ ou.username }}">
-                    <div class="flex gap-3">
-                        <button type="button" onclick="closeModal('discBlockModal{{ loop.index }}')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                        <button type="submit" class="btn-danger flex-1 py-3">
-                            <i class="fas fa-ban mr-2"></i>Desconectar y Bloquear
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <div class="modal-overlay" id="discModal{{ loop.index }}"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-power-off text-warning mr-2"></i>Desconectar Usuario</h3><p class="text-sm text-muted mb-4">El usuario <strong class="text-white">{{ ou.username }}</strong> será desconectado. Podrá volver a conectarse después.</p><form method="POST" action="{{ url_for('admin.online_disconnect') }}"><input type="hidden" name="username" value="{{ ou.username }}"><div class="flex gap-3"><button type="button" onclick="closeModal('discModal{{ loop.index }}')" class="btn btn-ghost flex-1 py-2.5">Cancelar</button><button type="submit" class="btn btn-warning flex-1 py-2.5"><i class="fas fa-power-off mr-1.5"></i>Desconectar</button></div></form></div></div>
+        <div class="modal-overlay" id="discBlockModal{{ loop.index }}"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-ban text-danger mr-2"></i>Desconectar y Bloquear</h3><p class="text-sm text-muted mb-4">El usuario <strong class="text-white">{{ ou.username }}</strong> será desconectado y bloqueado.</p><p class="text-danger text-xs font-medium mb-4"><i class="fas fa-exclamation-circle mr-1"></i>Para desbloquear, ve a Usuarios → Bloquear/Desbloquear</p><form method="POST" action="{{ url_for('admin.online_disconnect_block') }}"><input type="hidden" name="usernames" value="{{ ou.username }}"><div class="flex gap-3"><button type="button" onclick="closeModal('discBlockModal{{ loop.index }}')" class="btn btn-ghost flex-1 py-2.5">Cancelar</button><button type="submit" class="btn btn-danger flex-1 py-2.5"><i class="fas fa-ban mr-1.5"></i>Desconectar y Bloquear</button></div></form></div></div>
         {% endfor %}
     </div>
 
-    <!-- Modal Bloquear Todos -->
-    <div class="modal-overlay" id="blockAllModal">
-        <div class="modal-content">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-xl font-bold text-white">
-                    <i class="fas fa-ban text-red-400 mr-2"></i>Acción Masiva
-                </h3>
-                <button onclick="closeModal('blockAllModal')" class="text-gray-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="text-center py-4">
-                <div class="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
-                </div>
-                <p class="text-white text-lg font-medium mb-2">¿Desconectar y bloquear a todos?</p>
-                <p class="text-gray-400 text-sm">{{ excedeed_count }} usuario(s) serán desconectados y bloqueados.</p>
-                <p class="text-red-400 text-xs font-medium mt-1"><i class="fas fa-exclamation-circle mr-1"></i>Esta acción afectará a múltiples usuarios</p>
-            </div>
-            <form method="POST" action="{{ url_for('admin.online_disconnect_block') }}">
-                <input type="hidden" name="usernames" value="{{ exceeded_usernames|join(',') }}">
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('blockAllModal')" class="btn-ghost flex-1 py-3">Cancelar</button>
-                    <button type="submit" class="btn-danger flex-1 py-3">
-                        <i class="fas fa-ban mr-2"></i>Desconectar y Bloquear Todos
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div class="modal-overlay" id="blockAllModal"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-ban text-danger mr-2"></i>Acción Masiva</h3><p class="text-sm text-muted mb-4">{{ excedeed_count }} usuario(s) serán desconectados y bloqueados.</p><form method="POST" action="{{ url_for('admin.online_disconnect_block') }}"><input type="hidden" name="usernames" value="{{ exceeded_usernames|join(',') }}"><div class="flex gap-3"><button type="button" onclick="closeModal('blockAllModal')" class="btn btn-ghost flex-1 py-2.5">Cancelar</button><button type="submit" class="btn btn-danger flex-1 py-2.5"><i class="fas fa-ban mr-1.5"></i>Desconectar y Bloquear Todos</button></div></form></div></div>
 
     {% else %}
-    <!-- Estado vacío -->
-    <div class="glass-card p-12 text-center">
-        <div class="text-gray-500">
-            <div class="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-check-circle text-green-400 text-4xl"></i>
-            </div>
-            <p class="text-xl text-white font-medium">¡Todo en orden!</p>
-            <p class="text-sm mt-2 max-w-md mx-auto text-gray-400">
-                No hay usuarios que excedan sus conexiones máximas en este momento.
-                Cuando un usuario supere su límite, aparecerá aquí para que puedas desconectarlo y bloquearlo.
-            </p>
-            <div class="mt-6 glass-card p-4 inline-block text-left">
-                <p class="text-sm text-gray-400 font-medium mb-2">⚙️ Vista previa de cómo funciona:</p>
-                <div class="flex items-center gap-4 p-3 rounded-lg bg-dark-800 border border-white/5">
-                    <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
-                        <i class="fas fa-user-slash text-red-400"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-white font-medium">usuario_ejemplo</p>
-                        <p class="text-xs text-gray-500">
-                            <span class="text-red-400">5 conexiones</span> 
-                            <span class="text-gray-600">· Máx: 2 ·</span>
-                            <span class="badge badge-red">+3 extra</span>
-                        </p>
-                    </div>
-                    <div class="flex gap-1">
-                        <button class="btn-warning text-xs px-2 py-1 opacity-50" disabled><i class="fas fa-power-off"></i></button>
-                        <button class="btn-danger text-xs px-2 py-1 opacity-50" disabled><i class="fas fa-ban"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="card p-12 text-center text-muted"><div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4"><i class="fas fa-check-circle text-success text-3xl"></i></div><p class="text-xl text-white font-medium">¡Todo en orden!</p><p class="text-sm mt-2 max-w-md mx-auto">No hay usuarios que excedan sus conexiones máximas en este momento. Cuando un usuario supere su límite, aparecerá aquí para que puedas desconectarlo y bloquearlo.</p></div>
     {% endif %}
 
-    <!-- Instrucciones -->
-    <div class="glass-card p-5 mt-6">
-        <h3 class="text-white font-semibold mb-3 flex items-center gap-2">
-            <i class="fas fa-info-circle text-neon-blue"></i>
-            ¿Cómo funciona?
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div class="flex items-start gap-3 p-3 rounded-lg bg-dark-800">
-                <div class="w-8 h-8 rounded-lg bg-neon-blue/10 flex items-center justify-center flex-shrink-0">
-                    <span class="text-neon-blue font-bold">1</span>
-                </div>
-                <div>
-                    <p class="text-gray-300 font-medium">Detección automática</p>
-                    <p class="text-gray-500 mt-0.5">El sistema detecta usuarios con más conexiones de las permitidas</p>
-                </div>
-            </div>
-            <div class="flex items-start gap-3 p-3 rounded-lg bg-dark-800">
-                <div class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
-                    <span class="text-yellow-400 font-bold">2</span>
-                </div>
-                <div>
-                    <p class="text-gray-300 font-medium">Desconectar o Bloquear</p>
-                    <p class="text-gray-500 mt-0.5">Puedes solo desconectar, o desconectar y bloquear la cuenta</p>
-                </div>
-            </div>
-            <div class="flex items-start gap-3 p-3 rounded-lg bg-dark-800">
-                <div class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <span class="text-green-400 font-bold">3</span>
-                </div>
-                <div>
-                    <p class="text-gray-300 font-medium">Desbloquear después</p>
-                    <p class="text-gray-500 mt-0.5">Para desbloquear, ve a Usuarios → busca el usuario → desbloquear</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Guía -->
+    <div class="card p-5 mt-6"><h3 class="text-white font-semibold mb-3 flex items-center gap-2 text-sm"><i class="fas fa-info-circle text-accent"></i>¿Cómo funciona?</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"><div class="flex items-start gap-3 p-3 rounded-lg bg-surface-deep"><div class="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0"><span class="text-accent font-bold text-sm">1</span></div><div><p class="text-foreground font-medium">Detección automática</p><p class="text-muted mt-0.5 text-xs">El sistema detecta usuarios con más conexiones de las permitidas</p></div></div><div class="flex items-start gap-3 p-3 rounded-lg bg-surface-deep"><div class="w-7 h-7 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0"><span class="text-warning font-bold text-sm">2</span></div><div><p class="text-foreground font-medium">Desconectar o Bloquear</p><p class="text-muted mt-0.5 text-xs">Puedes solo desconectar, o desconectar y bloquear la cuenta</p></div></div><div class="flex items-start gap-3 p-3 rounded-lg bg-surface-deep"><div class="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0"><span class="text-success font-bold text-sm">3</span></div><div><p class="text-foreground font-medium">Desbloquear después</p><p class="text-muted mt-0.5 text-xs">Para desbloquear, ve a Usuarios → busca el usuario → desbloquear</p></div></div></div></div>
 </div>
 {% endblock %}
