@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import random
 import string
 import os
+import re
 from datetime import datetime, timedelta
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -307,6 +308,23 @@ def generate_password(length=12):
         password += [random.choice(chars) for _ in range(length - 4)]
     random.shuffle(password)
     return ''.join(password)
+
+
+# Patrón seguro para nombres de usuario Linux (mismo que ssh_manager.py)
+_VALID_USERNAME_RE = re.compile(r'^[a-z_][a-z0-9_-]{1,31}$')
+
+
+def validate_username(username):
+    """
+    Valida que un nombre de usuario solo contenga caracteres seguros.
+    Retorna (es_valido, mensaje_error).
+    """
+    if not _VALID_USERNAME_RE.match(username):
+        return False, (
+            f"Nombre de usuario inválido: '{username}'. "
+            "Solo minúsculas, números, guiones y guiones bajos (máx 32 caracteres)."
+        )
+    return True, ""
 
 
 def init_db():

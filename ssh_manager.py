@@ -61,48 +61,62 @@ def system_create_user(username, password, expires_at, max_connections=1, shell=
     Crea un usuario en el sistema Linux.
     En modo 'local' usa comandos del sistema directamente.
     """
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    
-    if backend == 'local':
-        return _local_create_user(username, password, expires_at, max_connections, shell)
-    else:
-        return _script_create_user(username, password, expires_at, max_connections, shell)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_create_user(username, password, expires_at, max_connections, shell)
+        else:
+            return _script_create_user(username, password, expires_at, max_connections, shell)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def system_delete_user(username):
     """Elimina un usuario del sistema"""
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    if backend == 'local':
-        return _local_delete_user(username)
-    else:
-        return _script_delete_user(username)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_delete_user(username)
+        else:
+            return _script_delete_user(username)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def system_block_user(username):
     """Bloquea un usuario (bloquea su shell)"""
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    if backend == 'local':
-        return _local_block_user(username)
-    else:
-        return _script_block_user(username)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_block_user(username)
+        else:
+            return _script_block_user(username)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def system_unblock_user(username, shell='/bin/false'):
     """Desbloquea un usuario"""
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    if backend == 'local':
-        return _local_unblock_user(username, shell)
-    else:
-        return _script_unblock_user(username, shell)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_unblock_user(username, shell)
+        else:
+            return _script_unblock_user(username, shell)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def system_change_password(username, new_password):
     """Cambia la contraseña de un usuario del sistema"""
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    if backend == 'local':
-        return _local_change_password(username, new_password)
-    else:
-        return _script_change_password(username, new_password)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_change_password(username, new_password)
+        else:
+            return _script_change_password(username, new_password)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def system_get_online_users():
@@ -119,20 +133,26 @@ def system_get_online_users():
 
 def system_disconnect_user(username):
     """Desconecta todas las sesiones de un usuario"""
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    if backend == 'local':
-        return _local_disconnect_user(username)
-    else:
-        return _script_disconnect_user(username)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_disconnect_user(username)
+        else:
+            return _script_disconnect_user(username)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def system_set_expiry(username, expires_at):
     """Configura la fecha de expiración de un usuario del sistema"""
-    backend = current_app.config.get('SSH_BACKEND', 'local')
-    if backend == 'local':
-        return _local_set_expiry(username, expires_at)
-    else:
-        return _script_set_expiry(username, expires_at)
+    try:
+        backend = current_app.config.get('SSH_BACKEND', 'local')
+        if backend == 'local':
+            return _local_set_expiry(username, expires_at)
+        else:
+            return _script_set_expiry(username, expires_at)
+    except ValueError as e:
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 # ================ IMPLEMENTACIÓN LOCAL (Linux con Dropbear) ================

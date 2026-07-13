@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from models import db, Admin, Reseller, SSHUser, ActivityLog, generate_password, CreditConfig, Server
+from models import db, Admin, Reseller, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username
 from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
@@ -142,7 +142,13 @@ def user_create():
     if not username:
         flash('El nombre de usuario es requerido', 'danger')
         return redirect(url_for('admin.users'))
-    
+
+    # Validar formato de username
+    valid, msg = validate_username(username)
+    if not valid:
+        flash(msg, 'danger')
+        return redirect(url_for('admin.users'))
+
     # Validaciones
     if SSHUser.query.filter_by(username=username).first():
         flash(f'El usuario "{username}" ya existe', 'danger')
