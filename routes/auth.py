@@ -1,8 +1,47 @@
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from models import db, Admin, Reseller, ActivityLog
 
 auth_bp = Blueprint('auth', __name__)
+
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
+
+
+def _check_brute_force(user):
+    """Verifica si la cuenta está bloqueada por fuerza bruta. Retorna (bloqueado, mensaje)."""
+    if not user or not user.locked_until:
+        return False, None
+    if datetime.utcnow() < user.locked_until:
+        mins = int((user.locked_until - datetime.utcnow()).total_seconds() / 60) + 1
+        return True, f'Cuenta bloqueada por intentos fallidos. Intenta de nuevo en {mins} minuto(s).'
+    # Bloqueo expirado, reiniciar
+    user.login_attempts = 0
+    user.locked_until = None
+    db.session.commit()
+    return False, None
+
+
+def _handle_failed_login(user):
+    """Incrementa intentos fallidos y bloquea si se excede el límite."""
+    if not user:
+        return
+    user.login_attempts = (user.login_attempts or 0) + 1
+    if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
+        user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+        flash(f'Demasiados intentos fallidos. Cuenta bloqueada por {LOCKOUT_MINUTES} minutos.', 'danger')
+    else:
+        restantes = MAX_LOGIN_ATTEMPTS - user.login_attempts
+        flash(f'Usuario o contraseña incorrectos. {restantes} intento(s) restante(s).', 'danger')
+    db.session.commit()
+
+
+def _reset_login_attempts(user):
+    """Reinicia el contador de intentos tras login exitoso."""
+    if user and hasattr(user, 'login_attempts'):
+        user.login_attempts = 0
+        user.locked_until = None
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -11,46 +50,37 @@ def login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         login_as = request.form.get('login_as', 'admin')
-        
+
         if not username or not password:
             flash('Por favor ingresa usuario y contraseña', 'warning')
             return render_template('auth/login.html')
-        
+
         user = None
         user_type = None
-        
+
         if login_as == 'admin':
             user = Admin.query.filter_by(username=username).first()
             user_type = 'admin'
-            
-            # Fuerza bruta: verificar si la cuenta está bloqueada
-            if user and user.locked_until:
-                from datetime import datetime
-                if datetime.utcnow() < user.locked_until:
-                    mins = int((user.locked_until - datetime.utcnow()).total_seconds() / 60)
-                    flash(f'Cuenta bloqueada por intentos fallidos. Intenta de nuevo en {mins} minuto(s).', 'danger')
-                    return render_template('auth/login.html')
-                else:
-                    # Bloqueo expirado, reiniciar
-                    user.login_attempts = 0
-                    user.locked_until = None
-                    db.session.commit()
         else:
             user = Reseller.query.filter_by(username=username).first()
             user_type = 'reseller'
-            if user and not user.is_active:
-                flash('Tu cuenta de revendedor no ha sido activada aún. Contacta al administrador.', 'danger')
-                return render_template('auth/login.html')
-        
+
+        # Protección fuerza bruta (ambos roles)
+        bloq, msg = _check_brute_force(user)
+        if bloq:
+            flash(msg, 'danger')
+            return render_template('auth/login.html')
+
+        # Verificar si el reseller está activo
+        if user_type == 'reseller' and user and not user.is_active:
+            flash('Tu cuenta de revendedor no ha sido activada aún. Contacta al administrador.', 'danger')
+            return render_template('auth/login.html')
+
         if user and user.check_password(password):
-            # Login exitoso: reiniciar intentos
-            if user_type == 'admin':
-                user.login_attempts = 0
-                user.locked_until = None
-                db.session.commit()
-            
+            _reset_login_attempts(user)
+            db.session.commit()
             login_user(user)
-            
+
             log = ActivityLog(
                 action='login',
                 description=f'Inicio de sesión como {user_type}: {username}',
@@ -60,31 +90,19 @@ def login():
             )
             db.session.add(log)
             db.session.commit()
-            
+
             # Forzar cambio de contraseña si es admin con must_change_password
             if user_type == 'admin' and getattr(user, 'must_change_password', False):
                 flash('Por seguridad, debes cambiar tu contraseña antes de continuar.', 'warning')
                 return redirect(url_for('admin.profile'))
-            
+
             if user_type == 'admin':
                 return redirect(url_for('admin.dashboard'))
             else:
                 return redirect(url_for('reseller.reseller_dashboard'))
         else:
-            # Login fallido: incrementar intentos para admin
-            if user_type == 'admin' and user:
-                from datetime import datetime, timedelta
-                user.login_attempts = (user.login_attempts or 0) + 1
-                if user.login_attempts >= 5:
-                    user.locked_until = datetime.utcnow() + timedelta(minutes=15)
-                    flash('Demasiados intentos fallidos. Cuenta bloqueada por 15 minutos.', 'danger')
-                else:
-                    restantes = 5 - user.login_attempts
-                    flash(f'Usuario o contraseña incorrectos. {restantes} intento(s) restante(s).', 'danger')
-                db.session.commit()
-            else:
-                flash('Usuario o contraseña incorrectos', 'danger')
-    
+            _handle_failed_login(user)
+
     return render_template('auth/login.html')
 
 

@@ -75,6 +75,8 @@ class Reseller(UserMixin, db.Model):
     notes = db.Column(db.Text, default='')
     last_activity = db.Column(db.DateTime, nullable=True)
     total_credits_received = db.Column(db.Integer, default=0)
+    login_attempts = db.Column(db.Integer, default=0)
+    locked_until = db.Column(db.DateTime, nullable=True)
 
     def get_id(self):
         return f'r_{self.id}'
@@ -362,6 +364,10 @@ def init_db():
     try:
         inspector = inspect(db.engine)
         reseller_columns = [c['name'] for c in inspector.get_columns('resellers')]
+        for col in ['login_attempts', 'locked_until']:
+            if col not in reseller_columns:
+                db.session.execute(db.text('ALTER TABLE resellers ADD COLUMN %s %s' % (
+                    col, 'DATETIME' if col == 'locked_until' else 'INTEGER DEFAULT 0')))
         for col in ['credit_mode', 'cost_per_day', 'cost_per_user', 'cost_per_extra_connection', 'max_days']:
             if col not in reseller_columns:
                 db.session.execute(db.text('ALTER TABLE resellers ADD COLUMN %s %s' % (

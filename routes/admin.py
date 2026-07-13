@@ -16,6 +16,28 @@ from ssh_manager import (
 
 admin_bp = Blueprint('admin', __name__)
 
+# Rutas permitidas sin cambiar contraseña
+_CHANGE_PASSWORD_EXEMPT = {'admin.profile', 'admin.change_password', 'auth.logout'}
+
+
+@admin_bp.before_request
+def enforce_password_change():
+    """
+    Obliga al admin a cambiar su contraseña antes de usar el panel.
+    """
+    from flask_login import current_user
+    if not current_user.is_authenticated:
+        return None
+    if not isinstance(current_user, Admin):
+        return None
+    if not getattr(current_user, 'must_change_password', False):
+        return None
+    if request.endpoint in _CHANGE_PASSWORD_EXEMPT:
+        return None
+    flash('Debes cambiar tu contraseña antes de continuar.', 'warning')
+    return redirect(url_for('admin.profile'))
+
+
 # Decorador para verificar que es admin
 def admin_required(f):
     from functools import wraps
