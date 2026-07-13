@@ -70,21 +70,18 @@
                         <td>
                             <div class="flex items-center justify-end gap-1">
                                 <button onclick="openRenewModal({{ user.id }},'{{ user.username }}',{{ user.days_duration }},{{ user.max_connections }})" class="btn btn-ghost btn-xs text-success" title="Renovar"><i class="fas fa-sync-alt"></i>Renovar</button>
-                                <form method="POST" action="{{ url_for('admin.user_change_password', user_id=user.id) }}" class="inline" onsubmit="return confirm('¿Cambiar contraseña de {{ user.username }}?')">
-                                    <button class="btn btn-ghost btn-xs text-warning" title="Cambiar contraseña"><i class="fas fa-key"></i>Clave</button>
-                                </form>
+                                <button onclick="confirmAction('Cambiar contraseña','¿Generar nueva clave para {{ user.username }}?','fa-key bg-warning/15 text-warning','btn-warning','Cambiar','#chpw-{{ user.id }}')" class="btn btn-ghost btn-xs text-warning" title="Cambiar contraseña"><i class="fas fa-key"></i>Clave</button>
+                                <form method="POST" action="{{ url_for('admin.user_change_password', user_id=user.id) }}" id="chpw-{{ user.id }}" class="hidden"></form>
                                 {% if user.is_blocked %}
                                 <form method="POST" action="{{ url_for('admin.user_unblock', user_id=user.id) }}" class="inline">
                                     <button class="btn btn-ghost btn-xs text-success" title="Desbloquear"><i class="fas fa-unlock"></i>Desbloquear</button>
                                 </form>
                                 {% else %}
-                                <form method="POST" action="{{ url_for('admin.user_block', user_id=user.id) }}" class="inline" onsubmit="return confirm('¿Bloquear {{ user.username }}?')">
-                                    <button class="btn btn-ghost btn-xs text-warning" title="Bloquear"><i class="fas fa-ban"></i>Bloquear</button>
-                                </form>
+                                <button onclick="confirmAction('Bloquear usuario','¿Bloquear a {{ user.username }}? No podrá conectarse.','fa-ban bg-warning/15 text-warning','btn-warning','Bloquear','#blk-{{ user.id }}')" class="btn btn-ghost btn-xs text-warning" title="Bloquear"><i class="fas fa-ban"></i>Bloquear</button>
+                                <form method="POST" action="{{ url_for('admin.user_block', user_id=user.id) }}" id="blk-{{ user.id }}" class="hidden"></form>
                                 {% endif %}
-                                <form method="POST" action="{{ url_for('admin.user_delete', user_id=user.id) }}" class="inline" onsubmit="return confirm('¿Eliminar permanentemente {{ user.username }}?')">
-                                    <button class="btn btn-ghost btn-xs text-danger" title="Eliminar"><i class="fas fa-trash"></i>Eliminar</button>
-                                </form>
+                                <button onclick="confirmAction('Eliminar usuario','¿Eliminar permanentemente a {{ user.username }}? Esta acción no se puede deshacer.','fa-trash bg-danger/15 text-danger','btn-danger','Eliminar','#del-{{ user.id }}')" class="btn btn-ghost btn-xs text-danger" title="Eliminar"><i class="fas fa-trash"></i>Eliminar</button>
+                                <form method="POST" action="{{ url_for('admin.user_delete', user_id=user.id) }}" id="del-{{ user.id }}" class="hidden"></form>
                             </div>
                         </td>
                     </tr>

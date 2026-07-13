@@ -322,6 +322,23 @@
         </main>
     </div>
 
+    <!-- Confirm Modal (reusable) -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-card text-center">
+            <div class="w-14 h-14 rounded-full bg-danger/15 flex items-center justify-center mx-auto mb-4" id="confirmIcon">
+                <i class="fas fa-exclamation-triangle text-danger text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2" id="confirmTitle">¿Confirmar acción?</h3>
+            <p class="text-sm text-muted mb-6" id="confirmMessage">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-3 justify-center">
+                <button type="button" onclick="closeModal('confirmModal')" class="btn btn-ghost flex-1">Cancelar</button>
+                <button type="button" id="confirmBtn" class="btn btn-danger flex-1" onclick="executeConfirm()">
+                    <i class="fas fa-check mr-1.5"></i>Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Auto-dismiss flash
         document.querySelectorAll('.flash').forEach(el=>{setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .4s';setTimeout(()=>el.remove(),400)},8000)});
@@ -334,6 +351,27 @@
         // Sidebar toggle
         function toggleSidebar(){const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay');if(window.innerWidth<768){s.classList.toggle('open');o.classList.toggle('active')}else{s.classList.toggle('sidebar-collapsed')}}
         document.querySelectorAll('.sidebar-link').forEach(l=>{l.addEventListener('click',()=>{if(window.innerWidth<768){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('active')}})});
+
+        // Confirm modal
+        let _confirmTarget = null;
+        function confirmAction(title, msg, iconClass, btnClass, btnText, formSelector) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = msg;
+            document.getElementById('confirmIcon').innerHTML = '<i class="fas ' + iconClass + ' text-2xl"></i>';
+            const btn = document.getElementById('confirmBtn');
+            btn.className = 'btn flex-1 ' + btnClass;
+            btn.innerHTML = '<i class="fas fa-check mr-1.5"></i>' + btnText;
+            _confirmTarget = formSelector;
+            openModal('confirmModal');
+        }
+        function executeConfirm() {
+            closeModal('confirmModal');
+            if (_confirmTarget) {
+                const form = document.querySelector(_confirmTarget);
+                if (form) form.submit();
+                _confirmTarget = null;
+            }
+        }
 
         // CSRF injection
         (function(){const m=document.querySelector('meta[name="csrf-token"]');if(!m)return;const t=m.getAttribute('content');document.querySelectorAll('form[method="POST"]').forEach(f=>{if(!f.querySelector('input[name="csrf_token"]')){const i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i)}})})();

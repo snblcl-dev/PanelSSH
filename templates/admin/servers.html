@@ -30,7 +30,8 @@
             <div class="flex gap-1.5">
                 <a href="{{ url_for('admin.server_test', server_id=s.id) }}" class="btn btn-ghost btn-xs flex-1 justify-center"><i class="fas fa-plug mr-1"></i>Probar</a>
                 <form method="POST" action="{{ url_for('admin.server_toggle', server_id=s.id) }}" class="flex-1"><button class="btn btn-xs w-full justify-center {% if s.is_active %}btn-warning{% else %}btn-primary{% endif %}"><i class="fas fa-{% if s.is_active %}pause{% else %}play{% endif %} mr-1"></i>{% if s.is_active %}Desactivar{% else %}Activar{% endif %}</button></form>
-                <form method="POST" action="{{ url_for('admin.server_delete', server_id=s.id) }}" class="flex-1" onsubmit="return confirm('¿Eliminar servidor {{ s.name }}?')"><button class="btn btn-danger btn-xs w-full justify-center"><i class="fas fa-trash mr-1"></i></button></form>
+                <button onclick="confirmAction('Eliminar servidor','¿Eliminar {{ s.name }}? Esta acción no se puede deshacer.','fa-trash bg-danger/15 text-danger','btn-danger','Eliminar','#delsrv-{{ s.id }}')" class="btn btn-danger btn-xs flex-1 justify-center"><i class="fas fa-trash mr-1"></i>Eliminar</button>
+                <form method="POST" action="{{ url_for('admin.server_delete', server_id=s.id) }}" id="delsrv-{{ s.id }}" class="hidden"></form>
             </div>
         </div>
         {% endfor %}
