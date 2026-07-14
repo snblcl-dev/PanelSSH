@@ -11,7 +11,7 @@ from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
     system_disconnect_user, system_set_expiry, system_execute,
-    system_get_online_all
+    system_get_online_all, system_sync_expired_users
 )
 
 admin_bp = Blueprint('admin', __name__)
@@ -70,6 +70,8 @@ def log_action(action, description, target_user=None, target_type='ssh_user'):
 @admin_required
 def dashboard():
     """Dashboard principal con estadísticas"""
+    # Sincronizar expirados: bloquear en el sistema a los que ya vencieron
+    system_sync_expired_users()
     now = datetime.utcnow()
     
     total_users = SSHUser.query.count()

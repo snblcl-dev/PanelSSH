@@ -8,7 +8,7 @@ from models import db, SSHUser, ActivityLog, generate_password, CreditConfig, Se
 from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
-    system_disconnect_user, system_execute
+    system_disconnect_user, system_execute, system_sync_expired_users
 )
 
 reseller_bp = Blueprint('reseller', __name__)
@@ -48,6 +48,8 @@ def log_action(action, description, target_user=None, target_type='ssh_user'):
 @reseller_required
 def reseller_dashboard():
     """Dashboard del revendedor"""
+    # Sincronizar expirados: bloquear en el sistema a los que ya vencieron
+    system_sync_expired_users()
     now = datetime.utcnow()
     
     # Solo sus propios usuarios
