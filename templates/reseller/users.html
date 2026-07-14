@@ -10,9 +10,78 @@
         <tbody>{% for user in users %}<tr><td><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full bg-accent/15 flex items-center justify-center"><span class="text-accent text-[11px] font-semibold font-mono">{{ user.username[0]|upper }}</span></div><span class="font-medium text-sm">{{ user.username }}</span></div></td><td><span class="font-mono text-[11px] bg-surface-deep px-2 py-0.5 rounded text-muted">{{ user.password_plain }}</span></td><td class="text-sm font-mono text-muted">{{ user.expires_at.strftime('%d/%m/%Y') }}</td><td>{% set r=user.days_remaining() %}<span class="text-sm font-mono font-semibold {% if r<=3 %}text-danger{% elif r<=7 %}text-warning{% else %}text-success{% endif %}">{{ r }}d</span></td><td class="text-sm text-muted">{% if user.server %}{{ user.server.name }}{% else %}Local{% endif %}</td><td>{% if user.is_blocked %}<span class="badge badge-danger">Bloq.</span>{% elif user.is_expired() %}<span class="badge badge-warning">Exp.</span>{% else %}<span class="badge badge-success">Activo</span>{% endif %}</td><td><div class="flex items-center justify-end gap-1"><button onclick="openRenewModal({{ user.id }},'{{ user.username }}',{{ user.days_duration }},{{ user.max_connections }})" class="btn btn-ghost btn-xs text-success"><i class="fas fa-sync-alt mr-1"></i>Renovar</button><form method="POST" action="{{ url_for('reseller.user_change_password') }}" class="inline"><input type="hidden" name="user_id" value="{{ user.id }}"><button class="btn btn-ghost btn-xs text-warning"><i class="fas fa-key mr-1"></i>Clave</button></form>{% if user.is_blocked %}<form method="POST" action="{{ url_for('reseller.user_unblock', user_id=user.id) }}" class="inline"><button class="btn btn-ghost btn-xs text-success"><i class="fas fa-unlock mr-1"></i>Desbloq.</button></form>{% else %}<button onclick="confirmAction('Bloquear usuario','¿Bloquear a {{ user.username }}?','fa-ban bg-warning/15 text-warning','btn-warning','Bloquear','#blk-r-{{ user.id }}')" class="btn btn-ghost btn-xs text-warning"><i class="fas fa-ban mr-1"></i>Bloquear</button><form method="POST" action="{{ url_for('reseller.user_block', user_id=user.id) }}" id="blk-r-{{ user.id }}" class="hidden"></form>{% endif %}</div></td></tr>{% else %}<tr><td colspan="7" class="text-center py-10 text-muted text-sm"><i class="fas fa-inbox text-3xl mb-2 block opacity-20"></i>No hay usuarios</td></tr>{% endfor %}</tbody></table></div></div>
 </div>
 
-<div class="modal-overlay" id="createUserModal"><div class="modal-card"><div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-user-plus text-accent mr-2"></i>Nuevo Usuario</h3><button onclick="closeModal('createUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div><form method="POST" action="{{ url_for('reseller.user_create') }}" class="space-y-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Días</label><input type="number" name="days" class="input" value="30" min="1"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" class="input" value="1" min="1"></div></div>{% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>{% endif %}<button type="submit" class="btn btn-primary w-full justify-center py-3"><i class="fas fa-plus mr-1.5"></i>Crear Usuario</button></form></div></div>
+<div class="modal-overlay" id="createUserModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-user-plus text-accent mr-2"></i>Nuevo Usuario</h3><button onclick="closeModal('createUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+        <form method="POST" action="{{ url_for('reseller.user_create') }}" class="space-y-4">
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" required></div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Días</label><input type="number" name="days" id="cDays" class="input" value="30" min="1" onchange="updateCreateCost()" oninput="updateCreateCost()"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" id="cConns" class="input" value="1" min="1" onchange="updateCreateCost()" oninput="updateCreateCost()"></div>
+            </div>
+            {% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>{% endif %}
+            <!-- Vista previa de costo -->
+            <div class="bg-surface-hover rounded-lg p-4 border border-warning/20">
+                <div class="flex justify-between text-sm"><span class="text-muted">Costo estimado:</span><span class="text-warning font-bold font-mono" id="cCost">— créditos</span></div>
+                <div class="flex justify-between text-sm mt-1.5"><span class="text-muted">Tus créditos:</span><span class="text-white font-bold">{{ current_user.credits }}</span></div>
+                <div class="flex justify-between text-sm mt-1.5"><span class="text-muted">Después quedarán:</span><span class="text-white font-bold font-mono" id="cRemaining">—</span></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-full justify-center py-3"><i class="fas fa-plus mr-1.5"></i>Crear Usuario</button>
+        </form>
+    </div>
+</div>
 
-<div class="modal-overlay" id="renewUserModal"><div class="modal-card"><div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-sync-alt text-success mr-2"></i>Renovar <span id="renewUsername" class="text-accent"></span></h3><button onclick="closeModal('renewUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div><form method="POST" action="{{ url_for('reseller.user_renew') }}" class="space-y-4"><input type="hidden" name="user_id" id="renewUserId"><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Días extra</label><input type="number" name="extra_days" id="renewDays" class="input" value="30"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" placeholder="Sin cambio"></div></div><button type="submit" class="btn btn-success w-full justify-center py-3"><i class="fas fa-sync-alt mr-1.5"></i>Renovar</button></form></div></div>
+<div class="modal-overlay" id="renewUserModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-sync-alt text-success mr-2"></i>Renovar <span id="renewUsername" class="text-accent"></span></h3><button onclick="closeModal('renewUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+        <form method="POST" action="{{ url_for('reseller.user_renew') }}" class="space-y-4">
+            <input type="hidden" name="user_id" id="renewUserId">
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Días extra</label><input type="number" name="extra_days" id="renewDays" class="input" value="30" onchange="updateRenewCost()" oninput="updateRenewCost()"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" placeholder="Sin cambio" onchange="updateRenewCost()" oninput="updateRenewCost()"></div>
+            </div>
+            <!-- Vista previa de costo -->
+            <div class="bg-surface-hover rounded-lg p-4 border border-warning/20">
+                <div class="flex justify-between text-sm"><span class="text-muted">Costo estimado:</span><span class="text-warning font-bold font-mono" id="rCost">— créditos</span></div>
+                <div class="flex justify-between text-sm mt-1.5"><span class="text-muted">Tus créditos:</span><span class="text-white font-bold">{{ current_user.credits }}</span></div>
+                <div class="flex justify-between text-sm mt-1.5"><span class="text-muted">Después quedarán:</span><span class="text-white font-bold font-mono" id="rRemaining">—</span></div>
+            </div>
+            <button type="submit" class="btn btn-success w-full justify-center py-3"><i class="fas fa-sync-alt mr-1.5"></i>Renovar</button>
+        </form>
+    </div>
+</div>
 
-<script>function openRenewModal(id,username,days,max){document.getElementById('renewUserId').value=id;document.getElementById('renewUsername').textContent=username;document.getElementById('renewDays').value=days;document.getElementById('renewMaxConn').value=max;openModal('renewUserModal')}</script>
+<script>
+// Config de creditos desde el backend
+const CREDIT_MODE = "{{ credit_config.mode }}";
+const COST_PER_DAY = {{ credit_config.cost_per_day }};
+const COST_PER_USER = {{ credit_config.cost_per_user }};
+const COST_EXTRA_CONN = {{ credit_config.cost_per_extra_connection }};
+const MY_CREDITS = {{ current_user.credits }};
+
+function calcCost(days, conns) {
+    let cost = CREDIT_MODE === 'per_user' ? COST_PER_USER : days * COST_PER_DAY;
+    if (conns > 1) cost += (conns - 1) * COST_EXTRA_CONN;
+    return cost;
+}
+
+function updateCreateCost() {
+    const days = parseInt(document.getElementById('cDays').value) || 1;
+    const conns = parseInt(document.getElementById('cConns').value) || 1;
+    const cost = calcCost(days, conns);
+    document.getElementById('cCost').textContent = cost + ' créditos';
+    document.getElementById('cRemaining').textContent = (MY_CREDITS - cost) + ' créditos';
+}
+
+function updateRenewCost() {
+    const days = parseInt(document.getElementById('renewDays').value) || 0;
+    const rawConns = document.getElementById('renewMaxConn').value;
+    const conns = rawConns ? parseInt(rawConns) : 0;
+    const cost = calcCost(days || 1, conns || 1);
+    document.getElementById('rCost').textContent = cost + ' créditos';
+    document.getElementById('rRemaining').textContent = (MY_CREDITS - cost) + ' créditos';
+}
+
+function openRenewModal(id,username,days,max){document.getElementById('renewUserId').value=id;document.getElementById('renewUsername').textContent=username;document.getElementById('renewDays').value=days;document.getElementById('renewMaxConn').value=max;updateRenewCost();openModal('renewUserModal')}
+updateCreateCost();</script>
 {% endblock %}
