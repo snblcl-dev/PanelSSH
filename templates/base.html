@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PanelSSH{% endblock %}</title>
 
-    <!-- Fonts -->
+    <!-- Fonts: Space Grotesk + DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -21,21 +21,14 @@
             theme: {
                 extend: {
                     colors: {
-                        surface: {
-                            deep:   '#020617',
-                            base:   '#0F172A',
-                            raised: '#1E293B',
-                            hover:  '#1A1E2F',
-                        },
-                        accent:  { DEFAULT: '#3B82F6', hover: '#2563EB', ring: 'rgba(59,130,246,0.35)' },
-                        success: '#22C55E',
-                        warning: '#EAB308',
-                        danger:  '#EF4444',
-                        muted:   '#94A3B8',
+                        surface: { deep:'#050510', base:'#0A0A1A', raised:'#101823', hover:'#151530' },
+                        quantum: { cyan:'#00FFFF', purple:'#7B61FF', magenta:'#FF00FF' },
+                        accent:  { DEFAULT:'#00FFFF', hover:'#00E0E0', ring:'rgba(0,255,255,0.3)' },
+                        success:'#22C55E', warning:'#F59E0B', danger:'#EF4444', muted:'#94A3B8',
                     },
                     fontFamily: {
-                        sans: ['"Fira Sans"', 'system-ui', 'sans-serif'],
-                        mono: ['"Fira Code"', 'monospace'],
+                        heading:['"Space Grotesk"','system-ui','sans-serif'],
+                        body:['"DM Sans"','system-ui','sans-serif'],
                     },
                 }
             }
@@ -43,337 +36,197 @@
     </script>
 
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: '"Fira Sans"', system-ui, -apple-system, sans-serif;
-            background: #020617; color: #F8FAFC;
-            min-height: 100vh; -webkit-font-smoothing: antialiased;
-        }
-        :focus-visible { outline:2px solid #3B82F6; outline-offset:2px; border-radius:4px; }
-        @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'"DM Sans"',system-ui,sans-serif;background:#050510;color:#E0E0FF;min-height:100vh;-webkit-font-smoothing:antialiased;background-image:radial-gradient(ellipse at 20% 0%,rgba(0,255,255,0.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(123,97,255,0.04) 0%,transparent 60%)}
+        :focus-visible{outline:2px solid #00FFFF;outline-offset:2px;border-radius:6px}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+        h1,h2,h3,h4{font-family:'"Space Grotesk"',system-ui,sans-serif}
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width:5px; height:5px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:#334155; border-radius:99px; }
-        ::-webkit-scrollbar-thumb:hover { background:#475569; }
+        ::-webkit-scrollbar{width:5px;height:5px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(0,255,255,0.12);border-radius:99px}
+        ::-webkit-scrollbar-thumb:hover{background:rgba(0,255,255,0.25)}
 
-        /* ── Card ── */
-        .card {
-            background:#0F172A; border:1px solid #334155;
-            border-radius:10px; transition:border-color .2s,box-shadow .2s;
-        }
-        .card:hover { border-color:#475569; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+        /* Card */
+        .card{background:#101823;border:1px solid rgba(255,255,255,0.06);border-radius:20px;box-shadow:0 2px 8px rgba(0,255,255,0.06),0 1px 3px rgba(0,0,0,0.4);transition:all .25s ease-out}
+        .card:hover{border-color:rgba(0,255,255,0.15);box-shadow:0 4px 20px rgba(0,255,255,0.12),0 2px 6px rgba(0,0,0,0.5)}
+        .card-purple{box-shadow:0 2px 8px rgba(123,97,255,0.06),0 1px 3px rgba(0,0,0,0.4)}
+        .card-purple:hover{border-color:rgba(123,97,255,0.2);box-shadow:0 4px 20px rgba(123,97,255,0.15)}
 
-        /* ── Stat Card ── */
-        .stat-card {
-            background:#0F172A; border:1px solid #334155;
-            border-radius:10px; padding:18px 20px; transition:all .2s;
-        }
-        .stat-card:hover { border-color:#3B82F6; box-shadow:0 2px 12px rgba(0,0,0,.5); }
+        /* Bento spans */
+        .bento-2x1{grid-column:span 2} .bento-2x2{grid-column:span 2;grid-row:span 2}
+        @media(max-width:767px){.bento-2x1,.bento-2x2{grid-column:span 1;grid-row:span 1}}
 
-        /* ── Buttons ── */
-        .btn {
-            display:inline-flex; align-items:center; gap:7px;
-            padding:8px 16px; border-radius:8px; font-size:.875rem; font-weight:600;
-            transition:all .15s; border:none; cursor:pointer; text-decoration:none;
-            white-space:nowrap; line-height:1.4;
-        }
-        .btn:active { transform:scale(.97); }
-        .btn-primary { background:#3B82F6; color:#fff; }
-        .btn-primary:hover { background:#2563EB; box-shadow:0 2px 8px rgba(59,130,246,.35); }
-        .btn-success { background:#16A34A; color:#fff; }
-        .btn-success:hover { background:#15803D; }
-        .btn-danger  { background:#DC2626; color:#fff; }
-        .btn-danger:hover  { background:#B91C1C; }
-        .btn-warning { background:#CA8A04; color:#0F172A; }
-        .btn-warning:hover { background:#A16207; }
-        .btn-ghost {
-            background:transparent; color:#94A3B8;
-            border:1px solid #334155;
-        }
-        .btn-ghost:hover { background:rgba(255,255,255,.04); color:#E2E8F0; border-color:#475569; }
-        .btn-xs { padding:4px 10px; font-size:.75rem; gap:5px; border-radius:6px; }
-        .btn-sm { padding:6px 13px; font-size:.8125rem; }
+        /* Stat Card */
+        .stat-card{background:#101823;border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:20px 24px;transition:all .25s;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+        .stat-card:hover{border-color:rgba(0,255,255,0.12);transform:translateY(-2px)}
 
-        /* ── Input / Select ── */
-        .input {
-            background:#1A1E2F; border:1px solid #334155; border-radius:8px;
-            padding:9px 12px; color:#F8FAFC; font-size:.875rem; font-family:inherit;
-            width:100%; transition:all .15s; outline:none;
-        }
-        .input:focus { border-color:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.2); }
-        .input::placeholder { color:#64748B; }
-        select.input {
-            appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-            background-repeat:no-repeat; background-position:right 12px center; padding-right:36px;
-        }
+        /* Buttons */
+        .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:12px;font-size:.875rem;font-weight:600;transition:all .2s;border:none;cursor:pointer;text-decoration:none;white-space:nowrap;line-height:1.4;font-family:'"DM Sans"',system-ui,sans-serif}
+        .btn:active{transform:scale(.97)}
+        .btn-primary{background:rgba(0,255,255,0.12);color:#00FFFF;border:1px solid rgba(0,255,255,0.2)}
+        .btn-primary:hover{background:rgba(0,255,255,0.2);box-shadow:0 0 20px rgba(0,255,255,0.2)}
+        .btn-success{background:rgba(34,197,94,0.12);color:#4ADE80;border:1px solid rgba(34,197,94,0.2)}
+        .btn-success:hover{background:rgba(34,197,94,0.2);box-shadow:0 0 16px rgba(34,197,94,0.2)}
+        .btn-danger{background:rgba(239,68,68,0.12);color:#F87171;border:1px solid rgba(239,68,68,0.2)}
+        .btn-danger:hover{background:rgba(239,68,68,0.2);box-shadow:0 0 16px rgba(239,68,68,0.2)}
+        .btn-warning{background:rgba(245,158,11,0.12);color:#FBBF24;border:1px solid rgba(245,158,11,0.2)}
+        .btn-warning:hover{background:rgba(245,158,11,0.2);box-shadow:0 0 16px rgba(245,158,11,0.2)}
+        .btn-ghost{background:transparent;color:#94A3B8;border:1px solid rgba(255,255,255,0.08)}
+        .btn-ghost:hover{background:rgba(255,255,255,0.04);color:#E0E0FF;border-color:rgba(255,255,255,0.15)}
+        .btn-xs{padding:5px 11px;font-size:.75rem;gap:5px;border-radius:8px}
+        .btn-sm{padding:7px 14px;font-size:.8125rem}
 
-        /* ── Badges ── */
-        .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:99px; font-size:.6875rem; font-weight:600; }
-        .badge-success { background:rgba(34,197,94,.15); color:#4ADE80; }
-        .badge-danger  { background:rgba(239,68,68,.15); color:#F87171; }
-        .badge-warning { background:rgba(234,179,8,.15); color:#FACC15; }
-        .badge-info    { background:rgba(59,130,246,.15); color:#60A5FA; }
-        .badge-muted   { background:rgba(148,163,184,.12); color:#94A3B8; }
+        /* Input */
+        .input{background:#0A0A1A;border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:10px 14px;color:#E0E0FF;font-size:.875rem;font-family:'"DM Sans"',system-ui,sans-serif;width:100%;transition:all .2s;outline:none}
+        .input:focus{border-color:#00FFFF;box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+        .input::placeholder{color:#64748B}
+        select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
 
-        /* ── Table ── */
-        .table-custom { width:100%; border-collapse:collapse; }
-        .table-custom th {
-            text-align:left; padding:10px 14px; color:#64748B; font-size:.6875rem;
-            font-weight:600; text-transform:uppercase; letter-spacing:.04em;
-            border-bottom:1px solid #334155; background:#0F172A;
+        /* Badges */
+        .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:.6875rem;font-weight:600}
+        .badge-success{background:rgba(34,197,94,.15);color:#4ADE80}
+        .badge-danger{background:rgba(239,68,68,.15);color:#F87171}
+        .badge-warning{background:rgba(245,158,11,.15);color:#FBBF24}
+        .badge-info{background:rgba(0,255,255,.12);color:#00FFFF}
+        .badge-muted{background:rgba(148,163,184,.12);color:#94A3B8}
+
+        /* Table */
+        .table-custom{width:100%;border-collapse:collapse}
+        .table-custom th{text-align:left;padding:10px 14px;color:#64748B;font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-family:'"Space Grotesk"',system-ui,sans-serif;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(0,255,255,0.02)}
+        .table-custom td{padding:10px 14px;font-size:.875rem;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .table-custom tr:hover td{background:rgba(0,255,255,0.03)}
+
+        /* Flash */
+        .flash{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;font-size:.875rem;margin-bottom:14px;animation:slideDown .25s ease-out}
+        .flash-success{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#4ADE80}
+        .flash-danger{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#F87171}
+        .flash-warning{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#FBBF24}
+        .flash-info{background:rgba(0,255,255,.06);border:1px solid rgba(0,255,255,.2);color:#00FFFF}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+        /* Modal */
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.active{display:flex}
+        .modal-card{background:#101823;border:1px solid rgba(0,255,255,0.10);border-radius:24px;padding:28px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 0 40px rgba(0,255,255,0.08),0 20px 60px rgba(0,0,0,0.7);animation:fadeScale .25s ease-out}
+        @keyframes fadeScale{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+        /* Sidebar */
+        .sidebar-link{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:14px;color:#94A3B8;font-size:.875rem;font-weight:500;font-family:'"DM Sans"',system-ui,sans-serif;transition:all .2s;text-decoration:none;white-space:nowrap}
+        .sidebar-link:hover{background:rgba(0,255,255,0.04);color:#00FFFF}
+        .sidebar-link.active{background:rgba(0,255,255,0.08);color:#00FFFF;border:1px solid rgba(0,255,255,0.15)}
+        .sidebar-link i{width:20px;text-align:center;font-size:1rem;flex-shrink:0}
+        .sidebar-divider{height:1px;background:rgba(255,255,255,0.05);margin:6px 12px}
+
+        .sidebar-collapsed{width:64px!important}
+        .sidebar-collapsed .sidebar-link{justify-content:center;padding:10px 0}
+        .sidebar-collapsed .sidebar-text,.sidebar-collapsed .logo-text,.sidebar-collapsed .user-block{display:none}
+        .sidebar-collapsed .sidebar-divider{margin:4px 10px}
+
+        .fade-in{animation:fadeIn .3s ease forwards}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+        @media(max-width:1023px){.sidebar-desktop{width:64px!important}.sidebar-desktop .sidebar-text,.sidebar-desktop .logo-text,.sidebar-desktop .user-block{display:none}.sidebar-desktop .sidebar-link{justify-content:center;padding:10px 0}.sidebar-desktop .sidebar-divider{margin:4px 10px}}
+        @media(max-width:767px){
+            .sidebar-desktop{position:fixed;top:0;left:-100%;width:270px!important;height:100vh;z-index:50;transition:left .3s ease-out;box-shadow:8px 0 40px rgba(0,0,0,.8)}
+            .sidebar-desktop.open{left:0}
+            .sidebar-desktop.open .sidebar-text,.sidebar-desktop.open .logo-text,.sidebar-desktop.open .user-block{display:inline}
+            .sidebar-desktop.open .sidebar-link{justify-content:flex-start;padding:10px 14px}
+            .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:49}
+            .sidebar-overlay.active{display:block}
+            .mobile-toggle{display:flex!important;align-items:center;gap:8px;position:fixed;top:10px;left:10px;z-index:60;background:#101823;border:1px solid rgba(0,255,255,0.12);border-radius:14px;padding:8px 14px;color:#00FFFF;cursor:pointer;font-size:.875rem}
         }
-        .table-custom td { padding:10px 14px; font-size:.875rem; border-bottom:1px solid rgba(51,65,85,.4); }
-        .table-custom tr:hover td { background:rgba(255,255,255,.02); }
-
-        /* ── Flash ── */
-        .flash { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; font-size:.875rem; margin-bottom:14px; animation:slideDown .25s ease-out; }
-        .flash-success { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#4ADE80; }
-        .flash-danger  { background:rgba(239,68,68,.10); border:1px solid rgba(239,68,68,.25); color:#F87171; }
-        .flash-warning { background:rgba(234,179,8,.10); border:1px solid rgba(234,179,8,.25); color:#FACC15; }
-        .flash-info    { background:rgba(59,130,246,.10); border:1px solid rgba(59,130,246,.25); color:#60A5FA; }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-
-        /* ── Modal ── */
-        .modal-overlay {
-            display:none; position:fixed; inset:0; background:rgba(0,0,0,.65);
-            z-index:1000; align-items:center; justify-content:center; padding:16px;
-        }
-        .modal-overlay.active { display:flex; }
-        .modal-card {
-            background:#1E293B; border:1px solid #334155; border-radius:14px;
-            padding:24px; max-width:520px; width:100%; max-height:85vh; overflow-y:auto;
-            box-shadow:0 20px 60px rgba(0,0,0,.6); animation:fadeScale .2s ease-out;
-        }
-        @keyframes fadeScale { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
-
-        /* ── Sidebar ── */
-        .sidebar-link {
-            display:flex; align-items:center; gap:11px; padding:9px 14px;
-            border-radius:8px; color:#94A3B8; font-size:.875rem; font-weight:500;
-            transition:all .15s; text-decoration:none; white-space:nowrap;
-        }
-        .sidebar-link:hover { background:rgba(255,255,255,.04); color:#E2E8F0; }
-        .sidebar-link.active { background:rgba(59,130,246,.12); color:#60A5FA; }
-        .sidebar-link i { width:20px; text-align:center; font-size:1rem; flex-shrink:0; }
-        .sidebar-divider { height:1px; background:#334155; margin:6px 12px; }
-
-        /* ── Sidebar collapsed ── */
-        .sidebar-collapsed { width:64px!important; }
-        .sidebar-collapsed .sidebar-link { justify-content:center; padding:9px 0; }
-        .sidebar-collapsed .sidebar-text,
-        .sidebar-collapsed .logo-text,
-        .sidebar-collapsed .user-block { display:none; }
-        .sidebar-collapsed .sidebar-divider { margin:4px 10px; }
-
-        /* ── Fade in ── */
-        .fade-in { animation:fadeIn .3s ease forwards; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-
-        /* ── Responsive ── */
-        @media (max-width:1023px) {
-            .sidebar-desktop { width:64px!important; }
-            .sidebar-desktop .sidebar-text,
-            .sidebar-desktop .logo-text,
-            .sidebar-desktop .user-block { display:none; }
-            .sidebar-desktop .sidebar-link { justify-content:center; padding:9px 0; }
-            .sidebar-desktop .sidebar-divider { margin:4px 10px; }
-        }
-        @media (max-width:767px) {
-            .sidebar-desktop {
-                position:fixed; top:0; left:-100%; width:260px!important;
-                height:100vh; z-index:50; transition:left .25s ease-out;
-                box-shadow:4px 0 24px rgba(0,0,0,.6);
-            }
-            .sidebar-desktop.open { left:0; }
-            .sidebar-desktop.open .sidebar-text,
-            .sidebar-desktop.open .logo-text,
-            .sidebar-desktop.open .user-block { display:inline; }
-            .sidebar-desktop.open .sidebar-link { justify-content:flex-start; padding:9px 14px; }
-            .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:49; }
-            .sidebar-overlay.active { display:block; }
-            .mobile-toggle {
-                display:flex!important; align-items:center; gap:8px;
-                position:fixed; top:10px; left:10px; z-index:60;
-                background:#1E293B; border:1px solid #334155; border-radius:8px;
-                padding:8px 12px; color:#E2E8F0; cursor:pointer; font-size:.875rem;
-            }
-        }
-        .mobile-toggle { display:none; }
+        .mobile-toggle{display:none}
     </style>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-
-    <!-- Mobile overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    <!-- Mobile toggle -->
-    <button class="mobile-toggle" id="mobileToggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i> <span>PanelSSH</span>
-    </button>
+    <button class="mobile-toggle" id="mobileToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i> <span>PanelSSH</span></button>
 
     <div class="flex h-screen">
         {% if current_user.is_authenticated %}
-        <!-- Sidebar -->
-        <aside class="w-60 bg-surface-base border-r border-[#334155] flex flex-col flex-shrink-0 sidebar-desktop" id="sidebar">
-            <!-- Logo -->
-            <div class="px-4 py-5 border-b border-[#334155]">
+        <aside class="w-60 flex flex-col flex-shrink-0 sidebar-desktop" id="sidebar" style="background:rgba(5,5,16,.92);border-right:1px solid rgba(0,255,255,0.06);">
+            <div class="px-4 py-5 border-b border-white/5">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-accent flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-terminal text-white text-base"></i>
-                    </div>
-                    <div class="logo-text">
-                        <h1 class="text-white font-bold text-base">PanelSSH</h1>
-                        <p class="text-[10px] text-muted">Dropbear Manager</p>
-                    </div>
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(0,255,255,0.10);"><i class="fas fa-terminal text-base" style="color:#00FFFF;"></i></div>
+                    <div class="logo-text"><h1 class="text-white font-bold text-base" style="font-family:'Space Grotesk',system-ui,sans-serif;">PanelSSH</h1><p class="text-[10px] text-muted">Dropbear Manager</p></div>
                 </div>
             </div>
 
-            <!-- Nav -->
             <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
                 {% if current_user.is_authenticated and (current_user.__class__.__name__ == 'Admin' or current_user._sa_class_name == 'Admin') %}
-                <!-- ADMIN -->
-                <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint and 'admin.dashboard' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-chart-pie"></i><span class="sidebar-text">Dashboard</span></a>
-                <a href="{{ url_for('admin.users') }}" class="sidebar-link {% if request.endpoint and 'admin.users' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-users"></i><span class="sidebar-text">Usuarios</span></a>
-                <a href="{{ url_for('admin.clients') }}" class="sidebar-link {% if request.endpoint and 'admin.clients' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-id-card"></i><span class="sidebar-text">Clientes</span></a>
-                <a href="{{ url_for('admin.servers') }}" class="sidebar-link {% if request.endpoint and 'admin.servers' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-server"></i><span class="sidebar-text">Servidores</span></a>
-                <a href="{{ url_for('admin.online') }}" class="sidebar-link {% if request.endpoint and 'admin.online' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-wifi"></i><span class="sidebar-text">Online</span></a>
-                <a href="{{ url_for('admin.disconnect') }}" class="sidebar-link {% if request.endpoint and 'admin.disconnect' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-plug text-danger"></i><span class="sidebar-text">Desconectar</span></a>
-                <a href="{{ url_for('admin.clean_expired') }}" class="sidebar-link {% if request.endpoint and 'admin.clean_expired' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-broom"></i><span class="sidebar-text">Limpiar Exp.</span></a>
-
+                <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint and 'admin.dashboard' in request.endpoint %}active{% endif %}"><i class="fas fa-chart-pie"></i><span class="sidebar-text">Dashboard</span></a>
+                <a href="{{ url_for('admin.users') }}" class="sidebar-link {% if request.endpoint and 'admin.users' in request.endpoint %}active{% endif %}"><i class="fas fa-users"></i><span class="sidebar-text">Usuarios</span></a>
+                <a href="{{ url_for('admin.clients') }}" class="sidebar-link {% if request.endpoint and 'admin.clients' in request.endpoint %}active{% endif %}"><i class="fas fa-id-card"></i><span class="sidebar-text">Clientes</span></a>
+                <a href="{{ url_for('admin.servers') }}" class="sidebar-link {% if request.endpoint and 'admin.servers' in request.endpoint %}active{% endif %}"><i class="fas fa-server"></i><span class="sidebar-text">Servidores</span></a>
+                <a href="{{ url_for('admin.online') }}" class="sidebar-link {% if request.endpoint and 'admin.online' in request.endpoint %}active{% endif %}"><i class="fas fa-wifi"></i><span class="sidebar-text">Online</span></a>
+                <a href="{{ url_for('admin.disconnect') }}" class="sidebar-link {% if request.endpoint and 'admin.disconnect' in request.endpoint %}active{% endif %}"><i class="fas fa-plug text-danger"></i><span class="sidebar-text">Desconectar</span></a>
+                <a href="{{ url_for('admin.clean_expired') }}" class="sidebar-link {% if request.endpoint and 'admin.clean_expired' in request.endpoint %}active{% endif %}"><i class="fas fa-broom"></i><span class="sidebar-text">Limpiar Exp.</span></a>
                 <div class="sidebar-divider"></div>
-
-                <a href="{{ url_for('admin.resellers') }}" class="sidebar-link {% if request.endpoint and 'admin.resellers' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-store"></i><span class="sidebar-text">Revendedores</span></a>
-                <a href="{{ url_for('admin.credit_settings') }}" class="sidebar-link {% if request.endpoint and 'admin.credit_settings' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-coins text-warning"></i><span class="sidebar-text">Créditos</span></a>
-
+                <a href="{{ url_for('admin.resellers') }}" class="sidebar-link {% if request.endpoint and 'admin.resellers' in request.endpoint %}active{% endif %}"><i class="fas fa-store"></i><span class="sidebar-text">Revendedores</span></a>
+                <a href="{{ url_for('admin.credit_settings') }}" class="sidebar-link {% if request.endpoint and 'admin.credit_settings' in request.endpoint %}active{% endif %}"><i class="fas fa-coins text-warning"></i><span class="sidebar-text">Créditos</span></a>
                 <div class="sidebar-divider"></div>
-
-                <a href="{{ url_for('admin.logs') }}" class="sidebar-link {% if request.endpoint and 'admin.logs' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-clipboard-list"></i><span class="sidebar-text">Registro</span></a>
-
+                <a href="{{ url_for('admin.logs') }}" class="sidebar-link {% if request.endpoint and 'admin.logs' in request.endpoint %}active{% endif %}"><i class="fas fa-clipboard-list"></i><span class="sidebar-text">Registro</span></a>
                 {% elif current_user.__class__.__name__ == 'Reseller' %}
-                <!-- RESELLER -->
-                <a href="{{ url_for('reseller.reseller_dashboard') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_dashboard' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-chart-pie"></i><span class="sidebar-text">Dashboard</span></a>
-                <a href="{{ url_for('reseller.users') }}" class="sidebar-link {% if request.endpoint and 'reseller.users' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-users"></i><span class="sidebar-text">Mis Usuarios</span></a>
-                <a href="{{ url_for('reseller.reseller_online') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_online' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-wifi"></i><span class="sidebar-text">Online</span></a>
-                <a href="{{ url_for('reseller.reseller_disconnect') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_disconnect' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-plug text-danger"></i><span class="sidebar-text">Desconectar</span></a>
-                <a href="{{ url_for('reseller.reseller_clean_expired') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_clean_expired' in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-broom"></i><span class="sidebar-text">Limpiar Exp.</span></a>
+                <a href="{{ url_for('reseller.reseller_dashboard') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_dashboard' in request.endpoint %}active{% endif %}"><i class="fas fa-chart-pie"></i><span class="sidebar-text">Dashboard</span></a>
+                <a href="{{ url_for('reseller.users') }}" class="sidebar-link {% if request.endpoint and 'reseller.users' in request.endpoint %}active{% endif %}"><i class="fas fa-users"></i><span class="sidebar-text">Mis Usuarios</span></a>
+                <a href="{{ url_for('reseller.reseller_online') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_online' in request.endpoint %}active{% endif %}"><i class="fas fa-wifi"></i><span class="sidebar-text">Online</span></a>
+                <a href="{{ url_for('reseller.reseller_disconnect') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_disconnect' in request.endpoint %}active{% endif %}"><i class="fas fa-plug text-danger"></i><span class="sidebar-text">Desconectar</span></a>
+                <a href="{{ url_for('reseller.reseller_clean_expired') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_clean_expired' in request.endpoint %}active{% endif %}"><i class="fas fa-broom"></i><span class="sidebar-text">Limpiar Exp.</span></a>
                 {% endif %}
             </nav>
 
-            <!-- User footer -->
-            <div class="p-3 border-t border-[#334155]">
+            <div class="p-3 border-t border-white/5">
                 <div class="flex items-center gap-3 user-block">
-                    <div class="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-                        <span class="text-accent text-xs font-bold">{{ current_user.username[0]|upper }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-white text-sm font-medium truncate">{{ current_user.username }}</p>
-                        <p class="text-[10px] text-muted">{% if current_user.__class__.__name__ == 'Admin' %}Administrador{% else %}Revendedor{% endif %}</p>
-                    </div>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(0,255,255,0.10);"><span class="text-xs font-bold" style="color:#00FFFF;">{{ current_user.username[0]|upper }}</span></div>
+                    <div class="flex-1 min-w-0"><p class="text-white text-sm font-medium truncate">{{ current_user.username }}</p><p class="text-[10px] text-muted">{% if current_user.__class__.__name__ == 'Admin' %}Administrador{% else %}Revendedor{% endif %}</p></div>
                     <div class="flex items-center gap-0.5">
-                        {% if current_user.__class__.__name__ == 'Admin' %}
-                        <a href="{{ url_for('admin.profile') }}" class="text-muted hover:text-accent p-1.5" title="Perfil"><i class="fas fa-cog text-sm"></i></a>
-                        {% endif %}
-                        <a href="{{ url_for('auth.logout') }}" class="text-muted hover:text-danger p-1.5" title="Cerrar sesión"><i class="fas fa-sign-out-alt text-sm"></i></a>
+                        {% if current_user.__class__.__name__ == 'Admin' %}<a href="{{ url_for('admin.profile') }}" class="text-muted hover:text-[#00FFFF] p-1.5" title="Perfil"><i class="fas fa-cog text-sm"></i></a>{% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="text-muted hover:text-danger p-1.5" title="Salir"><i class="fas fa-sign-out-alt text-sm"></i></a>
                     </div>
                 </div>
             </div>
         </aside>
         {% endif %}
 
-        <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-surface-deep">
             <div class="px-4 py-5 md:px-6 md:py-6 max-w-7xl mx-auto">
-                <!-- Flash messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                 <div class="space-y-2 mb-5">
                     {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">
-                        <i class="fas fa-{% if category=='success' %}check-circle{% elif category=='danger' %}exclamation-circle{% elif category=='warning' %}exclamation-triangle{% else %}info-circle{% endif %} text-base flex-shrink-0"></i>
-                        <span class="flex-1">{{ message }}</span>
-                        <button onclick="this.parentElement.remove()" class="opacity-50 hover:opacity-100 flex-shrink-0"><i class="fas fa-times"></i></button>
-                    </div>
+                    <div class="flash flash-{{ category }}"><i class="fas fa-{% if category=='success' %}check-circle{% elif category=='danger' %}exclamation-circle{% elif category=='warning' %}exclamation-triangle{% else %}info-circle{% endif %} text-base flex-shrink-0"></i><span class="flex-1">{{ message }}</span><button onclick="this.parentElement.remove()" class="opacity-50 hover:opacity-100 flex-shrink-0"><i class="fas fa-times"></i></button></div>
                     {% endfor %}
                 </div>
                 {% endif %}
                 {% endwith %}
-
                 {% block content %}{% endblock %}
             </div>
         </main>
     </div>
 
-    <!-- Confirm Modal (reusable) -->
     <div class="modal-overlay" id="confirmModal">
         <div class="modal-card text-center">
-            <div class="w-14 h-14 rounded-full bg-danger/15 flex items-center justify-center mx-auto mb-4" id="confirmIcon">
-                <i class="fas fa-exclamation-triangle text-danger text-2xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-white mb-2" id="confirmTitle">¿Confirmar acción?</h3>
-            <p class="text-sm text-muted mb-6" id="confirmMessage">Esta acción no se puede deshacer.</p>
-            <div class="flex gap-3 justify-center">
-                <button type="button" onclick="closeModal('confirmModal')" class="btn btn-ghost flex-1">Cancelar</button>
-                <button type="button" id="confirmBtn" class="btn btn-danger flex-1" onclick="executeConfirm()">
-                    <i class="fas fa-check mr-1.5"></i>Confirmar
-                </button>
-            </div>
+            <div class="w-14 h-14 rounded-full bg-danger/15 flex items-center justify-center mx-auto mb-4" id="confirmIcon"><i class="fas fa-exclamation-triangle text-danger text-2xl"></i></div>
+            <h3 class="text-lg font-bold text-white mb-2" id="confirmTitle">¿Confirmar?</h3>
+            <p class="text-sm text-muted mb-6" id="confirmMessage"></p>
+            <div class="flex gap-3 justify-center"><button type="button" onclick="closeModal('confirmModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="button" id="confirmBtn" class="btn btn-danger flex-1" onclick="executeConfirm()"><i class="fas fa-check mr-1.5"></i>Confirmar</button></div>
         </div>
     </div>
 
     <script>
-        // Auto-dismiss flash
         document.querySelectorAll('.flash').forEach(el=>{setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .4s';setTimeout(()=>el.remove(),400)},8000)});
-
-        // Modal helpers
         function openModal(id){document.getElementById(id).classList.add('active')}
         function closeModal(id){document.getElementById(id).classList.remove('active')}
         document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')})});
-
-        // Sidebar toggle
         function toggleSidebar(){const s=document.getElementById('sidebar'),o=document.getElementById('sidebarOverlay');if(window.innerWidth<768){s.classList.toggle('open');o.classList.toggle('active')}else{s.classList.toggle('sidebar-collapsed')}}
         document.querySelectorAll('.sidebar-link').forEach(l=>{l.addEventListener('click',()=>{if(window.innerWidth<768){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('active')}})});
-
-        // Confirm modal
-        let _confirmTarget = null;
-        function confirmAction(title, msg, iconClass, btnClass, btnText, formSelector) {
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmMessage').textContent = msg;
-            document.getElementById('confirmIcon').innerHTML = '<i class="fas ' + iconClass + ' text-2xl"></i>';
-            const btn = document.getElementById('confirmBtn');
-            btn.className = 'btn flex-1 ' + btnClass;
-            btn.innerHTML = '<i class="fas fa-check mr-1.5"></i>' + btnText;
-            _confirmTarget = formSelector;
-            openModal('confirmModal');
-        }
-        function executeConfirm() {
-            closeModal('confirmModal');
-            if (_confirmTarget) {
-                const form = document.querySelector(_confirmTarget);
-                if (form) form.submit();
-                _confirmTarget = null;
-            }
-        }
-
-        // CSRF injection
+        let _confirmTarget=null;
+        function confirmAction(title,msg,iconClass,btnClass,btnText,formSelector){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMessage').textContent=msg;document.getElementById('confirmIcon').innerHTML='<i class="fas '+iconClass+' text-2xl"></i>';const btn=document.getElementById('confirmBtn');btn.className='btn flex-1 '+btnClass;btn.innerHTML='<i class="fas fa-check mr-1.5"></i>'+btnText;_confirmTarget=formSelector;openModal('confirmModal')}
+        function executeConfirm(){closeModal('confirmModal');if(_confirmTarget){const f=document.querySelector(_confirmTarget);if(f)f.submit();_confirmTarget=null}}
         (function(){const m=document.querySelector('meta[name="csrf-token"]');if(!m)return;const t=m.getAttribute('content');document.querySelectorAll('form[method="POST"]').forEach(f=>{if(!f.querySelector('input[name="csrf_token"]')){const i=document.createElement('input');i.type='hidden';i.name='csrf_token';i.value=t;f.appendChild(i)}})})();
     </script>
     {% block extra_js %}{% endblock %}

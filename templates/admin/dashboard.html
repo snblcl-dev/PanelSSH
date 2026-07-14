@@ -2,246 +2,58 @@
 {% block title %}Dashboard — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div>
-            <h1 class="text-xl md:text-2xl font-bold text-white">Dashboard</h1>
-            <p class="text-xs md:text-sm text-muted mt-0.5">Panel de control general del servidor SSH</p>
-        </div>
-        <div class="flex items-center gap-2 text-xs md:text-sm text-muted font-mono">
-            <i class="fas fa-sync-alt text-accent"></i>
-            <span id="live-time"></span>
-        </div>
+        <div><h1 class="text-xl md:text-2xl font-bold text-white">Dashboard</h1><p class="text-xs md:text-sm text-muted mt-0.5">Panel de control general del servidor SSH</p></div>
+        <div class="flex items-center gap-2 text-xs md:text-sm text-muted"><i class="fas fa-sync-alt" style="color:#00FFFF;"></i><span id="live-time"></span></div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-        <!-- Total Users -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <i class="fas fa-users text-accent"></i>
-                </div>
-                <span class="badge badge-info">Total</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ total_users }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Usuarios Registrados</p>
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <!-- Total — 2x1 wide -->
+        <div class="stat-card bento-2x1 flex flex-col justify-center" style="border-left:3px solid #00FFFF;">
+            <div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,255,255,0.10);"><i class="fas fa-users text-lg" style="color:#00FFFF;"></i></div><span class="badge badge-info">Total</span></div>
+            <p class="text-3xl md:text-4xl font-bold text-white">{{ total_users }}</p>
+            <p class="text-xs text-muted mt-1">Usuarios Registrados</p>
         </div>
 
-        <!-- Active -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
-                    <i class="fas fa-check-circle text-success"></i>
-                </div>
-                <span class="badge badge-success">Activos</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ active_users }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Usuarios Activos</p>
-        </div>
+        <div class="stat-card"><div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(34,197,94,0.10);"><i class="fas fa-check-circle text-lg text-success"></i></div><span class="badge badge-success">Activos</span></div><p class="text-3xl font-bold text-white">{{ active_users }}</p><p class="text-xs text-muted mt-1">Usuarios Activos</p></div>
 
-        <!-- Blocked -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-danger/10 flex items-center justify-center">
-                    <i class="fas fa-ban text-danger"></i>
-                </div>
-                <span class="badge badge-danger">Bloqueados</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ blocked_users }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Usuarios Bloqueados</p>
-        </div>
+        <div class="stat-card"><div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(239,68,68,0.10);"><i class="fas fa-ban text-lg text-danger"></i></div><span class="badge badge-danger">Bloqueados</span></div><p class="text-3xl font-bold text-white">{{ blocked_users }}</p><p class="text-xs text-muted mt-1">Usuarios Bloqueados</p></div>
 
-        <!-- Expiring Soon -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
-                    <i class="fas fa-clock text-warning"></i>
-                </div>
-                <span class="badge badge-warning">Próximos</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ expiring_soon }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Vencen en 3 días</p>
-        </div>
+        <!-- Online — púrpura -->
+        <div class="stat-card card-purple"><div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(123,97,255,0.10);"><i class="fas fa-wifi text-lg" style="color:#7B61FF;"></i></div><span class="badge badge-info">Online</span></div><p class="text-3xl font-bold text-white">{{ online_users_count }}</p><p class="text-xs text-muted mt-1">Conectados Ahora</p></div>
 
-        <!-- Expired -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-muted/15 flex items-center justify-center">
-                    <i class="fas fa-skull text-muted"></i>
-                </div>
-                <span class="badge badge-muted">Expirados</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ expired_users }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Usuarios Expirados</p>
-        </div>
-
-        <!-- Online -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
-                    <i class="fas fa-wifi text-success"></i>
-                </div>
-                <span class="badge badge-success">Online</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ online_users_count }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Usuarios Conectados</p>
-        </div>
-
-        <!-- Created Today -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <i class="fas fa-calendar-day text-accent"></i>
-                </div>
-                <span class="badge badge-info">Hoy</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ created_today }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Creados Hoy</p>
-        </div>
-
-        <!-- Resellers -->
-        <div class="stat-card">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <i class="fas fa-store text-accent"></i>
-                </div>
-                <span class="badge badge-muted">Revendedores</span>
-            </div>
-            <p class="text-xl md:text-2xl font-bold text-white">{{ active_resellers }}/{{ total_resellers }}</p>
-            <p class="text-[11px] md:text-xs text-muted mt-0.5">Activos / Totales</p>
-        </div>
-    </div>
-
-    <!-- Bottom row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <!-- Recent Activity -->
-        <div class="card p-5">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
-                <i class="fas fa-history text-accent"></i>Actividad Reciente
-            </h3>
-            <div class="space-y-1">
-                {% for log in recent_logs %}
-                <div class="flex items-start gap-3 text-sm p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs
-                        {% if log.action in ('create','renew','unblock','login') %}bg-success/15 text-success
-                        {% elif log.action in ('delete','block','disconnect') %}bg-danger/15 text-danger
-                        {% else %}bg-accent/15 text-accent{% endif %}">
-                        <i class="fas fa-{% if log.action == 'create' %}plus{% elif log.action == 'renew' %}sync{% elif log.action == 'delete' %}trash{% elif log.action == 'block' %}ban{% elif log.action == 'unblock' %}check{% elif log.action == 'disconnect' %}power-off{% elif log.action == 'login' %}sign-in-alt{% else %}circle{% endif %}"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-white/90 truncate text-sm">{{ log.description }}</p>
-                        <p class="text-muted text-[11px] mt-0.5">
-                            <span class="text-accent">{{ log.performed_by }}</span> · {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}
-                        </p>
-                    </div>
-                </div>
-                {% else %}
-                <p class="text-muted text-sm text-center py-6">No hay actividad registrada aún</p>
-                {% endfor %}
+        <!-- Expiring + Expired + Today — 2x1 wide -->
+        <div class="stat-card bento-2x1 flex flex-col justify-center" style="border-left:3px solid #F59E0B;">
+            <div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(245,158,11,0.10);"><i class="fas fa-clock text-lg text-warning"></i></div><span class="badge badge-warning">Resumen de Tiempo</span></div>
+            <div class="flex items-end gap-6">
+                <div><p class="text-3xl font-bold text-white">{{ expiring_soon }}</p><p class="text-xs text-muted mt-1">Vencen en 3d</p></div>
+                <div><p class="text-3xl font-bold text-white">{{ expired_users }}</p><p class="text-xs text-muted mt-1">Expirados</p></div>
+                <div><p class="text-3xl font-bold text-white">{{ created_today }}</p><p class="text-xs text-muted mt-1">Creados Hoy</p></div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="card p-5">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
-                <i class="fas fa-bolt text-warning"></i>Acciones Rápidas
-            </h3>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="openModal('createUserModal')"
-                        class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-accent/40 transition-all group">
-                    <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                        <i class="fas fa-user-plus text-accent text-lg"></i>
-                    </div>
-                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Nuevo Usuario</span>
-                </button>
-                <a href="{{ url_for('admin.clean_expired') }}"
-                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-danger/40 transition-all group">
-                    <div class="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center group-hover:bg-danger/20 transition-colors">
-                        <i class="fas fa-broom text-danger text-lg"></i>
-                    </div>
-                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Limpiar Expirados</span>
-                </a>
-                <a href="{{ url_for('admin.online') }}"
-                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-accent/40 transition-all group">
-                    <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
-                        <i class="fas fa-wifi text-success text-lg"></i>
-                    </div>
-                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Ver Online</span>
-                </a>
-                <a href="{{ url_for('admin.users') }}"
-                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-accent/40 transition-all group">
-                    <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                        <i class="fas fa-users text-accent text-lg"></i>
-                    </div>
-                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Ver Usuarios</span>
-                </a>
-            </div>
-        </div>
+        <div class="stat-card"><div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,255,255,0.10);"><i class="fas fa-store text-lg" style="color:#00FFFF;"></i></div><span class="badge badge-muted">Revendedores</span></div><p class="text-3xl font-bold text-white">{{ active_resellers }}/{{ total_resellers }}</p><p class="text-xs text-muted mt-1">Activos / Totales</p></div>
+
+        <!-- Quick Actions — 2x1 wide -->
+        <div class="card p-5 bento-2x1"><h3 class="text-white font-semibold mb-3 flex items-center gap-2 text-sm"><i class="fas fa-bolt text-warning"></i>Acciones Rápidas</h3><div class="grid grid-cols-2 gap-2">
+            <button onclick="openModal('createUserModal')" class="flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:scale-[1.02] cursor-pointer" style="background:rgba(0,255,255,0.04);border-color:rgba(0,255,255,0.12);"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,255,255,0.10);"><i class="fas fa-user-plus text-lg" style="color:#00FFFF;"></i></div><span class="text-sm font-medium" style="color:#00FFFF;">Nuevo Usuario</span></button>
+            <a href="{{ url_for('admin.clean_expired') }}" class="flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:scale-[1.02] cursor-pointer" style="background:rgba(239,68,68,0.04);border-color:rgba(239,68,68,0.15);text-decoration:none;"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(239,68,68,0.10);"><i class="fas fa-broom text-lg" style="color:#F87171;"></i></div><span class="text-sm font-medium" style="color:#F87171;">Limpiar Expirados</span></a>
+            <a href="{{ url_for('admin.online') }}" class="flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:scale-[1.02] cursor-pointer" style="background:rgba(123,97,255,0.04);border-color:rgba(123,97,255,0.15);text-decoration:none;"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(123,97,255,0.10);"><i class="fas fa-wifi text-lg" style="color:#7B61FF;"></i></div><span class="text-sm font-medium" style="color:#7B61FF;">Ver Online</span></a>
+            <a href="{{ url_for('admin.users') }}" class="flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:scale-[1.02] cursor-pointer" style="background:rgba(0,255,255,0.04);border-color:rgba(0,255,255,0.12);text-decoration:none;"><div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,255,255,0.10);"><i class="fas fa-users text-lg" style="color:#00FFFF;"></i></div><span class="text-sm font-medium" style="color:#00FFFF;">Ver Usuarios</span></a>
+        </div></div>
+
+        <!-- Recent Activity — 2x1 wide -->
+        <div class="card p-5 bento-2x1"><h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm"><i class="fas fa-history" style="color:#00FFFF;"></i>Actividad Reciente</h3><div class="space-y-1">
+            {% for log in recent_logs %}
+            <div class="flex items-start gap-3 text-sm p-2.5 rounded-xl hover:bg-white/[0.03] transition-colors"><div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs {% if log.action in ('create','renew','unblock','login') %}bg-success/15 text-success{% elif log.action in ('delete','block','disconnect') %}bg-danger/15 text-danger{% else %}bg-info/15 text-info{% endif %}"><i class="fas fa-{% if log.action=='create' %}plus{% elif log.action=='renew' %}sync{% elif log.action=='delete' %}trash{% elif log.action=='block' %}ban{% elif log.action=='unblock' %}check{% elif log.action=='disconnect' %}power-off{% elif log.action=='login' %}sign-in-alt{% else %}circle{% endif %}"></i></div><div class="flex-1 min-w-0"><p class="text-white/90 truncate text-sm">{{ log.description }}</p><p class="text-muted text-[11px] mt-0.5"><span style="color:#00FFFF;">{{ log.performed_by }}</span> · {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}</p></div></div>
+            {% else %}<p class="text-muted text-sm text-center py-6">No hay actividad registrada aún</p>{% endfor %}
+        </div></div>
     </div>
 </div>
 
 <!-- Modal: Create User -->
-<div class="modal-overlay" id="createUserModal">
-    <div class="modal-card">
-        <div class="flex items-center justify-between mb-5">
-            <h3 class="text-lg font-bold text-white">
-                <i class="fas fa-user-plus text-accent mr-2"></i>Nuevo Usuario
-            </h3>
-            <button onclick="closeModal('createUserModal')" class="text-muted hover:text-white transition-colors">
-                <i class="fas fa-times text-lg"></i>
-            </button>
-        </div>
-        <form method="POST" action="{{ url_for('admin.user_create') }}" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label>
-                <input type="text" name="username" class="input" placeholder="Ej: usuario1" required>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1.5">Días de Duración</label>
-                    <input type="number" name="days" class="input" value="30" min="1" max="365">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1.5">Conexiones Máximas</label>
-                    <input type="number" name="max_connections" class="input" value="1" min="1" max="10">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-muted mb-1.5">
-                    Asignar a Revendedor <span class="text-muted/60 text-xs">(opcional)</span>
-                </label>
-                <select name="assign_reseller" class="input">
-                    <option value="">Sin revendedor</option>
-                    {% for r in resellers %}<option value="{{ r.id }}">{{ r.username }}</option>{% endfor %}
-                </select>
-            </div>
-            {% if servers %}
-            <div>
-                <label class="block text-sm font-medium text-muted mb-1.5">
-                    Servidor <span class="text-muted/60 text-xs">(opcional)</span>
-                </label>
-                <select name="server_id" class="input">
-                    <option value="">Local (este servidor)</option>
-                    {% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}
-                </select>
-            </div>
-            {% endif %}
-            <button type="submit" class="btn btn-primary w-full justify-center py-3">
-                <i class="fas fa-plus mr-1.5"></i>Crear Usuario
-            </button>
-        </form>
-    </div>
-</div>
+<div class="modal-overlay" id="createUserModal"><div class="modal-card"><div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-user-plus mr-2" style="color:#00FFFF;"></i>Nuevo Usuario</h3><button onclick="closeModal('createUserModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div><form method="POST" action="{{ url_for('admin.user_create') }}" class="space-y-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" placeholder="Ej: usuario1" required></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Días de Duración</label><input type="number" name="days" class="input" value="30" min="1" max="365"></div><div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones Máximas</label><input type="number" name="max_connections" class="input" value="1" min="1" max="10"></div></div><div><label class="block text-sm font-medium text-muted mb-1.5">Asignar a Revendedor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="assign_reseller" class="input"><option value="">Sin revendedor</option>{% for r in resellers %}<option value="{{ r.id }}">{{ r.username }}</option>{% endfor %}</select></div>{% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local (este servidor)</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}</select></div>{% endif %}<button type="submit" class="btn btn-primary w-full justify-center py-3"><i class="fas fa-plus mr-1.5"></i>Crear Usuario</button></form></div></div>
 
-<script>
-function updateTime() {
-    const now = new Date();
-    document.getElementById('live-time').textContent = now.toLocaleString('es-ES', {
-        weekday:'long', year:'numeric', month:'long', day:'numeric',
-        hour:'2-digit', minute:'2-digit', second:'2-digit'
-    });
-}
-updateTime(); setInterval(updateTime, 1000);
-</script>
+<script>function updateTime(){const n=new Date();document.getElementById('live-time').textContent=n.toLocaleString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})}updateTime();setInterval(updateTime,1000);</script>
 {% endblock %}
