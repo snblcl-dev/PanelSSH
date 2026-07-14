@@ -183,11 +183,11 @@ def user_create():
         flash(f'El maximo de dias permitido es {max_days}', 'danger')
         return redirect(url_for('admin.users'))
     days = max(1, days)
-    max_connections = max(1, min(max_connections, 800))
-    
+    max_connections = max(1, min(max_connections, 10))
+
     password = generate_password()
     expires_at = datetime.utcnow() + timedelta(days=days)
-    
+
     user = SSHUser(
         username=username,
         password_plain=password,

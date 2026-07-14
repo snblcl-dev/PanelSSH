@@ -130,7 +130,7 @@ def user_create():
         flash(f'El maximo de dias permitido es {max_days}', 'danger')
         return redirect(url_for('reseller.users'))
     days = max(1, days)
-    max_connections = max(1, min(max_connections, 800))
+    max_connections = max(1, min(max_connections, current_user.get_max_connections()))
     
     # Verificar creditos
     if not current_user.can_create_user(days, max_connections):
