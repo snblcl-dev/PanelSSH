@@ -49,8 +49,6 @@ def log_action(action, description, target_user=None, target_type='ssh_user'):
 @reseller_required
 def reseller_dashboard():
     """Dashboard del revendedor"""
-    # Sincronizar expirados: bloquear en el sistema a los que ya vencieron
-    system_sync_expired_users()
     now = datetime.utcnow()
     
     # Solo sus propios usuarios

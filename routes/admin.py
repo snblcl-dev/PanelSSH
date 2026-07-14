@@ -70,8 +70,6 @@ def log_action(action, description, target_user=None, target_type='ssh_user'):
 @admin_required
 def dashboard():
     """Dashboard principal con estadísticas"""
-    # Sincronizar expirados: bloquear en el sistema a los que ya vencieron
-    system_sync_expired_users()
     now = datetime.utcnow()
     
     total_users = SSHUser.query.count()
