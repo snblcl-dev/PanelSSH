@@ -77,9 +77,11 @@
                         </td>
                         <td>
                             <div class="flex items-center justify-end gap-1">
+                                {% if not user.is_demo %}
                                 <button onclick="openRenewModal({{ user.id }},'{{ user.username }}',{{ user.days_duration }},{{ user.max_connections }})" class="btn btn-ghost btn-xs text-success" title="Renovar"><i class="fas fa-sync-alt"></i>Renovar</button>
                                 <button onclick="confirmAction('Cambiar contraseña','¿Generar nueva clave para {{ user.username }}?','fa-key bg-warning/15 text-warning','btn-warning','Cambiar','#chpw-{{ user.id }}')" class="btn btn-ghost btn-xs text-warning" title="Cambiar contraseña"><i class="fas fa-key"></i>Clave</button>
                                 <form method="POST" action="{{ url_for('admin.user_change_password', user_id=user.id) }}" id="chpw-{{ user.id }}" class="hidden"></form>
+                                {% endif %}
                                 {% if user.is_blocked %}
                                 <form method="POST" action="{{ url_for('admin.user_unblock', user_id=user.id) }}" class="inline">
                                     <button class="btn btn-ghost btn-xs text-success" title="Desbloquear"><i class="fas fa-unlock"></i>Desbloquear</button>
@@ -110,7 +112,7 @@
             <div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" placeholder="Ej: usuario1" required></div>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-medium text-muted mb-1.5">Días de Duración</label><input type="number" name="days" class="input" value="30" min="1" max="365"></div>
-                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones Máximas</label><input type="number" name="max_connections" class="input" value="1" min="1" max="10"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones Máximas</label><input type="number" name="max_connections" class="input" value="1" min="1" max="800"></div>
             </div>
             <div><label class="block text-sm font-medium text-muted mb-1.5">Asignar a Revendedor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="assign_reseller" class="input"><option value="">Sin revendedor</option>{% for r in resellers %}<option value="{{ r.id }}">{{ r.username }}</option>{% endfor %}</select></div>
             {% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local (este servidor)</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}</select></div>{% endif %}
@@ -127,7 +129,7 @@
             <input type="hidden" name="user_id" id="renewUserId">
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-medium text-muted mb-1.5">Días extra</label><input type="number" name="extra_days" id="renewDays" class="input" value="30" min="1" max="365"></div>
-                <div><label class="block text-sm font-medium text-muted mb-1.5">Nuevas conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" min="1" max="10" placeholder="Sin cambio"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Nuevas conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" min="1" max="800" placeholder="Sin cambio"></div>
             </div>
             <button type="submit" class="btn btn-success w-full justify-center py-3"><i class="fas fa-sync-alt mr-1.5"></i>Renovar Usuario</button>
         </form>
@@ -142,7 +144,7 @@
             <div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" placeholder="Ej: demo1" required></div>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-medium text-muted mb-1.5">Duración (minutos)</label><select name="minutes" class="input"><option value="10">10 minutos</option><option value="30" selected>30 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option><option value="180">3 horas</option></select></div>
-                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" class="input" value="1" min="1" max="10"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" class="input" value="1" min="1" max="800"></div>
             </div>
             {% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local (este servidor)</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}</select></div>{% endif %}
             <div class="bg-warning/5 border border-warning/20 rounded-lg p-3 text-xs text-muted"><i class="fas fa-info-circle text-warning mr-1"></i>El usuario se <strong class="text-warning">bloqueará automáticamente</strong> al cumplirse el tiempo.</div>
