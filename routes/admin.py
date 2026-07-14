@@ -482,8 +482,6 @@ def user_change_password(user_id):
 @admin_required
 def online():
     """Usuarios conectados activamente"""
-    # Sincronizar expirados al entrar a Online (donde se monitorean conexiones)
-    system_sync_expired_users()
     online_users = system_get_online_all()
     
     # Crear dict rápido: username -> info

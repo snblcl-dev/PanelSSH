@@ -83,6 +83,12 @@ else
     echo "    cd ${PROJECT_PATH} && venv/bin/python wsgi.py &"
 fi
 
+# Cron job para sincronizar expirados cada 5 minutos
+echo "[5/5] Configurando cron de sincronizacion..."
+CRON_ENTRY="*/5 * * * * cd ${PROJECT_PATH} && venv/bin/python sync_expired.py >> /var/log/sshpanel-sync.log 2>&1"
+(crontab -l 2>/dev/null | grep -v "sync_expired.py"; echo "${CRON_ENTRY}") | crontab -
+echo "  Cron configurado: cada 5 minutos"
+
 echo ""
 echo "========================================"
 echo "  Instalacion completada!"
