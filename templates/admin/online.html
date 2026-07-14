@@ -22,7 +22,7 @@
     {% endif %}
 
     <div class="card overflow-hidden mb-6">
-        <div class="px-5 py-4 border-b border-[#334155] flex items-center justify-between"><h3 class="text-white font-semibold flex items-center gap-2 text-sm"><i class="fas fa-signal text-success"></i>Conectados Actualmente</h3>{% if online_users %}<span class="text-xs text-muted">{{ online_users|length }} sesion(es) activa(s)</span>{% endif %}</div>
+        <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between"><h3 class="text-white font-semibold flex items-center gap-2 text-sm"><i class="fas fa-signal text-success"></i>Conectados Actualmente</h3>{% if online_users %}<span class="text-xs text-muted">{{ online_users|length }} sesion(es) activa(s)</span>{% endif %}</div>
         <div class="overflow-x-auto">
             <table class="table-custom">
                 <thead><tr><th>Usuario</th><th>Conexiones Activas</th><th>Máx. Permitido</th><th>Servidor</th><th>Estado</th><th class="text-right">Acciones</th></tr></thead>
@@ -57,7 +57,7 @@
 
     <!-- Vista General de Usuarios -->
     <div class="card overflow-hidden">
-        <div class="px-5 py-4 border-b border-[#334155] flex items-center justify-between"><h3 class="text-white font-semibold flex items-center gap-2 text-sm"><i class="fas fa-list text-accent"></i>Vista General de Usuarios</h3><span class="text-xs text-muted">{{ all_users|length }} registrados</span></div>
+        <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between"><h3 class="text-white font-semibold flex items-center gap-2 text-sm"><i class="fas fa-list text-accent"></i>Vista General de Usuarios</h3><span class="text-xs text-muted">{{ all_users|length }} registrados</span></div>
         <div class="overflow-x-auto">
             <table class="table-custom">
                 <thead><tr><th>Usuario</th><th>Máx. Conexiones</th><th>Expira</th><th>Estado</th></tr></thead>
