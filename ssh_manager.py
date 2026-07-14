@@ -175,6 +175,11 @@ def _local_create_user(username, password, expires_at, max_connections, shell):
         if not r['success'] and 'already exists' not in r['stderr']:
             return r
 
+    # Si la fecha de expiración ya pasó, bloquear inmediatamente
+    from datetime import datetime
+    if expires_at <= datetime.utcnow():
+        _local_block_user(username)
+
     return {'success': True, 'stdout': f'Usuario {username} creado exitosamente', 'stderr': '', 'returncode': 0}
 
 
@@ -335,6 +340,12 @@ def _remote_create_user(server, username, password, expires_at, max_connections,
         r = _execute_remote(server, cmd)
         if not r['success'] and 'already exists' not in r['stderr']:
             return r
+
+    # Si la fecha de expiración ya pasó, bloquear inmediatamente en remoto
+    from datetime import datetime
+    if expires_at <= datetime.utcnow():
+        _remote_block_user(server, username)
+
     return {'success': True, 'stdout': f'Usuario {username} creado en servidor remoto', 'stderr': '', 'returncode': 0}
 
 
@@ -386,7 +397,14 @@ def _remote_disconnect_user(server, username):
 
 def _remote_set_expiry(server, username, expires_at):
     u = shlex.quote(username)
-    return _execute_remote(server, f'chage -E {expires_at.strftime("%Y-%m-%d")} {u}')
+    r = _execute_remote(server, f'chage -E {expires_at.strftime("%Y-%m-%d")} {u}')
+
+    # Si la fecha ya expiró, bloquear cuenta y matar sesiones inmediatamente
+    from datetime import datetime
+    if expires_at <= datetime.utcnow():
+        _remote_block_user(server, username)
+
+    return r
 
 
 def _remote_get_online_users(server):
@@ -471,11 +489,42 @@ def system_get_online_all():
     return all_users
 
 
+def system_sync_expired_users():
+    """
+    Sincroniza el sistema: bloquea cuentas de usuarios cuya fecha de expiracion
+    ya paso pero que siguen desbloqueadas en el sistema.
+    Debe llamarse periodicamente (ej: al cargar el dashboard).
+    Retorna cuantos usuarios fueron bloqueados.
+    """
+    from models import SSHUser
+    from datetime import datetime
+
+    count = 0
+    now = datetime.utcnow()
+    expired_users = SSHUser.query.filter(
+        SSHUser.expires_at <= now,
+        SSHUser.is_blocked == False
+    ).all()
+
+    for user in expired_users:
+        result = system_execute(user, 'block_user', user.username)
+        if result['success']:
+            count += 1
+
+    return count
+
+
 def _local_set_expiry(username, expires_at):
     _validate_username(username)
     u = shlex.quote(username)
     expiry = shlex.quote(expires_at.strftime("%Y-%m-%d"))
     r = _run_command(f'chage -E {expiry} {u}')
+
+    # Si la fecha ya expiró, bloquear cuenta y matar sesiones inmediatamente
+    from datetime import datetime
+    if expires_at <= datetime.utcnow():
+        _local_block_user(username)
+
     return r
 
 
