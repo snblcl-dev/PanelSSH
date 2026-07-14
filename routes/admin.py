@@ -183,7 +183,10 @@ def user_create():
         flash(f'El maximo de dias permitido es {max_days}', 'danger')
         return redirect(url_for('admin.users'))
     days = max(1, days)
-    max_connections = max(1, min(max_connections, 10))
+    if max_connections > 10:
+        flash('El máximo de conexiones permitido es 10', 'danger')
+        return redirect(url_for('admin.users'))
+    max_connections = max(1, max_connections)
 
     password = generate_password()
     expires_at = datetime.utcnow() + timedelta(days=days)
@@ -242,7 +245,10 @@ def user_create_demo():
 
     # Validar minutos (1-180)
     minutes = max(1, min(minutes, 180))
-    max_connections = max(1, min(max_connections, 800))
+    if max_connections > 800:
+        flash('El máximo de conexiones para demo es 800', 'danger')
+        return redirect(url_for('admin.users'))
+    max_connections = max(1, max_connections)
 
     password = generate_password()
     expires_at = datetime.utcnow() + timedelta(minutes=minutes)
@@ -384,7 +390,11 @@ def user_renew():
         flash(f'El maximo de dias para renovar es {max_days}', 'danger')
         return redirect(url_for('admin.users'))
     extra_days = max(1, extra_days)
-    
+
+    if new_max_connections and new_max_connections > 10:
+        flash('El maximo de conexiones permitido es 10', 'danger')
+        return redirect(url_for('admin.users'))
+
     old_expiry = user.expires_at.strftime('%Y-%m-%d')
     user.renew(extra_days, new_max_connections)
     db.session.commit()

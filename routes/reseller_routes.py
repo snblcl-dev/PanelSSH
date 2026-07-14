@@ -130,8 +130,12 @@ def user_create():
         flash(f'El maximo de dias permitido es {max_days}', 'danger')
         return redirect(url_for('reseller.users'))
     days = max(1, days)
-    max_connections = max(1, min(max_connections, current_user.get_max_connections()))
-    
+    max_conn_allowed = current_user.get_max_connections()
+    if max_connections > max_conn_allowed:
+        flash(f'El maximo de conexiones permitido para tu cuenta es {max_conn_allowed}', 'danger')
+        return redirect(url_for('reseller.users'))
+    max_connections = max(1, max_connections)
+
     # Verificar creditos
     if not current_user.can_create_user(days, max_connections):
         config = CreditConfig.get_config()
@@ -194,8 +198,12 @@ def user_renew():
     extra_days = max(1, extra_days)
     
     if new_max_connections:
-        new_max_connections = max(1, min(new_max_connections, current_user.get_max_connections()))
-    
+        max_conn_allowed = current_user.get_max_connections()
+        if new_max_connections > max_conn_allowed:
+            flash(f'El maximo de conexiones permitido para tu cuenta es {max_conn_allowed}', 'danger')
+            return redirect(url_for('reseller.users'))
+        new_max_connections = max(1, new_max_connections)
+
     # Calcular costo
     config = CreditConfig.get_config()
     current_max = new_max_connections if new_max_connections else user.max_connections
