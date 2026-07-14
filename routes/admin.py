@@ -454,15 +454,24 @@ def user_delete(user_id):
 @admin_required
 def user_change_password(user_id):
     user = SSHUser.query.get_or_404(user_id)
-    new_password = user.reset_password()
+    custom_password = request.form.get('new_password', '').strip()
+
+    if custom_password:
+        if len(custom_password) < 4:
+            flash('La contraseña debe tener al menos 4 caracteres', 'danger')
+            return redirect(url_for('admin.users'))
+        new_password = custom_password
+    else:
+        new_password = user.reset_password()
+
     from werkzeug.security import generate_password_hash
     user.password = generate_password_hash(new_password)
     db.session.commit()
     system_execute(user, 'change_password', user.username, new_password)
-    
+
     log_action('change_password', f'Contrasena cambiada para: {user.username}',
                target_user=user.username)
-    
+
     flash(f'Nueva contraseña para "{user.username}": {new_password}', 'success')
     return redirect(url_for('admin.users'))
 

@@ -236,17 +236,25 @@ def user_change_password():
     if user.created_by_reseller != current_user.id:
         flash('No tienes permiso para modificar este usuario', 'danger')
         return redirect(url_for('reseller.users'))
-    
-    new_password = user.reset_password()
+
+    custom_password = request.form.get('new_password', '').strip()
+    if custom_password:
+        if len(custom_password) < 4:
+            flash('La contraseña debe tener al menos 4 caracteres', 'danger')
+            return redirect(url_for('reseller.users'))
+        new_password = custom_password
+    else:
+        new_password = user.reset_password()
+
     from werkzeug.security import generate_password_hash
     user.password = generate_password_hash(new_password)
     db.session.commit()
-    
+
     system_execute(user, "change_password", user.username, new_password)
-    
+
     log_action('change_password', f'Contraseña cambiada para: {user.username}',
                target_user=user.username)
-    
+
     flash(f'Nueva contraseña para "{user.username}": {new_password}', 'success')
     return redirect(url_for('reseller.users'))
 

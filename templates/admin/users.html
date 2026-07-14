@@ -79,8 +79,7 @@
                             <div class="flex items-center justify-end gap-1">
                                 {% if not user.is_demo %}
                                 <button onclick="openRenewModal({{ user.id }},'{{ user.username }}',{{ user.days_duration }},{{ user.max_connections }})" class="btn btn-ghost btn-xs text-success" title="Renovar"><i class="fas fa-sync-alt"></i>Renovar</button>
-                                <button onclick="confirmAction('Cambiar contraseña','¿Generar nueva clave para {{ user.username }}?','fa-key bg-warning/15 text-warning','btn-warning','Cambiar','#chpw-{{ user.id }}')" class="btn btn-ghost btn-xs text-warning" title="Cambiar contraseña"><i class="fas fa-key"></i>Clave</button>
-                                <form method="POST" action="{{ url_for('admin.user_change_password', user_id=user.id) }}" id="chpw-{{ user.id }}" class="hidden"></form>
+                                <button onclick="openChpwModal({{ user.id }},'{{ user.username }}')" class="btn btn-ghost btn-xs text-warning" title="Cambiar contraseña"><i class="fas fa-key"></i>Clave</button>
                                 {% endif %}
                                 {% if user.is_blocked %}
                                 <form method="POST" action="{{ url_for('admin.user_unblock', user_id=user.id) }}" class="inline">
@@ -153,7 +152,31 @@
     </div>
 </div>
 
+<!-- Modal: Cambiar Contraseña -->
+<div class="modal-overlay" id="chpwModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-key text-warning mr-2"></i>Cambiar Contraseña: <span id="chpwUsername" class="text-accent"></span></h3><button onclick="closeModal('chpwModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+        <form method="POST" id="chpwForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-muted mb-1.5">Nueva Contraseña</label>
+                <input type="text" name="new_password" class="input font-mono" placeholder="Escribe la nueva contraseña..." minlength="4" required autofocus id="chpwInput">
+                <p class="text-xs text-muted mt-1">Mínimo 4 caracteres. Si dejas vacío se generará automáticamente.</p>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeModal('chpwModal')" class="btn btn-ghost flex-1">Cancelar</button>
+                <button type="submit" class="btn btn-primary flex-1"><i class="fas fa-save mr-1.5"></i>Cambiar Contraseña</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+function openChpwModal(userId, username) {
+    document.getElementById('chpwUsername').textContent = username;
+    document.getElementById('chpwForm').action = "{{ url_for('admin.user_change_password', user_id=999) }}".replace('999', userId);
+    document.getElementById('chpwInput').value = '';
+    openModal('chpwModal');
+}
 function openRenewModal(id,username,days,max){document.getElementById('renewUserId').value=id;document.getElementById('renewUsername').textContent=username;document.getElementById('renewDays').value=days;document.getElementById('renewMaxConn').value=max;openModal('renewUserModal');}
 </script>
 {% endblock %}
