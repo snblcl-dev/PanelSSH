@@ -8,7 +8,10 @@
             <h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-users text-accent mr-2"></i>Usuarios SSH</h1>
             <p class="text-xs md:text-sm text-muted mt-0.5">Gestiona todos los usuarios del servidor</p>
         </div>
-        <button onclick="openModal('createUserModal')" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>Nuevo Usuario</button>
+        <div class="flex items-center gap-2">
+            <button onclick="openModal('createUserModal')" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>Nuevo Usuario</button>
+            <button onclick="openModal('createDemoModal')" class="btn btn-warning btn-sm"><i class="fas fa-clock"></i>Usuario Demo</button>
+        </div>
     </div>
 
     <!-- Filters -->
@@ -127,6 +130,23 @@
                 <div><label class="block text-sm font-medium text-muted mb-1.5">Nuevas conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" min="1" max="10" placeholder="Sin cambio"></div>
             </div>
             <button type="submit" class="btn btn-success w-full justify-center py-3"><i class="fas fa-sync-alt mr-1.5"></i>Renovar Usuario</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Create Demo User -->
+<div class="modal-overlay" id="createDemoModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-clock text-warning mr-2"></i>Usuario Demo</h3><button onclick="closeModal('createDemoModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+        <form method="POST" action="{{ url_for('admin.user_create_demo') }}" class="space-y-4">
+            <div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" placeholder="Ej: demo1" required></div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Duración (minutos)</label><select name="minutes" class="input"><option value="10">10 minutos</option><option value="30" selected>30 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option><option value="180">3 horas</option></select></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" class="input" value="1" min="1" max="10"></div>
+            </div>
+            {% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local (este servidor)</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}</select></div>{% endif %}
+            <div class="bg-warning/5 border border-warning/20 rounded-lg p-3 text-xs text-muted"><i class="fas fa-info-circle text-warning mr-1"></i>El usuario se <strong class="text-warning">bloqueará automáticamente</strong> al cumplirse el tiempo.</div>
+            <button type="submit" class="btn btn-warning w-full justify-center py-3"><i class="fas fa-clock mr-1.5"></i>Crear Usuario Demo</button>
         </form>
     </div>
 </div>
