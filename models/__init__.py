@@ -139,6 +139,8 @@ class SSHUser(db.Model):
 
     max_connections = db.Column(db.Integer, default=1)
     days_duration = db.Column(db.Integer, default=30)
+    is_demo = db.Column(db.Boolean, default=False)
+    duration_minutes = db.Column(db.Integer, nullable=True)  # Solo para usuarios demo
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
@@ -390,6 +392,10 @@ def init_db():
         user_columns = [c['name'] for c in inspector.get_columns('ssh_users')]
         if 'server_id' not in user_columns:
             db.session.execute(db.text('ALTER TABLE ssh_users ADD COLUMN server_id INTEGER REFERENCES servers(id)'))
+        if 'is_demo' not in user_columns:
+            db.session.execute(db.text('ALTER TABLE ssh_users ADD COLUMN is_demo BOOLEAN DEFAULT 0'))
+        if 'duration_minutes' not in user_columns:
+            db.session.execute(db.text('ALTER TABLE ssh_users ADD COLUMN duration_minutes INTEGER'))
         db.session.commit()
     except Exception:
         db.session.rollback()

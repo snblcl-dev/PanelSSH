@@ -211,8 +211,66 @@ def user_create():
     
     log_action('create', f'Usuario creado: {username} ({days} días, {max_connections} conexiones)',
                target_user=username)
-    
+
     flash(f'Usuario "{username}" creado exitosamente. Contraseña: {password}', 'success')
+    return redirect(url_for('admin.users'))
+
+
+@admin_bp.route('/users/create-demo', methods=['POST'])
+@admin_required
+def user_create_demo():
+    """Crea un usuario demo con duración en minutos (solo admin)"""
+    username = request.form.get('username', '').strip()
+    minutes = request.form.get('minutes', 30, type=int)
+    max_connections = request.form.get('max_connections', 1, type=int)
+    server_id = request.form.get('server_id', type=int)
+
+    if not username:
+        flash('El nombre de usuario es requerido', 'danger')
+        return redirect(url_for('admin.users'))
+
+    valid, msg = validate_username(username)
+    if not valid:
+        flash(msg, 'danger')
+        return redirect(url_for('admin.users'))
+
+    if SSHUser.query.filter_by(username=username).first():
+        flash(f'El usuario "{username}" ya existe', 'danger')
+        return redirect(url_for('admin.users'))
+
+    # Validar minutos (1-180)
+    minutes = max(1, min(minutes, 180))
+    max_connections = max(1, min(max_connections, 10))
+
+    password = generate_password()
+    expires_at = datetime.utcnow() + timedelta(minutes=minutes)
+
+    user = SSHUser(
+        username=username,
+        password_plain=password,
+        max_connections=max_connections,
+        days_duration=0,
+        expires_at=expires_at,
+        is_active=True,
+        is_blocked=False,
+        is_demo=True,
+        duration_minutes=minutes,
+        created_by_admin=current_user.id,
+        server_id=server_id if server_id else None
+    )
+    from werkzeug.security import generate_password_hash
+    user.password = generate_password_hash(password)
+
+    db.session.add(user)
+    db.session.commit()
+
+    from ssh_manager import system_execute
+    system_execute(user, 'create_user', username, password, expires_at, max_connections)
+
+    log_action('create_demo', f'Usuario demo creado: {username} ({minutes} minutos, {max_connections} conexiones)',
+               target_user=username)
+
+    flash(f'Usuario demo "{username}" creado. Contraseña: {password} | Expira en {minutes} minutos', 'success')
     return redirect(url_for('admin.users'))
 
 

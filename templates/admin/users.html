@@ -47,14 +47,19 @@
                             </div>
                         </td>
                         <td><span class="font-mono text-[11px] bg-surface-deep px-2 py-0.5 rounded text-muted">{{ user.password_plain }}</span></td>
-                        <td class="text-sm font-mono text-muted whitespace-nowrap">{{ user.expires_at.strftime('%d/%m/%Y') }}</td>
+                        <td class="text-sm font-mono text-muted whitespace-nowrap">{{ user.expires_at.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td>
-                            {% set remaining = user.days_remaining() %}
-                            <span class="text-sm font-mono font-semibold {% if remaining<=3 %}text-danger{% elif remaining<=7 %}text-warning{% else %}text-success{% endif %}">{{ remaining }}d</span>
+                            {% if user.is_demo %}
+                                <span class="text-sm font-mono font-semibold {% if user.is_expired() %}text-danger{% else %}text-success{% endif %}">{{ user.duration_minutes }}m</span>
+                            {% else %}
+                                {% set remaining = user.days_remaining() %}
+                                <span class="text-sm font-mono font-semibold {% if remaining<=3 %}text-danger{% elif remaining<=7 %}text-warning{% else %}text-success{% endif %}">{{ remaining }}d</span>
+                            {% endif %}
                         </td>
                         <td class="text-sm text-muted">{% if user.server %}{{ user.server.name }}{% else %}<span class="text-muted/50">Local</span>{% endif %}</td>
                         <td>
-                            {% if user.is_blocked %}
+                            {% if user.is_demo %}<span class="badge badge-warning"><i class="fas fa-clock text-[10px] mr-1"></i>Demo</span>
+                            {% elif user.is_blocked %}
                             <span class="badge badge-danger"><i class="fas fa-lock text-[10px] mr-1"></i>Bloqueado</span>
                             {% elif user.is_expired() %}
                             <span class="badge badge-warning"><i class="fas fa-clock text-[10px] mr-1"></i>Expirado</span>

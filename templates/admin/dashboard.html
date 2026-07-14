@@ -147,30 +147,37 @@
             <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
                 <i class="fas fa-bolt text-warning"></i>Acciones Rápidas
             </h3>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <button onclick="openModal('createUserModal')"
-                        class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-accent/40 transition-all group">
+                        class="flex flex-col items-center gap-2.5 p-4 rounded-lg bg-surface-hover border border-white/5 hover:border-accent/40 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
                         <i class="fas fa-user-plus text-accent text-lg"></i>
                     </div>
                     <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Nuevo Usuario</span>
                 </button>
+                <button onclick="openModal('createDemoModal')"
+                        class="flex flex-col items-center gap-2.5 p-4 rounded-lg bg-surface-hover border border-white/5 hover:border-warning/40 transition-all group">
+                    <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition-colors">
+                        <i class="fas fa-clock text-warning text-lg"></i>
+                    </div>
+                    <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Usuario Demo</span>
+                </button>
                 <a href="{{ url_for('admin.clean_expired') }}"
-                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-danger/40 transition-all group">
+                   class="flex flex-col items-center gap-2.5 p-4 rounded-lg bg-surface-hover border border-white/5 hover:border-danger/40 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center group-hover:bg-danger/20 transition-colors">
                         <i class="fas fa-broom text-danger text-lg"></i>
                     </div>
                     <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Limpiar Expirados</span>
                 </a>
                 <a href="{{ url_for('admin.online') }}"
-                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-accent/40 transition-all group">
+                   class="flex flex-col items-center gap-2.5 p-4 rounded-lg bg-surface-hover border border-white/5 hover:border-accent/40 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
                         <i class="fas fa-wifi text-success text-lg"></i>
                     </div>
                     <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Ver Online</span>
                 </a>
                 <a href="{{ url_for('admin.users') }}"
-                   class="flex flex-col items-center gap-2.5 p-5 rounded-lg bg-surface-hover border border-[#334155] hover:border-accent/40 transition-all group">
+                   class="flex flex-col items-center gap-2.5 p-4 rounded-lg bg-surface-hover border border-white/5 hover:border-accent/40 transition-all group">
                     <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
                         <i class="fas fa-users text-accent text-lg"></i>
                     </div>
@@ -229,6 +236,57 @@
             {% endif %}
             <button type="submit" class="btn btn-primary w-full justify-center py-3">
                 <i class="fas fa-plus mr-1.5"></i>Crear Usuario
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Create Demo User -->
+<div class="modal-overlay" id="createDemoModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-bold text-white">
+                <i class="fas fa-clock text-warning mr-2"></i>Usuario Demo
+            </h3>
+            <button onclick="closeModal('createDemoModal')" class="text-muted hover:text-white transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('admin.user_create_demo') }}" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label>
+                <input type="text" name="username" class="input" placeholder="Ej: demo1" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1.5">Duración (minutos)</label>
+                    <select name="minutes" class="input">
+                        <option value="10">10 minutos</option>
+                        <option value="30" selected>30 minutos</option>
+                        <option value="60">1 hora</option>
+                        <option value="120">2 horas</option>
+                        <option value="180">3 horas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label>
+                    <input type="number" name="max_connections" class="input" value="1" min="1" max="10">
+                </div>
+            </div>
+            {% if servers %}
+            <div>
+                <label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label>
+                <select name="server_id" class="input">
+                    <option value="">Local (este servidor)</option>
+                    {% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="bg-warning/5 border border-warning/20 rounded-lg p-3 text-xs text-muted">
+                <i class="fas fa-info-circle text-warning mr-1"></i>El usuario se <strong class="text-warning">bloqueará automáticamente</strong> al cumplirse el tiempo.
+            </div>
+            <button type="submit" class="btn btn-warning w-full justify-center py-3">
+                <i class="fas fa-clock mr-1.5"></i>Crear Usuario Demo
             </button>
         </form>
     </div>
