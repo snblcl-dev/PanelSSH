@@ -2,9 +2,46 @@
 {% block title %}Online — PanelSSH{% endblock %}
 {% block content %}
 <div class="fade-in">
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-5"><div><h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-wifi text-success mr-2"></i>Usuarios Online</h1><p class="text-xs md:text-sm text-muted mt-0.5">Tus usuarios conectados actualmente</p></div><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full {% if online_users %}bg-success animate-pulse{% else %}bg-muted{% endif %}"></span><span class="text-sm text-muted">{{ online_users|length }} conectados</span></div></div>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div><h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-wifi text-success mr-2"></i>Usuarios Online</h1><p class="text-xs md:text-sm text-muted mt-0.5">Tus usuarios conectados actualmente</p></div>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 text-sm"><span class="w-2.5 h-2.5 rounded-full {% if online_users %}bg-success animate-pulse{% else %}bg-muted{% endif %}"></span><span class="text-muted">{{ online_users|length }} conectados</span></div>
+            <button onclick="location.reload()" class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i>Actualizar</button>
+        </div>
+    </div>
 
-    <div class="card overflow-hidden"><div class="overflow-x-auto"><table class="table-custom"><thead><tr><th>Usuario</th><th>Conexiones</th><th>Máximo</th><th>Estado</th></tr></thead>
-        <tbody>{% for ou in online_users %}<tr><td><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full {% if ou.get('exceeded') %}bg-danger animate-pulse{% else %}bg-success{% endif %}"></span><span class="font-medium text-sm">{{ ou.username }}</span></div></td><td class="font-mono text-sm font-semibold {% if ou.get('exceeded') %}text-danger{% endif %}">{{ ou.connections }}</td><td class="text-sm text-muted">{{ ou.max_connections }}</td><td>{% if ou.get('exceeded') %}<span class="badge badge-danger">Excedido</span>{% else %}<span class="badge badge-success">OK</span>{% endif %}</td></tr>{% else %}<tr><td colspan="4" class="text-center py-10 text-muted text-sm"><i class="fas fa-wifi text-3xl mb-2 block opacity-20"></i>No hay usuarios conectados</td></tr>{% endfor %}</tbody></table></div></div>
+    <!-- Tabla de usuarios online -->
+    <div class="card overflow-hidden">
+        <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between"><h3 class="text-white font-semibold flex items-center gap-2 text-sm"><i class="fas fa-signal text-success"></i>Conectados Actualmente</h3>{% if online_users %}<span class="text-xs text-muted">{{ online_users|length }} sesion(es) activa(s)</span>{% endif %}</div>
+        <div class="overflow-x-auto">
+            <table class="table-custom">
+                <thead><tr><th>Usuario</th><th>Conexiones Activas</th><th>Máx. Permitido</th><th>Estado</th><th class="text-right">Acciones</th></tr></thead>
+                <tbody>
+                    {% for ou in online_users %}
+                    <tr class="{% if ou.get('exceeded') %}bg-danger/5{% endif %}">
+                        <td><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full {% if ou.get('exceeded') %}bg-danger animate-pulse{% else %}bg-success{% endif %}"></span><span class="text-white font-medium">{{ ou.username }}</span>{% if ou.get('exceeded') %}<span class="badge badge-danger text-[10px]">EXCEDIDO</span>{% endif %}</div></td>
+                        <td><span class="text-white font-bold text-lg {% if ou.get('exceeded') %}text-danger{% endif %}">{{ ou.connections }}</span><span class="text-muted text-sm"> sesiones</span></td>
+                        <td>{% if ou.max_connections and ou.max_connections != 'N/A' %}<span class="text-foreground">{{ ou.max_connections }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>{% if ou.get('exceeded') %}<span class="badge badge-danger"><i class="fas fa-exclamation-circle mr-1 text-[10px]"></i>Excede límite</span>{% else %}<span class="badge badge-success"><i class="fas fa-check mr-1 text-[10px]"></i>Normal</span>{% endif %}</td>
+                        <td class="text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openModal('discOnlineModal{{ ou.username }}')" class="btn btn-ghost btn-xs text-warning"><i class="fas fa-power-off mr-1"></i>Desconectar</button>
+                                {% if ou.get('exceeded') %}<button onclick="openModal('blockOnlineModal{{ ou.username }}')" class="btn btn-danger btn-xs"><i class="fas fa-ban mr-1"></i>Bloquear</button>{% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Modal: Disconnect -->
+                    <div class="modal-overlay" id="discOnlineModal{{ ou.username }}"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-power-off text-warning mr-2"></i>Desconectar</h3><p class="text-sm text-muted mb-4">¿Desconectar a <strong class="text-white">{{ ou.username }}</strong>? Podrá volver a conectarse después.</p><form method="POST" action="{{ url_for('reseller.reseller_disconnect_run') }}"><input type="hidden" name="username" value="{{ ou.username }}"><input type="hidden" name="block" value="false"><div class="flex gap-3 justify-end"><button type="button" onclick="closeModal('discOnlineModal{{ ou.username }}')" class="btn btn-ghost btn-sm">Cancelar</button><button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-power-off mr-1.5"></i>Desconectar</button></div></form></div></div>
+                    <!-- Modal: Block -->
+                    {% if ou.get('exceeded') %}
+                    <div class="modal-overlay" id="blockOnlineModal{{ ou.username }}"><div class="modal-card"><h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-ban text-danger mr-2"></i>Desconectar y Bloquear</h3><p class="text-sm text-muted mb-4">¿Desconectar y bloquear a <strong class="text-white">{{ ou.username }}</strong>? No podrá conectarse hasta ser desbloqueado.</p><form method="POST" action="{{ url_for('reseller.reseller_disconnect_run') }}"><input type="hidden" name="username" value="{{ ou.username }}"><input type="hidden" name="block" value="true"><div class="flex gap-3 justify-end"><button type="button" onclick="closeModal('blockOnlineModal{{ ou.username }}')" class="btn btn-ghost btn-sm">Cancelar</button><button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-ban mr-1.5"></i>Desconectar y Bloquear</button></div></form></div></div>
+                    {% endif %}
+                    {% else %}
+                    <tr><td colspan="5" class="text-center py-16 text-muted"><i class="fas fa-wifi text-5xl mb-3 block opacity-15"></i><p class="text-lg font-medium text-foreground/60">No hay usuarios conectados</p><p class="text-sm mt-2 max-w-md mx-auto">Cuando tus usuarios se conecten vía SSH/Dropbear, aparecerán aquí.</p></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
