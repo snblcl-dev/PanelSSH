@@ -17,7 +17,7 @@
             <div><label class="block text-sm font-medium text-muted mb-1.5">Nombre de Usuario</label><input type="text" name="username" class="input" required></div>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-medium text-muted mb-1.5">Días</label><input type="number" name="days" id="cDays" class="input" value="30" min="1" onchange="updateCreateCost()" oninput="updateCreateCost()"></div>
-                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="max_connections" id="cConns" class="input" value="1" min="1" onchange="updateCreateCost()" oninput="updateCreateCost()"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones (máx {{ max_connections }})</label><input type="number" name="max_connections" id="cConns" class="input" value="1" min="1" max="{{ max_connections }}" onchange="updateCreateCost()" oninput="updateCreateCost()"></div>
             </div>
             {% if servers %}<div><label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label><select name="server_id" class="input"><option value="">Local</option>{% for s in servers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>{% endif %}
             <!-- Vista previa de costo -->
@@ -38,7 +38,7 @@
             <input type="hidden" name="user_id" id="renewUserId">
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-medium text-muted mb-1.5">Días extra</label><input type="number" name="extra_days" id="renewDays" class="input" value="30" onchange="updateRenewCost()" oninput="updateRenewCost()"></div>
-                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" placeholder="Sin cambio" onchange="updateRenewCost()" oninput="updateRenewCost()"></div>
+                <div><label class="block text-sm font-medium text-muted mb-1.5">Conexiones (máx {{ max_connections }})</label><input type="number" name="new_max_connections" id="renewMaxConn" class="input" max="{{ max_connections }}" placeholder="Sin cambio" onchange="updateRenewCost()" oninput="updateRenewCost()"></div>
             </div>
             <!-- Vista previa de costo -->
             <div class="bg-surface-hover rounded-lg p-4 border border-warning/20">
