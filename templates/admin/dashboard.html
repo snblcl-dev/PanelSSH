@@ -261,6 +261,13 @@
                     <input type="number" name="max_connections" class="input" value="1" min="1" max="800">
                 </div>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-muted mb-1.5">Asignar a Revendedor <span class="text-muted/60 text-xs">(opcional)</span></label>
+                <select name="assign_reseller" class="input">
+                    <option value="">Sin revendedor</option>
+                    {% for r in resellers %}<option value="{{ r.id }}">{{ r.username }}</option>{% endfor %}
+                </select>
+            </div>
             {% if servers %}
             <div>
                 <label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label>

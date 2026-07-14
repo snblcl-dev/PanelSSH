@@ -228,6 +228,7 @@ def user_create_demo():
     username = request.form.get('username', '').strip()
     minutes = request.form.get('minutes', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)
+    assign_reseller = request.form.get('assign_reseller', type=int)
     server_id = request.form.get('server_id', type=int)
 
     if not username:
@@ -264,6 +265,7 @@ def user_create_demo():
         is_demo=True,
         duration_minutes=minutes,
         created_by_admin=current_user.id,
+        created_by_reseller=assign_reseller if assign_reseller else None,
         server_id=server_id if server_id else None
     )
     from werkzeug.security import generate_password_hash
