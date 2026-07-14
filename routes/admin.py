@@ -93,9 +93,9 @@ def dashboard():
     total_resellers = Reseller.query.count()
     active_resellers = Reseller.query.filter_by(is_active=True).count()
     
-    # Usuarios online (todos los servidores)
-    online_all = system_get_online_all()
-    online_users_count = len(online_all)
+    # Usuarios online
+    online_data = system_get_online_users()
+    online_users_count = len(online_data.get('users', [])) if online_data['success'] else 0
     
     # Últimas actividades
     recent_logs = ActivityLog.query.order_by(
