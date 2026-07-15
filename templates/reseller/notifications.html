@@ -6,15 +6,15 @@
 
     <div class="space-y-3">
         {% for n in notifications %}
-        <div class="card p-5 {% if not n.is_read %}border-l-[3px] border-l-accent bg-accent/[0.02]{% endif %}">
+        <div class="card p-5 cursor-pointer hover:border-accent/30 transition-all {% if not n.is_read %}border-l-[3px] border-l-accent bg-accent/[0.02]{% endif %}" onclick="openDetailModal('{{ n.title|e }}', '{{ n.message|e }}', '{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}')">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1"><h3 class="text-white font-semibold text-sm">{{ n.title }}</h3>{% if not n.is_read %}<span class="badge badge-info text-[10px]">Nuevo</span>{% endif %}</div>
-                    <p class="text-sm text-muted">{{ n.message }}</p>
+                    <p class="text-sm text-muted truncate">{{ n.message[:80] }}{% if n.message|length > 80 %}...{% endif %}</p>
                     <p class="text-xs text-muted mt-2"><i class="fas fa-clock mr-1"></i>{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
                 </div>
                 {% if not n.is_read %}
-                <form method="POST" action="{{ url_for('reseller.reseller_mark_read', notif_id=n.id) }}"><button class="btn btn-ghost btn-xs text-accent"><i class="fas fa-check mr-1"></i>Marcar leída</button></form>
+                <form method="POST" action="{{ url_for('reseller.reseller_mark_read', notif_id=n.id) }}" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-xs text-accent"><i class="fas fa-check mr-1"></i>Marcar leída</button></form>
                 {% endif %}
             </div>
         </div>
@@ -23,4 +23,20 @@
         {% endfor %}
     </div>
 </div>
+
+<div class="modal-overlay" id="detailNotifModal">
+    <div class="modal-card">
+        <div class="flex items-center justify-between mb-3"><h3 class="text-lg font-bold text-white" id="detailTitle"></h3><button onclick="closeModal('detailNotifModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div>
+        <p class="text-xs text-muted mb-3" id="detailMeta"></p>
+        <p class="text-sm text-foreground whitespace-pre-wrap" id="detailMessage"></p>
+    </div>
+</div>
+<script>
+function openDetailModal(title, message, date) {
+    document.getElementById('detailTitle').textContent = title;
+    document.getElementById('detailMeta').innerHTML = '<i class="fas fa-clock mr-1"></i>' + date;
+    document.getElementById('detailMessage').textContent = message;
+    openModal('detailNotifModal');
+}
+</script>
 {% endblock %}

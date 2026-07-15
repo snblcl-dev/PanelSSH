@@ -101,36 +101,9 @@
         </div>
     </div>
 
-    <!-- Bottom row -->
+    <!-- Bottom row: Quick Actions primero (aparece arriba en móvil) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <!-- Recent Activity -->
-        <div class="card p-5">
-            <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
-                <i class="fas fa-history text-accent"></i>Actividad Reciente
-            </h3>
-            <div class="space-y-1">
-                {% for log in recent_logs %}
-                <div class="flex items-start gap-3 text-sm p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs
-                        {% if log.action in ('create','renew','unblock','login') %}bg-success/15 text-success
-                        {% elif log.action in ('delete','block','disconnect') %}bg-danger/15 text-danger
-                        {% else %}bg-accent/15 text-accent{% endif %}">
-                        <i class="fas fa-{% if log.action == 'create' %}plus{% elif log.action == 'renew' %}sync{% elif log.action == 'delete' %}trash{% elif log.action == 'block' %}ban{% elif log.action == 'unblock' %}check{% elif log.action == 'disconnect' %}power-off{% elif log.action == 'login' %}sign-in-alt{% else %}circle{% endif %}"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-white/90 truncate text-sm">{{ log.description }}</p>
-                        <p class="text-muted text-[11px] mt-0.5">
-                            <span class="text-accent">{{ log.performed_by }}</span> · {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}
-                        </p>
-                    </div>
-                </div>
-                {% else %}
-                <p class="text-muted text-sm text-center py-6">No hay actividad registrada aún</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
+        <!-- Acciones Rápidas -->
         <div class="card p-5">
             <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
                 <i class="fas fa-bolt text-warning"></i>Acciones Rápidas
@@ -171,6 +144,33 @@
                     </div>
                     <span class="text-sm text-muted font-medium group-hover:text-white transition-colors">Ver Usuarios</span>
                 </a>
+            </div>
+        </div>
+
+        <!-- Actividad Reciente -->
+        <div class="card p-5">
+            <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
+                <i class="fas fa-history text-accent"></i>Actividad Reciente
+            </h3>
+            <div class="space-y-1">
+                {% for log in recent_logs %}
+                <div class="flex items-start gap-3 text-sm p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs
+                        {% if log.action in ('create','renew','unblock','login') %}bg-success/15 text-success
+                        {% elif log.action in ('delete','block','disconnect') %}bg-danger/15 text-danger
+                        {% else %}bg-accent/15 text-accent{% endif %}">
+                        <i class="fas fa-{% if log.action == 'create' %}plus{% elif log.action == 'renew' %}sync{% elif log.action == 'delete' %}trash{% elif log.action == 'block' %}ban{% elif log.action == 'unblock' %}check{% elif log.action == 'disconnect' %}power-off{% elif log.action == 'login' %}sign-in-alt{% else %}circle{% endif %}"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white/90 truncate text-sm">{{ log.description }}</p>
+                        <p class="text-muted text-[11px] mt-0.5">
+                            <span class="text-accent">{{ log.performed_by }}</span> · {{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted text-sm text-center py-6">No hay actividad registrada aún</p>
+                {% endfor %}
             </div>
         </div>
     </div>
