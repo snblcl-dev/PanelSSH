@@ -9,6 +9,7 @@
         <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center"><i class="fas fa-check-circle text-success"></i></div></div><p class="text-xl md:text-2xl font-bold text-white">{{ active_users }}</p><p class="text-[11px] md:text-xs text-muted">Activos</p></div>
         <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="w-9 h-9 rounded-lg bg-danger/10 flex items-center justify-center"><i class="fas fa-ban text-danger"></i></div></div><p class="text-xl md:text-2xl font-bold text-white">{{ blocked_users }}</p><p class="text-[11px] md:text-xs text-muted">Bloqueados</p></div>
         <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center"><i class="fas fa-clock text-warning"></i></div></div><p class="text-xl md:text-2xl font-bold text-white">{{ expired_users }}</p><p class="text-[11px] md:text-xs text-muted">Expirados</p></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center"><i class="fas fa-exclamation-triangle text-warning"></i></div><span class="badge badge-warning text-[10px]">Próximos</span></div><p class="text-xl md:text-2xl font-bold text-white">{{ expiring_soon }}</p><p class="text-[11px] md:text-xs text-muted">Vencen en 3 días</p></div>
     </div>
 
     <div class="grid grid-cols-2 gap-3">

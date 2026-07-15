@@ -61,12 +61,18 @@ def reseller_dashboard():
     ).count()
     blocked_users = my_users.filter_by(is_blocked=True).count()
     expired_users = my_users.filter(SSHUser.expires_at <= now).count()
-    
+    expiring_soon = my_users.filter(
+        SSHUser.is_blocked == False,
+        SSHUser.expires_at > now,
+        SSHUser.expires_at <= now + timedelta(days=3)
+    ).count()
+
     return render_template('reseller/dashboard.html',
         total_users=total_users,
         active_users=active_users,
         blocked_users=blocked_users,
         expired_users=expired_users,
+        expiring_soon=expiring_soon,
         credits=current_user.credits,
         credit_config=CreditConfig.get_config(),
         servers=Server.query.filter_by(is_active=True).all()
