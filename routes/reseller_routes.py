@@ -2,7 +2,7 @@
 Rutas para el panel de Revendedores/Resellers
 """
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from models import db, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username, Notification
 from ssh_manager import (
@@ -477,5 +477,28 @@ def reseller_unread_count():
         db.or_(Notification.reseller_id == current_user.id, Notification.reseller_id == None),
         Notification.is_read == False
     ).count()
-    from flask import jsonify
     return jsonify({'unread': count})
+
+
+# ============ REGISTRO DE ACTIVIDAD ============
+
+@reseller_bp.route('/logs')
+@reseller_required
+def reseller_logs():
+    """Registro de actividades del reseller"""
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').strip()
+
+    query = ActivityLog.query.filter(
+        ActivityLog.performed_by == current_user.username,
+        ActivityLog.performed_by_type == 'reseller'
+    )
+
+    if search:
+        query = query.filter(ActivityLog.description.contains(search))
+
+    logs_page = query.order_by(ActivityLog.created_at.desc()).paginate(
+        page=page, per_page=25, error_out=False
+    )
+
+    return render_template('reseller/logs.html', logs=logs_page, search=search)

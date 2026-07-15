@@ -278,6 +278,8 @@
                 <a href="{{ url_for('reseller.reseller_clean_expired') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_clean_expired' in request.endpoint %}active{% endif %}">
                     <i class="fas fa-broom"></i><span class="sidebar-text">Limpiar Exp.</span></a>
                 <div class="sidebar-divider"></div>
+                <a href="{{ url_for('reseller.reseller_logs') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_logs' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i><span class="sidebar-text">Mi Registro</span></a>
                 <a href="{{ url_for('reseller.reseller_notifications') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_notifications' in request.endpoint %}active{% endif %}">
                     <i class="fas fa-bell"></i><span class="sidebar-text">Notificaciones</span>
                     <span id="notifBadge" class="hidden ml-auto bg-accent text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none"></span>
