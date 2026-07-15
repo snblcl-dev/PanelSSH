@@ -49,13 +49,14 @@
 
         <div class="card overflow-hidden">
             <table>
-                <thead><tr><th>Instancia</th><th>Subdominio</th><th>Puerto</th><th>Vence</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Instancia</th><th>Subdominio</th><th>Usuarios</th><th>RAM</th><th>Vence</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                     {% for inst in instances %}
                     <tr>
                         <td class="text-white font-medium">{{ inst.slug }}</td>
-                        <td class="text-gray-400">{{ inst.subdomain or '—' }}</td>
-                        <td class="font-mono text-gray-300">{{ inst.port }}</td>
+                        <td class="text-gray-400 text-sm">{{ inst.subdomain or '—' }}</td>
+                        <td class="font-mono text-gray-300">{{ inst.stats.users }}</td>
+                        <td class="text-sm text-gray-400">{{ inst.stats.ram_mb }} MB</td>
                         <td class="text-sm {% if inst.expires_at and inst.expires_at < now_iso %}text-red-400 font-semibold{% else %}text-gray-400{% endif %}">{{ inst.expires_at[:10] if inst.expires_at else 'Sin límite' }}</td>
                         <td><span class="badge {% if inst.is_active %}badge-success{% else %}badge-danger{% endif %}">{{ 'Online' if inst.is_active else 'Caído' }}</span></td>
                         <td>
@@ -67,7 +68,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center py-10 text-gray-500">No hay instancias. Crea la primera.</td></tr>
+                    <tr><td colspan="7" class="text-center py-10 text-gray-500">No hay instancias. Crea la primera.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

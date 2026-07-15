@@ -4,6 +4,7 @@ Acceso solo para el admin principal.
 """
 import os
 import json
+import sqlite3
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -73,6 +74,36 @@ def check_service_status(slug):
     return result.stdout.strip() == 'active'
 
 
+def get_instance_stats(slug):
+    """Obtiene stats de una instancia: usuarios, RAM"""
+    stats = {'users': 0, 'ram_mb': 0}
+    inst_dir = INSTANCES_DIR / slug
+
+    # Contar usuarios en la DB
+    db_path = inst_dir / 'sshpanel.db'
+    if db_path.exists():
+        try:
+            conn = sqlite3.connect(str(db_path))
+            stats['users'] = conn.execute('SELECT COUNT(*) FROM ssh_users').fetchone()[0]
+            conn.close()
+        except Exception:
+            pass
+
+    # RAM del proceso
+    result = subprocess.run(
+        ['systemctl', 'show', f'sshpanel-{slug}', '--property=MemoryCurrent'],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        mem = result.stdout.strip().replace('MemoryCurrent=', '')
+        try:
+            stats['ram_mb'] = round(int(mem) / (1024 * 1024), 1)
+        except ValueError:
+            pass
+
+    return stats
+
+
 # ── Auth ──
 def master_required(f):
     @wraps(f)
@@ -96,6 +127,7 @@ def dashboard():
     # Actualizar estado de cada instancia
     for inst in instances:
         inst['is_active'] = check_service_status(inst['slug'])
+        inst['stats'] = get_instance_stats(inst['slug'])
     save_instances(instances)
     now_iso = datetime.utcnow().isoformat()[:10]
     return render_template('dashboard.html', instances=instances, now_iso=now_iso)
