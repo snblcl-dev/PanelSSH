@@ -462,6 +462,7 @@ def user_change_password(user_id):
             flash('La contraseña debe tener al menos 4 caracteres', 'danger')
             return redirect(url_for('admin.users'))
         new_password = custom_password
+        user.password_plain = new_password  # Actualizar en BD
     else:
         new_password = user.reset_password()
 
