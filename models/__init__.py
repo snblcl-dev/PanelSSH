@@ -219,6 +219,21 @@ class ActivityLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
+class Notification(db.Model):
+    """Mensajes del admin para revendedores"""
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    reseller_id = db.Column(db.Integer, db.ForeignKey('resellers.id'), nullable=True)  # NULL = para todos
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('admins.id'), nullable=False)
+
+    reseller = db.relationship('Reseller', backref='notifications')
+    admin = db.relationship('Admin', backref='sent_notifications')
+
+
 class CreditConfig(db.Model):
     """Configuracion del sistema de creditos"""
     __tablename__ = 'credit_config'
@@ -449,6 +464,15 @@ def init_db():
                 )
                 count += 1
         if count > 0:
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    # Migracion: tabla notifications
+    try:
+        inspector = inspect(db.engine)
+        if 'notifications' not in inspector.get_table_names():
+            db.create_all()
             db.session.commit()
     except Exception:
         db.session.rollback()

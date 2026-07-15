@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Notificaciones — PanelSSH{% endblock %}
+{% block content %}
+<div class="fade-in max-w-3xl mx-auto">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div><h1 class="text-xl md:text-2xl font-bold text-white"><i class="fas fa-bell text-warning mr-2"></i>Notificaciones a Revendedores</h1><p class="text-xs md:text-sm text-muted mt-0.5">Envía avisos de mantenimiento, actualizaciones o anuncios</p></div>
+        <button onclick="openModal('sendNotifModal')" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane mr-1.5"></i>Nueva Notificación</button>
+    </div>
+
+    <!-- Modal: Enviar -->
+    <div class="modal-overlay" id="sendNotifModal"><div class="modal-card"><div class="flex items-center justify-between mb-5"><h3 class="text-lg font-bold text-white"><i class="fas fa-paper-plane text-accent mr-2"></i>Nueva Notificación</h3><button onclick="closeModal('sendNotifModal')" class="text-muted hover:text-white"><i class="fas fa-times text-lg"></i></button></div><form method="POST" action="{{ url_for('admin.notification_send') }}" class="space-y-4"><div><label class="block text-sm font-medium text-muted mb-1.5">Título</label><input type="text" name="title" class="input" placeholder="Ej: Mantenimiento programado" required></div><div><label class="block text-sm font-medium text-muted mb-1.5">Mensaje</label><textarea name="message" class="input" rows="4" placeholder="Escribe el mensaje..." required></textarea></div><div><label class="block text-sm font-medium text-muted mb-1.5">Destinatario</label><select name="reseller_id" class="input"><option value="">Todos los revendedores</option>{% for r in resellers %}<option value="{{ r.id }}">{{ r.username }}</option>{% endfor %}</select></div><button type="submit" class="btn btn-primary w-full justify-center py-3"><i class="fas fa-paper-plane mr-1.5"></i>Enviar Notificación</button></form></div></div>
+
+    <!-- Lista de notificaciones -->
+    <div class="space-y-3">
+        {% for n in notifications %}
+        <div class="card p-5">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1"><h3 class="text-white font-semibold text-sm">{{ n.title }}</h3><span class="badge badge-info text-[10px]">{{ n.reseller.username if n.reseller else 'Todos' }}</span></div>
+                    <p class="text-sm text-muted">{{ n.message }}</p>
+                    <p class="text-xs text-muted mt-2"><i class="fas fa-clock mr-1"></i>{{ n.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+                <form method="POST" action="{{ url_for('admin.notification_delete', notif_id=n.id) }}"><button class="btn btn-ghost btn-xs text-danger"><i class="fas fa-trash"></i></button></form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card p-10 text-center text-muted text-sm"><i class="fas fa-bell text-3xl mb-2 block opacity-20"></i>No hay notificaciones enviadas</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

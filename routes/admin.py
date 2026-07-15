@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from models import db, Admin, Reseller, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username
+from models import db, Admin, Reseller, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username, Notification
 from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
@@ -925,3 +925,51 @@ def server_delete(server_id):
     log_action('server_delete', 'Servidor eliminado: %s' % name)
     flash('Servidor %s eliminado' % name, 'success')
     return redirect(url_for('admin.servers'))
+
+
+# ============ NOTIFICACIONES A REVENDEDORES ============
+
+@admin_bp.route('/notifications')
+@admin_required
+def notifications():
+    """Lista de notificaciones enviadas"""
+    notifs = Notification.query.order_by(Notification.created_at.desc()).limit(50).all()
+    resellers = Reseller.query.filter_by(is_active=True).all()
+    return render_template('admin/notifications.html', notifications=notifs, resellers=resellers)
+
+
+@admin_bp.route('/notifications/send', methods=['POST'])
+@admin_required
+def notification_send():
+    """Enviar notificacion a revendedores"""
+    title = request.form.get('title', '').strip()
+    message = request.form.get('message', '').strip()
+    reseller_id = request.form.get('reseller_id', type=int)  # None = todos
+
+    if not title or not message:
+        flash('Título y mensaje son requeridos', 'danger')
+        return redirect(url_for('admin.notifications'))
+
+    notif = Notification(
+        title=title,
+        message=message,
+        reseller_id=reseller_id if reseller_id else None,
+        created_by=current_user.id
+    )
+    db.session.add(notif)
+    db.session.commit()
+
+    target = 'todos los revendedores' if not reseller_id else f'revendedor #{reseller_id}'
+    log_action('notification', f'Notificacion enviada a {target}: {title}')
+    flash(f'Notificación enviada a {target}', 'success')
+    return redirect(url_for('admin.notifications'))
+
+
+@admin_bp.route('/notifications/delete/<int:notif_id>', methods=['POST'])
+@admin_required
+def notification_delete(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    db.session.delete(notif)
+    db.session.commit()
+    flash('Notificación eliminada', 'success')
+    return redirect(url_for('admin.notifications'))

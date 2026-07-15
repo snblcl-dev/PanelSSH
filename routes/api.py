@@ -2,6 +2,7 @@
 API REST para operaciones desde el frontend (JS).
 """
 from datetime import datetime, timedelta
+from collections import defaultdict
 from flask import Blueprint, jsonify, request
 from flask_login import login_required
 from models import db, SSHUser, ActivityLog
@@ -9,9 +10,30 @@ from ssh_manager import system_get_online_users
 
 api_bp = Blueprint('api', __name__)
 
+# Rate limiting en memoria
+_rate_limits = defaultdict(list)
+
+def rate_limit(max_requests=30, window_seconds=60):
+    """Decorador: limita peticiones por IP. 429 si excede."""
+    def decorator(f):
+        from functools import wraps
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            ip = request.remote_addr or '127.0.0.1'
+            now = datetime.utcnow()
+            window = timedelta(seconds=window_seconds)
+            _rate_limits[ip] = [t for t in _rate_limits[ip] if now - t < window]
+            if len(_rate_limits[ip]) >= max_requests:
+                return jsonify({'error': 'Demasiadas peticiones. Intenta de nuevo en un minuto.'}), 429
+            _rate_limits[ip].append(now)
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
 
 @api_bp.route('/stats')
 @login_required
+@rate_limit(30, 60)
 def api_stats():
     """Estadísticas en JSON para el dashboard"""
     now = datetime.utcnow()
@@ -51,6 +73,7 @@ def api_stats():
 
 @api_bp.route('/online')
 @login_required
+@rate_limit(30, 60)
 def api_online():
     """Lista de usuarios online en JSON"""
     online_data = system_get_online_users()
@@ -71,6 +94,7 @@ def api_online():
 
 @api_bp.route('/logs/recent')
 @login_required
+@rate_limit(20, 60)
 def api_recent_logs():
     """Últimos 20 logs en JSON"""
     logs = ActivityLog.query.order_by(ActivityLog.created_at.desc()).limit(20).all()

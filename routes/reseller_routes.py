@@ -4,7 +4,7 @@ Rutas para el panel de Revendedores/Resellers
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from models import db, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username
+from models import db, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username, Notification
 from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
@@ -436,3 +436,40 @@ def reseller_clean_expired_run():
     
     flash(f'{count} usuarios expirados eliminados', 'success')
     return redirect(url_for('reseller.reseller_clean_expired'))
+
+
+# ============ NOTIFICACIONES ============
+
+@reseller_bp.route('/notifications')
+@reseller_required
+def reseller_notifications():
+    """Ver notificaciones del revendedor"""
+    notifs = Notification.query.filter(
+        db.or_(Notification.reseller_id == current_user.id, Notification.reseller_id == None)
+    ).order_by(Notification.created_at.desc()).limit(30).all()
+    return render_template('reseller/notifications.html', notifications=notifs)
+
+
+@reseller_bp.route('/notifications/read/<int:notif_id>', methods=['POST'])
+@reseller_required
+def reseller_mark_read(notif_id):
+    """Marcar notificacion como leida"""
+    notif = Notification.query.get_or_404(notif_id)
+    if notif.reseller_id and notif.reseller_id != current_user.id:
+        flash('No tienes permiso', 'danger')
+        return redirect(url_for('reseller.reseller_notifications'))
+    notif.is_read = True
+    db.session.commit()
+    return redirect(url_for('reseller.reseller_notifications'))
+
+
+@reseller_bp.route('/api/unread-count')
+@reseller_required
+def reseller_unread_count():
+    """Devuelve el numero de notificaciones no leidas (para badge sidebar)"""
+    count = Notification.query.filter(
+        db.or_(Notification.reseller_id == current_user.id, Notification.reseller_id == None),
+        Notification.is_read == False
+    ).count()
+    from flask import jsonify
+    return jsonify({'unread': count})
