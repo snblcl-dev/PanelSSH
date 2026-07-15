@@ -111,6 +111,7 @@ def dashboard():
         expired_users=expired_users,
         expiring_soon=expiring_soon,
         total_resellers=total_resellers,
+        active_resellers=active_resellers,
         online_users_count=online_users_count,
         created_today=created_today,
         recent_logs=recent_logs,

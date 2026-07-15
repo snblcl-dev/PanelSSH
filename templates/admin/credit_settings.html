@@ -14,6 +14,25 @@
         </div>
     </div>
 
+    <!-- Banner del modo actual -->
+    <div class="card p-4 mb-4 {% if config.mode == 'per_day' %}border-accent/40 bg-accent/5{% else %}border-warning/40 bg-warning/5{% endif %}">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center {% if config.mode == 'per_day' %}bg-accent/15{% else %}bg-warning/15{% endif %}">
+                <i class="fas fa-{% if config.mode == 'per_day' %}calendar-day text-accent{% else %}user-plus text-warning{% endif %} text-lg"></i>
+            </div>
+            <div>
+                <p class="text-white font-semibold text-sm">Modo actual: <span class="{% if config.mode == 'per_day' %}text-accent{% else %}text-warning{% endif %}">{% if config.mode == 'per_day' %}Por Día{% else %}Por Usuario{% endif %}</span></p>
+                <p class="text-xs text-muted mt-0.5">
+                    {% if config.mode == 'per_day' %}
+                    Se descuenta <strong class="text-warning">{{ config.cost_per_day }} crédito(s) por día</strong> + {{ config.cost_per_extra_connection }} crédito(s) por cada conexión extra
+                    {% else %}
+                    Se descuenta <strong class="text-warning">{{ config.cost_per_user }} crédito(s) fijo(s) por usuario</strong> + {{ config.cost_per_extra_connection }} crédito(s) por cada conexión extra
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Guía ¿Cómo funciona? -->
     <div class="card p-6 mb-6">
         <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm">
