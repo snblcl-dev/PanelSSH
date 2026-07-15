@@ -36,4 +36,9 @@ echo "✓ Panel Maestro instalado"
 echo "  URL:     http://$(curl -s ifconfig.me):5100"
 echo "  Service: systemctl status $SERVICE_NAME"
 echo "  Logs:    journalctl -u $SERVICE_NAME -f"
-echo "  Pass:    admin123 (cambiala en /etc/systemd/system/${SERVICE_NAME}.service)"
+echo "  Pass:    admin123 (cámbiala desde Perfil en el panel)"
+
+# Cron para revisar instancias vencidas cada hora
+CRON_EXPIRY="0 * * * * $BASE_DIR/check-expirations.sh"
+(crontab -l 2>/dev/null | grep -v "check-expirations"; echo "$CRON_EXPIRY") | crontab -
+echo "  Cron:     revisa vencimientos cada hora"
