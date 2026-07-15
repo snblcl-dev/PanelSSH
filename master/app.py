@@ -97,7 +97,8 @@ def dashboard():
     for inst in instances:
         inst['is_active'] = check_service_status(inst['slug'])
     save_instances(instances)
-    return render_template('dashboard.html', instances=instances)
+    now_iso = datetime.utcnow().isoformat()[:10]
+    return render_template('dashboard.html', instances=instances, now_iso=now_iso)
 
 
 @app.route('/create', methods=['POST'])
@@ -154,6 +155,26 @@ def delete(slug):
     else:
         flash(f'Error al eliminar: {result.stderr[:200]}', 'danger')
 
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/set-expiry/<slug>', methods=['POST'])
+@master_required
+def set_expiry(slug):
+    expires_at = request.form.get('expires_at', '').strip()
+    data = load_instances()
+    for inst in data:
+        if inst['slug'] == slug:
+            inst['expires_at'] = expires_at if expires_at else None
+            break
+    save_instances(data)
+
+    # Si la fecha ya pasó, apagar
+    if expires_at and expires_at < datetime.utcnow().isoformat()[:10]:
+        subprocess.run(['systemctl', 'stop', f'sshpanel-{slug}'], timeout=30)
+        flash(f'Instancia "{slug}" vencida — servicio detenido', 'warning')
+    else:
+        flash(f'Vencimiento de "{slug}" actualizado', 'success')
     return redirect(url_for('dashboard'))
 
 

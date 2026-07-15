@@ -49,17 +49,18 @@
 
         <div class="card overflow-hidden">
             <table>
-                <thead><tr><th>Instancia</th><th>Subdominio</th><th>Puerto</th><th>Estado</th><th>Creada</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Instancia</th><th>Subdominio</th><th>Puerto</th><th>Vence</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                     {% for inst in instances %}
                     <tr>
                         <td class="text-white font-medium">{{ inst.slug }}</td>
                         <td class="text-gray-400">{{ inst.subdomain or '—' }}</td>
                         <td class="font-mono text-gray-300">{{ inst.port }}</td>
+                        <td class="text-sm {% if inst.expires_at and inst.expires_at < now_iso %}text-red-400 font-semibold{% else %}text-gray-400{% endif %}">{{ inst.expires_at[:10] if inst.expires_at else 'Sin límite' }}</td>
                         <td><span class="badge {% if inst.is_active %}badge-success{% else %}badge-danger{% endif %}">{{ 'Online' if inst.is_active else 'Caído' }}</span></td>
-                        <td class="text-gray-500 text-sm">{{ inst.created_at[:10] if inst.created_at else '—' }}</td>
                         <td>
                             <div class="flex gap-1">
+                                <button onclick="openExpiryModal('{{ inst.slug }}','{{ inst.expires_at[:10] if inst.expires_at else '' }}')" class="btn btn-ghost btn-sm" title="Vencimiento"><i class="fas fa-calendar"></i></button>
                                 <form method="POST" action="{{ url_for('restart', slug=inst.slug) }}"><button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i></button></form>
                                 <form method="POST" action="{{ url_for('delete', slug=inst.slug) }}" onsubmit="return confirm('¿Eliminar {{ inst.slug }}?')"><button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>
                             </div>
@@ -70,6 +71,18 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Modal: Vencimiento -->
+    <div class="modal-overlay" id="expiryModal">
+        <div class="modal-card">
+            <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-calendar mr-2" style="color:#F59E0B;"></i>Fecha de Vencimiento</h3>
+            <form method="POST" id="expiryForm" class="space-y-4">
+                <div><label class="block text-sm text-gray-400 mb-1">Vence el (YYYY-MM-DD)</label><input type="date" name="expires_at" id="expiryDate" class="input"></div>
+                <p class="text-xs text-gray-500">Si la fecha pasa, la instancia se apaga automáticamente.</p>
+                <div class="flex gap-3"><button type="button" onclick="closeModal('expiryModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-primary flex-1 justify-center"><i class="fas fa-save"></i>Guardar</button></div>
+            </form>
         </div>
     </div>
 
@@ -89,6 +102,11 @@
         function openModal(id){document.getElementById(id).classList.add('active')}
         function closeModal(id){document.getElementById(id).classList.remove('active')}
         document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')})});
+        function openExpiryModal(slug, currentDate){
+            document.getElementById('expiryForm').action='/set-expiry/'+slug;
+            document.getElementById('expiryDate').value=currentDate;
+            openModal('expiryModal');
+        }
     </script>
 </body>
 </html>
