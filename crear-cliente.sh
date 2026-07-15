@@ -32,7 +32,7 @@ mkdir -p "$INSTANCE_DIR"
 
 # Copiar código base (excluyendo instances y archivos innecesarios)
 echo "[1/5] Copiando código base..."
-rsync -a --exclude 'instances' --exclude '__pycache__' --exclude '*.pyc' --exclude '.git' \
+rsync -a --exclude 'instances' --exclude 'instance' --exclude '__pycache__' --exclude '*.pyc' --exclude '.git' --exclude 'venv' \
       "$BASE_DIR/" "$INSTANCE_DIR/"
 
 # Generar secret key única
