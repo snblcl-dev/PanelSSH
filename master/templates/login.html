@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Maestro — PanelSSH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body{background:#020617;color:#F8FAFC;font-family:system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+        .card{background:#0F172A;border:1px solid #334155;border-radius:16px;padding:32px;max-width:400px;width:100%}
+        .input{background:#1A1E2F;border:1px solid #334155;border-radius:10px;padding:10px 14px;color:#F8FAFC;width:100%;font-size:.875rem}
+        .input:focus{outline:none;border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+        .btn{width:100%;padding:11px;border-radius:10px;font-size:.875rem;font-weight:600;border:none;cursor:pointer;background:#3B82F6;color:#fff;transition:all .2s}
+        .btn:hover{background:#2563EB}
+        .error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#F87171;padding:10px 14px;border-radius:8px;font-size:.875rem;margin-bottom:16px}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-3" style="background:rgba(59,130,246,.15);">
+                <i class="fas fa-cogs text-2xl" style="color:#3B82F6;"></i>
+            </div>
+            <h1 class="text-xl font-bold text-white">Panel Maestro</h1>
+            <p class="text-sm text-gray-400 mt-1">Gestión de Instancias SaaS</p>
+        </div>
+
+        {% if error %}
+        <div class="error"><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Contraseña</label>
+                <input type="password" name="password" class="input" placeholder="Ingresa la contraseña maestra" required autofocus>
+            </div>
+            <button type="submit" class="btn"><i class="fas fa-lock mr-2"></i>Ingresar</button>
+        </form>
+    </div>
+</body>
+</html>

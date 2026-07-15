@@ -5,20 +5,62 @@ Acceso solo para el admin principal.
 import os
 import json
 import sqlite3
+import secrets
+import hashlib
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
+from collections import defaultdict
 from pathlib import Path
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, session
 from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 BASE_DIR = Path(__file__).parent.parent
 INSTANCES_DIR = BASE_DIR / 'instances'
 MASTER_DB = Path(__file__).parent / 'instances.json'
-MASTER_PASSWORD = os.environ.get('MASTER_PASSWORD', 'admin123')
+CONFIG_FILE = Path(__file__).parent / 'config.json'
 
-# Secret key simple para sesiones
-app.secret_key = os.environ.get('MASTER_SECRET', 'cambiar-esta-clave-en-produccion')
+# ── Configuración ──
+def load_config():
+    if CONFIG_FILE.exists():
+        return json.loads(CONFIG_FILE.read_text())
+    # Primera ejecución: generar secret y password default
+    config = {
+        'secret_key': secrets.token_hex(32),
+        'password_hash': generate_password_hash('admin123'),
+        'login_attempts': 0,
+        'locked_until': None,
+    }
+    save_config(config)
+    return config
+
+
+def save_config(config):
+    CONFIG_FILE.write_text(json.dumps(config, indent=2))
+
+
+config = load_config()
+app.secret_key = config['secret_key']
+app.config['WTF_CSRF_ENABLED'] = False  # Usamos nuestro propio CSRF simple
+
+# ── Rate limiting ──
+_rate_limits = defaultdict(list)
+
+def rate_limit(max_requests=10, window_seconds=60):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            ip = request.remote_addr or '127.0.0.1'
+            now = datetime.utcnow()
+            window = timedelta(seconds=window_seconds)
+            _rate_limits[ip] = [t for t in _rate_limits[ip] if now - t < window]
+            if len(_rate_limits[ip]) >= max_requests:
+                return render_template('login.html', error='Demasiados intentos. Espera un minuto.'), 429
+            _rate_limits[ip].append(now)
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
 
 
 # ── Datos ──
@@ -33,7 +75,6 @@ def save_instances(data):
 
 
 def scan_filesystem():
-    """Sincroniza: busca carpetas en instances/ que no estén en el registro"""
     registered = {i['slug'] for i in load_instances()}
     if not INSTANCES_DIR.exists():
         return
@@ -55,7 +96,6 @@ def scan_filesystem():
 
 
 def get_instance_port(slug):
-    """Lee el puerto del archivo systemd de la instancia"""
     service_file = Path(f'/etc/systemd/system/sshpanel-{slug}.service')
     if service_file.exists():
         content = service_file.read_text()
@@ -66,7 +106,6 @@ def get_instance_port(slug):
 
 
 def check_service_status(slug):
-    """Verifica si el servicio systemd está activo"""
     result = subprocess.run(
         ['systemctl', 'is-active', f'sshpanel-{slug}'],
         capture_output=True, text=True
@@ -75,11 +114,8 @@ def check_service_status(slug):
 
 
 def get_instance_stats(slug):
-    """Obtiene stats de una instancia: usuarios, RAM"""
     stats = {'users': 0, 'ram_mb': 0}
     inst_dir = INSTANCES_DIR / slug
-
-    # Contar usuarios en la DB
     db_path = inst_dir / 'sshpanel.db'
     if db_path.exists():
         try:
@@ -88,8 +124,6 @@ def get_instance_stats(slug):
             conn.close()
         except Exception:
             pass
-
-    # RAM del proceso
     result = subprocess.run(
         ['systemctl', 'show', f'sshpanel-{slug}', '--property=MemoryCurrent'],
         capture_output=True, text=True
@@ -100,37 +134,109 @@ def get_instance_stats(slug):
             stats['ram_mb'] = round(int(mem) / (1024 * 1024), 1)
         except ValueError:
             pass
-
     return stats
+
+
+def generate_csrf_token():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(32)
+    return session['_csrf_token']
 
 
 # ── Auth ──
 def master_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or auth.password != MASTER_PASSWORD:
-            return ('Acceso restringido', 401, {
-                'WWW-Authenticate': 'Basic realm="Panel Maestro"'
-            })
+        if not session.get('master_authenticated'):
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
 
 
 # ── Rutas ──
 
+@app.route('/login', methods=['GET', 'POST'])
+@rate_limit(10, 60)
+def login():
+    config_data = load_config()
+
+    # Verificar bloqueo
+    if config_data.get('locked_until'):
+        lock_time = datetime.fromisoformat(config_data['locked_until'])
+        if datetime.utcnow() < lock_time:
+            mins = int((lock_time - datetime.utcnow()).total_seconds() / 60) + 1
+            return render_template('login.html', error=f'Cuenta bloqueada. Intenta en {mins} minuto(s).')
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+
+        if check_password_hash(config_data['password_hash'], password):
+            config_data['login_attempts'] = 0
+            config_data['locked_until'] = None
+            save_config(config_data)
+            session['master_authenticated'] = True
+            session['_csrf_token'] = secrets.token_hex(32)
+            return redirect(url_for('dashboard'))
+        else:
+            config_data['login_attempts'] = config_data.get('login_attempts', 0) + 1
+            if config_data['login_attempts'] >= 5:
+                config_data['locked_until'] = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+                save_config(config_data)
+                return render_template('login.html', error='Demasiados intentos. Cuenta bloqueada por 15 minutos.')
+            save_config(config_data)
+            remaining = 5 - config_data['login_attempts']
+            return render_template('login.html', error=f'Contraseña incorrecta. {remaining} intento(s) restante(s).')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
 @app.route('/')
 @master_required
 def dashboard():
     scan_filesystem()
     instances = load_instances()
-    # Actualizar estado de cada instancia
     for inst in instances:
         inst['is_active'] = check_service_status(inst['slug'])
         inst['stats'] = get_instance_stats(inst['slug'])
     save_instances(instances)
     now_iso = datetime.utcnow().isoformat()[:10]
-    return render_template('dashboard.html', instances=instances, now_iso=now_iso)
+    csrf_token = generate_csrf_token()
+    return render_template('dashboard.html', instances=instances, now_iso=now_iso, csrf_token=csrf_token)
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+@master_required
+def profile():
+    if request.method == 'POST':
+        current_pw = request.form.get('current_password', '')
+        new_pw = request.form.get('new_password', '')
+        confirm_pw = request.form.get('confirm_password', '')
+
+        config_data = load_config()
+        if not check_password_hash(config_data['password_hash'], current_pw):
+            flash('Contraseña actual incorrecta', 'danger')
+            return redirect(url_for('profile'))
+
+        if len(new_pw) < 6:
+            flash('La nueva contraseña debe tener al menos 6 caracteres', 'danger')
+            return redirect(url_for('profile'))
+
+        if new_pw != confirm_pw:
+            flash('Las contraseñas no coinciden', 'danger')
+            return redirect(url_for('profile'))
+
+        config_data['password_hash'] = generate_password_hash(new_pw)
+        save_config(config_data)
+        flash('Contraseña cambiada exitosamente', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('profile.html')
 
 
 @app.route('/create', methods=['POST'])
@@ -143,17 +249,14 @@ def create():
         flash('Slug y subdominio son requeridos', 'danger')
         return redirect(url_for('dashboard'))
 
-    # Validar slug
     if not slug.replace('-', '').replace('_', '').isalnum():
         flash('Slug inválido: solo letras, números, guiones', 'danger')
         return redirect(url_for('dashboard'))
 
-    # Verificar que no exista
     if Path(INSTANCES_DIR / slug).exists():
         flash(f'La instancia "{slug}" ya existe', 'danger')
         return redirect(url_for('dashboard'))
 
-    # Ejecutar script
     script = BASE_DIR / 'crear-cliente.sh'
     result = subprocess.run(
         ['bash', str(script), slug, subdomain],
@@ -162,7 +265,6 @@ def create():
 
     if result.returncode == 0:
         flash(f'Instancia "{slug}" creada exitosamente en https://{subdomain}', 'success')
-        # Registrar en DB
         scan_filesystem()
     else:
         flash(f'Error al crear: {result.stderr[:200]}', 'danger')
@@ -180,7 +282,6 @@ def delete(slug):
     )
 
     if result.returncode == 0:
-        # Quitar del registro
         data = [i for i in load_instances() if i['slug'] != slug]
         save_instances(data)
         flash(f'Instancia "{slug}" eliminada', 'success')
@@ -201,7 +302,6 @@ def set_expiry(slug):
             break
     save_instances(data)
 
-    # Si la fecha ya pasó, apagar
     if expires_at and expires_at < datetime.utcnow().isoformat()[:10]:
         subprocess.run(['systemctl', 'stop', f'sshpanel-{slug}'], timeout=30)
         flash(f'Instancia "{slug}" vencida — servicio detenido', 'warning')

@@ -36,7 +36,11 @@
                 <h1 class="text-2xl font-bold text-white"><i class="fas fa-cogs text-accent mr-2" style="color:#3B82F6;"></i>Panel Maestro</h1>
                 <p class="text-sm text-gray-400 mt-1">{{ instances|length }} instancia(s) activa(s)</p>
             </div>
-            <button onclick="openModal('createModal')" class="btn btn-primary"><i class="fas fa-plus"></i>Nueva Instancia</button>
+            <div class="flex items-center gap-2">
+                <a href="{{ url_for('profile') }}" class="btn btn-ghost btn-sm"><i class="fas fa-cog"></i>Perfil</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-ghost btn-sm text-red-400"><i class="fas fa-sign-out-alt"></i>Salir</a>
+                <button onclick="openModal('createModal')" class="btn btn-primary"><i class="fas fa-plus"></i>Nueva Instancia</button>
+            </div>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}

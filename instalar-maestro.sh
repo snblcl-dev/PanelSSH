@@ -19,7 +19,6 @@ Type=simple
 User=root
 WorkingDirectory=$MASTER_DIR
 Environment=MASTER_PORT=5100
-Environment=MASTER_PASSWORD=admin123
 ExecStart=$BASE_DIR/venv/bin/python $MASTER_DIR/wsgi.py
 Restart=always
 RestartSec=5
