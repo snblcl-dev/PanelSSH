@@ -67,6 +67,12 @@ def reseller_dashboard():
         SSHUser.expires_at <= now + timedelta(days=3)
     ).count()
 
+    # Ultimas actividades del reseller
+    recent_logs = ActivityLog.query.filter(
+        ActivityLog.performed_by == current_user.username,
+        ActivityLog.performed_by_type == 'reseller'
+    ).order_by(ActivityLog.created_at.desc()).limit(10).all()
+
     return render_template('reseller/dashboard.html',
         total_users=total_users,
         active_users=active_users,
@@ -74,6 +80,7 @@ def reseller_dashboard():
         expired_users=expired_users,
         expiring_soon=expiring_soon,
         credits=current_user.credits,
+        recent_logs=recent_logs,
         credit_config=CreditConfig.get_config(),
         servers=Server.query.filter_by(is_active=True).all()
     )

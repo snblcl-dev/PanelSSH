@@ -12,9 +12,26 @@
         <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center"><i class="fas fa-exclamation-triangle text-warning"></i></div><span class="badge badge-warning text-[10px]">Próximos</span></div><p class="text-xl md:text-2xl font-bold text-white">{{ expiring_soon }}</p><p class="text-[11px] md:text-xs text-muted">Vencen en 3 días</p></div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-2 gap-3 mb-6">
         <a href="{{ url_for('reseller.users') }}" class="card p-5 flex flex-col items-center gap-2.5 hover:border-accent/40 transition-all group"><div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20"><i class="fas fa-user-plus text-accent text-lg"></i></div><span class="text-sm text-muted font-medium group-hover:text-white">Nuevo Usuario</span></a>
         <a href="{{ url_for('reseller.reseller_clean_expired') }}" class="card p-5 flex flex-col items-center gap-2.5 hover:border-danger/40 transition-all group"><div class="w-10 h-10 rounded-lg bg-danger/10 flex items-center justify-center group-hover:bg-danger/20"><i class="fas fa-broom text-danger text-lg"></i></div><span class="text-sm text-muted font-medium group-hover:text-white">Limpiar Expirados</span></a>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="card p-5">
+        <h3 class="text-white font-semibold mb-4 flex items-center gap-2 text-sm"><i class="fas fa-history text-accent"></i>Mi Actividad Reciente</h3>
+        <div class="space-y-1">
+            {% for log in recent_logs %}
+            <div class="flex items-start gap-3 text-sm p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs {% if log.action in ('create','renew','unblock','login') %}bg-success/15 text-success{% elif log.action in ('delete','block','disconnect') %}bg-danger/15 text-danger{% else %}bg-accent/15 text-accent{% endif %}">
+                    <i class="fas fa-{% if log.action=='create' %}plus{% elif log.action=='renew' %}sync{% elif log.action=='delete' %}trash{% elif log.action=='block' %}ban{% elif log.action=='unblock' %}check{% elif log.action=='disconnect' %}power-off{% elif log.action=='login' %}sign-in-alt{% else %}circle{% endif %}"></i>
+                </div>
+                <div class="flex-1 min-w-0"><p class="text-white/90 truncate text-sm">{{ log.description }}</p><p class="text-muted text-[11px] mt-0.5">{{ log.created_at.strftime('%H:%M · %d/%m/%Y') }}</p></div>
+            </div>
+            {% else %}
+            <p class="text-muted text-sm text-center py-6">No hay actividad registrada aún</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}
