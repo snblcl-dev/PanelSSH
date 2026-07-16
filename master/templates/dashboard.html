@@ -7,111 +7,216 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body{background:#020617;color:#F8FAFC;font-family:system-ui,sans-serif}
-        .card{background:#0F172A;border:1px solid #334155;border-radius:12px;padding:20px}
-        .btn{padding:8px 16px;border-radius:8px;font-size:.875rem;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-        .btn-primary{background:#3B82F6;color:#fff}.btn-primary:hover{background:#2563EB}
-        .btn-danger{background:#DC2626;color:#fff}.btn-danger:hover{background:#B91C1C}
-        .btn-ghost{background:transparent;color:#94A3B8;border:1px solid #334155}
+        :root{--bg:#020617;--card:#0F172A;--border:#334155;--text:#F8FAFC;--muted:#94A3B8;--blue:#3B82F6;--green:#22C55E;--red:#EF4444;--yellow:#EAB308;--purple:#8B5CF6}
+        body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .2s}
+        .card:hover{border-color:#475569}
+        .stat{border-left:3px solid transparent}
+        .stat-blue{border-left-color:var(--blue)}
+        .stat-green{border-left-color:var(--green)}
+        .stat-yellow{border-left-color:var(--yellow)}
+        .stat-purple{border-left-color:var(--purple)}
+        .stat-red{border-left-color:var(--red)}
+        .btn{padding:7px 14px;border-radius:9px;font-size:.8125rem;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+        .btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#2563EB}
+        .btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#B91C1C}
+        .btn-warning{background:#B45309;color:#fff}
+        .btn-success{background:#059669;color:#fff}
+        .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+        .btn-ghost:hover{background:rgba(255,255,255,.04);color:#E2E8F0}
+        .btn-xs{padding:4px 8px;font-size:.6875rem;border-radius:6px}
         .btn-sm{padding:5px 10px;font-size:.75rem}
-        .input{background:#1A1E2F;border:1px solid #334155;border-radius:8px;padding:9px 12px;color:#F8FAFC;width:100%}
-        .badge{padding:2px 8px;border-radius:99px;font-size:.6875rem;font-weight:600}
-        .badge-success{background:rgba(34,197,94,.15);color:#4ADE80}
-        .badge-danger{background:rgba(239,68,68,.15);color:#F87171}
-        .flash{padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:.875rem}
-        .flash-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:#4ADE80}
-        .flash-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#F87171}
+        .input{background:#1A1E2F;border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);width:100%;font-size:.875rem;outline:none}
+        .input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+        .badge{padding:2px 9px;border-radius:99px;font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+        .badge-success{background:rgba(34,197,94,.12);color:#4ADE80}
+        .badge-danger{background:rgba(239,68,68,.12);color:#F87171}
+        .badge-warning{background:rgba(234,179,8,.12);color:#FACC15}
+        .badge-info{background:rgba(59,130,246,.12);color:#60A5FA}
+        .badge-purple{background:rgba(139,92,246,.12);color:#A78BFA}
+        .flash{padding:10px 14px;border-radius:9px;font-size:.875rem;margin-bottom:14px}
+        .flash-success{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);color:#4ADE80}
+        .flash-danger{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#F87171}
+        .flash-warning{background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);color:#FACC15}
         table{width:100%;border-collapse:collapse}
-        th{text-align:left;padding:10px 14px;color:#64748B;font-size:.6875rem;text-transform:uppercase;border-bottom:1px solid #334155}
-        td{padding:10px 14px;font-size:.875rem;border-bottom:1px solid rgba(51,65,85,.4)}
-        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+        th{text-align:left;padding:8px 12px;color:#64748B;font-size:.625rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);font-weight:600}
+        td{padding:8px 12px;font-size:.8125rem;border-bottom:1px solid rgba(51,65,85,.4)}
+        tr:hover td{background:rgba(255,255,255,.015)}
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:16px}
         .modal-overlay.active{display:flex}
-        .modal-card{background:#1E293B;border:1px solid #334155;border-radius:14px;padding:24px;max-width:480px;width:100%}
+        .modal-card{background:#1E293B;border:1px solid var(--border);border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.7);animation:fadeScale .2s ease-out}
+        @keyframes fadeScale{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+        .progress-bar{height:6px;border-radius:99px;background:var(--border);overflow:hidden}
+        .progress-fill{height:100%;border-radius:99px;transition:width .5s}
+        @media(max-width:640px){.grid-resp{grid-template-columns:1fr!important}}
+        .tooltip{position:relative}
+        .tooltip:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1E293B;color:#E2E8F0;padding:4px 10px;border-radius:6px;font-size:.6875rem;white-space:nowrap;z-index:10;margin-bottom:4px}
     </style>
 </head>
 <body>
-    <div class="max-w-5xl mx-auto px-4 py-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-white"><i class="fas fa-cogs text-accent mr-2" style="color:#3B82F6;"></i>Panel Maestro</h1>
-                <p class="text-sm text-gray-400 mt-1">{{ instances|length }} instancia(s) activa(s)</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ url_for('profile') }}" class="btn btn-ghost btn-sm"><i class="fas fa-cog"></i>Perfil</a>
-                <a href="{{ url_for('logout') }}" class="btn btn-ghost btn-sm text-red-400"><i class="fas fa-sign-out-alt"></i>Salir</a>
-                <button onclick="openModal('createModal')" class="btn btn-primary"><i class="fas fa-plus"></i>Nueva Instancia</button>
-            </div>
+<div class="max-w-7xl mx-auto px-3 py-4 md:px-5 md:py-5">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold text-white" style="font-weight:800;letter-spacing:-0.02em;">Panel Maestro</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Gestión de instancias SaaS</p>
         </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('profile') }}" class="btn btn-ghost btn-sm"><i class="fas fa-cog"></i></a>
+            <a href="{{ url_for('logout') }}" class="btn btn-ghost btn-sm"><i class="fas fa-sign-out-alt"></i> Salir</a>
+        </div>
+    </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="flash flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+    {% endwith %}
 
-        <div class="card overflow-hidden">
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-5">
+        <div class="card stat stat-blue"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">CPU</p><p class="text-xl font-bold text-white">{{ sys_stats.cpu }}%</p><div class="progress-bar mt-2"><div class="progress-fill {% if sys_stats.cpu>80 %}bg-red-500{% elif sys_stats.cpu>60 %}bg-yellow-500{% else %}bg-blue-500{% endif %}" style="width:{{ sys_stats.cpu }}%"></div></div></div>
+        <div class="card stat stat-purple"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">RAM</p><p class="text-xl font-bold text-white">{{ sys_stats.ram_pct }}%</p><p class="text-[10px] text-gray-500 mt-0.5">{{ sys_stats.ram_used }} / {{ sys_stats.ram_total }}</p></div>
+        <div class="card stat stat-yellow"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Disco</p><p class="text-xl font-bold text-white">{{ sys_stats.disk_pct }}%</p><p class="text-[10px] text-gray-500 mt-0.5">{{ sys_stats.disk_used }} / {{ sys_stats.disk_total }}</p></div>
+        <div class="card stat stat-green"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Usuarios</p><p class="text-xl font-bold text-white">{{ global_stats.total_users }}</p><p class="text-[10px] text-gray-500 mt-0.5">Total global</p></div>
+        <div class="card stat stat-blue"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Instancias</p><p class="text-xl font-bold text-white">{{ global_stats.active_instances }}/{{ global_stats.total_instances }}</p><p class="text-[10px] text-gray-500 mt-0.5">Activas</p></div>
+        <div class="card stat stat-purple"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Revendedores</p><p class="text-xl font-bold text-white">{{ global_stats.total_resellers }}</p><p class="text-[10px] text-gray-500 mt-0.5">Total global</p></div>
+        <div class="card stat stat-green"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Servidores</p><p class="text-xl font-bold text-white">{{ global_stats.total_servers }}</p><p class="text-[10px] text-gray-500 mt-0.5">Total global</p></div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button onclick="openModal('createModal')" class="btn btn-primary"><i class="fas fa-plus"></i> Nueva Instancia</button>
+        <form method="POST" action="{{ url_for('mass_update') }}" class="inline"><button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i> Actualizar Todo (git pull)</button></form>
+        <span class="text-xs text-gray-500 ml-auto">{{ instances|length }} instancia(s)</span>
+    </div>
+
+    <!-- Instances Table -->
+    <div class="card overflow-hidden mb-6">
+        <div class="overflow-x-auto">
             <table>
-                <thead><tr><th>Instancia</th><th>Subdominio</th><th>Usuarios</th><th>RAM</th><th>Vence</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Instancia</th><th>Stats</th><th>Límites</th><th>Vence</th><th>Estado</th><th class="text-right">Acciones</th></tr></thead>
                 <tbody>
                     {% for inst in instances %}
                     <tr>
-                        <td class="text-white font-medium">{{ inst.slug }}</td>
-                        <td class="text-gray-400 text-sm">{{ inst.subdomain or '—' }}</td>
-                        <td class="font-mono text-gray-300">{{ inst.stats.users }}</td>
-                        <td class="text-sm text-gray-400">{{ inst.stats.ram_mb }} MB</td>
-                        <td class="text-sm {% if inst.expires_at and inst.expires_at < now_iso %}text-red-400 font-semibold{% else %}text-gray-400{% endif %}">{{ inst.expires_at[:10] if inst.expires_at else 'Sin límite' }}</td>
-                        <td><span class="badge {% if inst.is_active %}badge-success{% else %}badge-danger{% endif %}">{{ 'Online' if inst.is_active else 'Caído' }}</span></td>
                         <td>
-                            <div class="flex gap-1">
-                                <button onclick="openExpiryModal('{{ inst.slug }}','{{ inst.expires_at[:10] if inst.expires_at else '' }}')" class="btn btn-ghost btn-sm" title="Vencimiento"><i class="fas fa-calendar"></i></button>
-                                <form method="POST" action="{{ url_for('restart', slug=inst.slug) }}"><button class="btn btn-ghost btn-sm"><i class="fas fa-sync-alt"></i></button></form>
-                                <form method="POST" action="{{ url_for('delete', slug=inst.slug) }}" onsubmit="return confirm('¿Eliminar {{ inst.slug }}?')"><button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full {% if inst.is_active %}bg-green-400{% else %}bg-red-400{% endif %}"></span>
+                                <div>
+                                    <p class="text-white font-medium text-sm">{{ inst.slug }}</p>
+                                    {% if inst.subdomain %}<p class="text-[10px] text-gray-500">{{ inst.subdomain }}</p>{% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                <span title="Usuarios"><i class="fas fa-users mr-1"></i>{{ inst.stats.users }}</span>
+                                <span title="Revendedores"><i class="fas fa-store mr-1"></i>{{ inst.stats.resellers }}</span>
+                                <span title="Servidores"><i class="fas fa-server mr-1"></i>{{ inst.stats.servers }}</span>
+                                <span title="RAM"><i class="fas fa-memory mr-1"></i>{{ inst.stats.ram_mb }}M</span>
+                            </div>
+                        </td>
+                        <td class="text-xs text-gray-400">
+                            {% set lim = inst.get('limits',{}) %}
+                            <span class="{% if lim.get('max_users',-1) != -1 and inst.stats.users >= lim.max_users %}text-red-400 font-semibold{% endif %}">U:{{ lim.get('max_users','∞') if lim.get('max_users',-1) != -1 else '∞' }}</span> ·
+                            <span>R:{{ lim.get('max_resellers','∞') if lim.get('max_resellers',-1) != -1 else '∞' }}</span> ·
+                            <span>S:{{ lim.get('max_servers','∞') if lim.get('max_servers',-1) != -1 else '∞' }}</span>
+                        </td>
+                        <td class="text-xs {% if inst.expires_at and inst.expires_at < now_iso %}text-red-400 font-semibold{% else %}text-gray-400{% endif %}">{{ inst.expires_at[:10] if inst.expires_at else '∞' }}</td>
+                        <td>
+                            {% if inst.get('maintenance') %}
+                            <span class="badge badge-warning">Mantenimiento</span>
+                            {% elif inst.is_active %}
+                            <span class="badge badge-success">Online</span>
+                            {% else %}
+                            <span class="badge badge-danger">Caído</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <button onclick="openExpiryModal('{{ inst.slug }}','{{ inst.expires_at[:10] if inst.expires_at else '' }}')" class="btn btn-ghost btn-xs tooltip" data-tip="Vencimiento"><i class="fas fa-calendar text-xs"></i></button>
+                                <button onclick="openLimitsModal('{{ inst.slug }}','{{ inst.limits.max_users if inst.limits.max_users != -1 else '' }}','{{ inst.limits.max_resellers if inst.limits.max_resellers != -1 else '' }}','{{ inst.limits.max_servers if inst.limits.max_servers != -1 else '' }}')" class="btn btn-ghost btn-xs tooltip" data-tip="Límites"><i class="fas fa-sliders-h text-xs"></i></button>
+                                <form method="POST" action="{{ url_for('toggle_maintenance', slug=inst.slug) }}" class="inline">
+                                    <input type="hidden" name="message" value="{% if inst.get('maintenance') %}{% else %}Panel en mantenimiento programado.{% endif %}">
+                                    <button class="btn btn-ghost btn-xs tooltip {% if inst.get('maintenance') %}text-yellow-400{% endif %}" data-tip="Mantenimiento"><i class="fas fa-tools text-xs"></i></button>
+                                </form>
+                                <a href="{{ url_for('backup', slug=inst.slug) }}" class="btn btn-ghost btn-xs tooltip" data-tip="Backup DB"><i class="fas fa-download text-xs"></i></a>
+                                <form method="POST" action="{{ url_for('restart', slug=inst.slug) }}"><button class="btn btn-ghost btn-xs tooltip" data-tip="Reiniciar"><i class="fas fa-sync-alt text-xs"></i></button></form>
+                                <form method="POST" action="{{ url_for('delete', slug=inst.slug) }}" onsubmit="return confirm('¿Eliminar {{ inst.slug }}?')"><button class="btn btn-danger btn-xs"><i class="fas fa-trash text-xs"></i></button></form>
                             </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="7" class="text-center py-10 text-gray-500">No hay instancias. Crea la primera.</td></tr>
+                    <tr><td colspan="6" class="text-center py-16 text-gray-500"><i class="fas fa-server text-4xl mb-3 block opacity-15"></i>No hay instancias todavía</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal: Vencimiento -->
-    <div class="modal-overlay" id="expiryModal">
-        <div class="modal-card">
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-calendar mr-2" style="color:#F59E0B;"></i>Fecha de Vencimiento</h3>
-            <form method="POST" id="expiryForm" class="space-y-4">
-                <div><label class="block text-sm text-gray-400 mb-1">Vence el (YYYY-MM-DD)</label><input type="date" name="expires_at" id="expiryDate" class="input"></div>
-                <p class="text-xs text-gray-500">Si la fecha pasa, la instancia se apaga automáticamente.</p>
-                <div class="flex gap-3"><button type="button" onclick="closeModal('expiryModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-primary flex-1 justify-center"><i class="fas fa-save"></i>Guardar</button></div>
-            </form>
+    <!-- Activity Log -->
+    <div class="card">
+        <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fas fa-history text-blue-400"></i>Actividad del Maestro</h3>
+        <div class="space-y-1 max-h-64 overflow-y-auto">
+            {% for entry in activity_log %}
+            <div class="flex items-center gap-3 text-xs p-1.5 rounded hover:bg-white/[0.02]">
+                <span class="text-gray-500 font-mono w-16 flex-shrink-0">{{ entry.time[:16].replace('T',' ') }}</span>
+                <span class="badge {% if 'create' in entry.action %}badge-success{% elif 'delete' in entry.action %}badge-danger{% elif 'mass_update' in entry.action %}badge-info{% elif 'maintenance' in entry.action %}badge-warning{% else %}badge-info{% endif %}">{{ entry.action }}</span>
+                <span class="text-gray-400 truncate">{{ entry.detail }}</span>
+            </div>
+            {% else %}
+            <p class="text-xs text-gray-500 text-center py-4">Sin actividad registrada</p>
+            {% endfor %}
         </div>
     </div>
+</div>
 
-    <!-- Modal: Crear -->
-    <div class="modal-overlay" id="createModal">
-        <div class="modal-card">
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-plus mr-2" style="color:#3B82F6;"></i>Nueva Instancia</h3>
-            <form method="POST" action="{{ url_for('create') }}" class="space-y-4">
-                <div><label class="block text-sm text-gray-400 mb-1">Slug (identificador)</label><input type="text" name="slug" class="input" placeholder="empresa-x" required></div>
-                <div><label class="block text-sm text-gray-400 mb-1">Subdominio</label><input type="text" name="subdomain" class="input" placeholder="cliente.tudominio.com" required></div>
-                <div class="flex gap-3"><button type="button" onclick="closeModal('createModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-primary flex-1 justify-center"><i class="fas fa-plus"></i>Crear</button></div>
-            </form>
+<!-- Modal: Crear Instancia -->
+<div class="modal-overlay" id="createModal"><div class="modal-card">
+    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-plus mr-2 text-blue-400"></i>Nueva Instancia</h3>
+    <form method="POST" action="{{ url_for('create') }}" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs text-gray-400 mb-1">Slug</label><input type="text" name="slug" class="input" placeholder="empresa-x" required></div>
+            <div><label class="block text-xs text-gray-400 mb-1">Subdominio</label><input type="text" name="subdomain" class="input" placeholder="cliente.dominio.com" required></div>
         </div>
-    </div>
+        <p class="text-[11px] text-gray-500 font-medium mt-2">Límites del plan (-1 = ilimitado)</p>
+        <div class="grid grid-cols-3 gap-3">
+            <div><label class="block text-xs text-gray-400 mb-1">Max Usuarios</label><input type="number" name="max_users" class="input" value="-1"></div>
+            <div><label class="block text-xs text-gray-400 mb-1">Max Revendedores</label><input type="number" name="max_resellers" class="input" value="-1"></div>
+            <div><label class="block text-xs text-gray-400 mb-1">Max Servidores</label><input type="number" name="max_servers" class="input" value="-1"></div>
+        </div>
+        <div class="flex gap-3 pt-2"><button type="button" onclick="closeModal('createModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-primary flex-1 justify-center"><i class="fas fa-plus"></i>Crear Instancia</button></div>
+    </form>
+</div></div>
 
-    <script>
-        function openModal(id){document.getElementById(id).classList.add('active')}
-        function closeModal(id){document.getElementById(id).classList.remove('active')}
-        document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')})});
-        function openExpiryModal(slug, currentDate){
-            document.getElementById('expiryForm').action='/set-expiry/'+slug;
-            document.getElementById('expiryDate').value=currentDate;
-            openModal('expiryModal');
-        }
-    </script>
+<!-- Modal: Vencimiento -->
+<div class="modal-overlay" id="expiryModal"><div class="modal-card">
+    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-calendar mr-2 text-yellow-400"></i>Fecha de Vencimiento</h3>
+    <form method="POST" id="expiryForm" class="space-y-3">
+        <div><label class="block text-xs text-gray-400 mb-1">Vence el</label><input type="date" name="expires_at" id="expiryDate" class="input"></div>
+        <p class="text-xs text-gray-500">Al vencer, la instancia se apaga automáticamente.</p>
+        <div class="flex gap-3"><button type="button" onclick="closeModal('expiryModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-primary flex-1 justify-center">Guardar</button></div>
+    </form>
+</div></div>
+
+<!-- Modal: Límites -->
+<div class="modal-overlay" id="limitsModal"><div class="modal-card">
+    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-sliders-h mr-2 text-purple-400"></i>Límites de Instancia</h3>
+    <form method="POST" id="limitsForm" class="space-y-3">
+        <div class="grid grid-cols-3 gap-3">
+            <div><label class="block text-xs text-gray-400 mb-1">Max Usuarios</label><input type="number" name="max_users" id="limUsers" class="input" value="-1"></div>
+            <div><label class="block text-xs text-gray-400 mb-1">Max Revendedores</label><input type="number" name="max_resellers" id="limResellers" class="input" value="-1"></div>
+            <div><label class="block text-xs text-gray-400 mb-1">Max Servidores</label><input type="number" name="max_servers" id="limServers" class="input" value="-1"></div>
+        </div>
+        <p class="text-xs text-gray-500">-1 = ilimitado. Si se alcanza el límite, la instancia no podrá crear más.</p>
+        <div class="flex gap-3"><button type="button" onclick="closeModal('limitsModal')" class="btn btn-ghost flex-1">Cancelar</button><button type="submit" class="btn btn-primary flex-1 justify-center">Guardar</button></div>
+    </form>
+</div></div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('active')}
+function closeModal(id){document.getElementById(id).classList.remove('active')}
+document.querySelectorAll('.modal-overlay').forEach(el=>{el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active')})});
+function openExpiryModal(slug,date){document.getElementById('expiryForm').action='/set-expiry/'+slug;document.getElementById('expiryDate').value=date;openModal('expiryModal')}
+function openLimitsModal(slug,u,r,s){document.getElementById('limitsForm').action='/set-limits/'+slug;document.getElementById('limUsers').value=u||-1;document.getElementById('limResellers').value=r||-1;document.getElementById('limServers').value=s||-1;openModal('limitsModal')}
+</script>
 </body>
 </html>
