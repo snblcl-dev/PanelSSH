@@ -53,6 +53,24 @@ if ss -tlnp | grep -q ":$PORT "; then
 fi
 echo "  Puerto asignado: $PORT"
 
+# Configurar DNS automático con Cloudflare (si hay credenciales)
+CF_CONFIG="$BASE_DIR/.cloudflare"
+if [ -f "$CF_CONFIG" ]; then
+    source "$CF_CONFIG"
+    if [ -n "$CF_API_TOKEN" ] && [ -n "$CF_ZONE_ID" ]; then
+        echo "[*] Creando registro DNS en Cloudflare..."
+        CF_RESULT=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"A\",\"name\":\"$SUBDOMAIN\",\"content\":\"$(curl -s ifconfig.me)\",\"ttl\":120,\"proxied\":false}")
+        if echo "$CF_RESULT" | grep -q '"success":true'; then
+            echo "  ✓ DNS creado: $SUBDOMAIN"
+        else
+            echo "  ⚠ Error DNS: $(echo $CF_RESULT | grep -o '\"message\":\"[^\"]*\"')"
+        fi
+    fi
+fi
+
 # Configurar systemd
 echo "[3/5] Configurando servicio systemd..."
 SERVICE_NAME="sshpanel-${SLUG}"

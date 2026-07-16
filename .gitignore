@@ -45,3 +45,4 @@ flask_error.txt
 # Archivos de sistema
 instance/
 .claude/
+.cloudflare
