@@ -325,6 +325,11 @@ def create():
                                'max_resellers': int(max_resellers) if max_resellers != '-1' else -1,
                                'max_servers': int(max_servers) if max_servers != '-1' else -1}
         save_instances(data)
+        # Escribir .limits en la instancia
+        limits_file = INSTANCES_DIR / slug / '.limits'
+        limits_file.write_text(json.dumps({'max_users': int(max_users) if max_users != '-1' else -1,
+                                            'max_resellers': int(max_resellers) if max_resellers != '-1' else -1,
+                                            'max_servers': int(max_servers) if max_servers != '-1' else -1}))
         log_activity('create_instance', slug)
         flash(f'Instancia "{slug}" creada en https://{subdomain}','success')
     else:
@@ -371,6 +376,13 @@ def set_limits(slug):
                               'max_resellers': int(max_resellers) if max_resellers != '-1' else -1,
                               'max_servers': int(max_servers) if max_servers != '-1' else -1}; break
     save_instances(data)
+
+    # Escribir archivo .limits en la instancia para que el panel lo lea
+    the_inst = [i for i in data if i['slug'] == slug]
+    if the_inst:
+        limits_file = INSTANCES_DIR / slug / '.limits'
+        limits_file.write_text(json.dumps(the_inst[0]['limits']))
+
     log_activity('set_limits', slug)
     flash(f'Límites de "{slug}" actualizados','success')
     return redirect(url_for('dashboard'))

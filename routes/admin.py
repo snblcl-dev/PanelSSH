@@ -169,6 +169,15 @@ def user_create():
     if current_app.config.get('PANEL_MODE') == 'saas' and not server_id:
         flash('En modo SaaS solo puedes crear usuarios en servidores remotos. Agrega un servidor primero.', 'warning')
         return redirect(url_for('admin.users'))
+
+    # Verificar límite de usuarios
+    max_users = current_app.config.get('MAX_USERS_LIMIT', -1)
+    if max_users != -1:
+        current_count = SSHUser.query.count()
+        if current_count >= max_users:
+            flash(f'Has alcanzado el límite de {max_users} usuarios de tu plan. Contacta al administrador para ampliarlo.', 'danger')
+            return redirect(url_for('admin.users'))
+
     username = request.form.get('username', '').strip()
     days = request.form.get('days', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)
@@ -241,6 +250,15 @@ def user_create_demo():
     if current_app.config.get('PANEL_MODE') == 'saas' and not server_id:
         flash('En modo SaaS solo puedes crear usuarios demo en servidores remotos.', 'warning')
         return redirect(url_for('admin.users'))
+
+    # Verificar límite de usuarios (demos también cuentan)
+    max_users = current_app.config.get('MAX_USERS_LIMIT', -1)
+    if max_users != -1:
+        current_count = SSHUser.query.count()
+        if current_count >= max_users:
+            flash(f'Límite de {max_users} usuarios alcanzado.', 'danger')
+            return redirect(url_for('admin.users'))
+
     username = request.form.get('username', '').strip()
     minutes = request.form.get('minutes', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)
@@ -886,6 +904,14 @@ def servers():
 @admin_required
 def server_create():
     from models import Server
+    # Verificar límite de servidores
+    max_servers = current_app.config.get('MAX_SERVERS_LIMIT', -1)
+    if max_servers != -1:
+        current_count = Server.query.count()
+        if current_count >= max_servers:
+            flash(f'Límite de {max_servers} servidores alcanzado en tu plan.', 'danger')
+            return redirect(url_for('admin.servers'))
+
     name = request.form.get('name', '').strip()
     host = request.form.get('host', '').strip()
     if not name or not host:

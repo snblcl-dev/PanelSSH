@@ -45,3 +45,16 @@ class Config:
 
     # Modo: 'standalone' (default) o 'saas' (sin usuarios locales)
     PANEL_MODE = os.environ.get('SSHPANEL_MODE', 'standalone')
+
+    # Limites de plan (SaaS) — leidos de .limits en dir de instancia
+    _limits_file = Path(INSTANCE_DIR) / '.limits'
+    _limits = {}
+    if _limits_file.exists():
+        try:
+            import json as _json
+            _limits = _json.loads(_limits_file.read_text())
+        except Exception:
+            pass
+    MAX_USERS_LIMIT = _limits.get('max_users', -1)
+    MAX_RESELLERS_LIMIT = _limits.get('max_resellers', -1)
+    MAX_SERVERS_LIMIT = _limits.get('max_servers', -1)
