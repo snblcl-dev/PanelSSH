@@ -41,6 +41,23 @@ def create_app():
         def inject_globals():
             return {'saas_mode': app.config.get('PANEL_MODE') == 'saas'}
 
+        # Modo mantenimiento (SaaS)
+        import json as _json
+        from pathlib import Path as _Path
+        _maint_file = _Path(app.config.get('INSTANCE_DIR', '')) / '.maintenance'
+
+        @app.before_request
+        def check_maintenance():
+            from flask import render_template, request as _req
+            if _maint_file.exists() and _req.endpoint not in ('auth.login', 'auth.logout', 'static'):
+                try:
+                    _maint = _json.loads(_maint_file.read_text())
+                    if _maint.get('active'):
+                        msg = _maint.get('message', 'Panel en mantenimiento. Vuelve pronto.')
+                        return render_template('maintenance.html', message=msg), 503
+                except Exception:
+                    pass
+
         # Redirigir raíz al login
         @app.route('/')
         def index():

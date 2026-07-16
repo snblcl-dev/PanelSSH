@@ -397,7 +397,15 @@ def toggle_maintenance(slug):
             inst['maintenance'] = not inst.get('maintenance', False)
             inst['maintenance_msg'] = msg if inst['maintenance'] else ''; break
     save_instances(data)
-    status = 'activado' if [i for i in data if i['slug']==slug][0]['maintenance'] else 'desactivado'
+    # Escribir/borrar archivo .maintenance en la instancia
+    maint_file = INSTANCES_DIR / slug / '.maintenance'
+    inst = [i for i in data if i['slug']==slug][0]
+    if inst['maintenance']:
+        maint_file.write_text(json.dumps({'active': True, 'message': inst.get('maintenance_msg','')}))
+    else:
+        maint_file.unlink(missing_ok=True)
+
+    status = 'activado' if inst['maintenance'] else 'desactivado'
     log_activity('maintenance', f'{slug} -> {status}')
     flash(f'Mantenimiento {status} para "{slug}"','success')
     return redirect(url_for('dashboard'))
