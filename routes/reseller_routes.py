@@ -117,9 +117,10 @@ def users():
 @reseller_required
 def user_create():
     """Crear usuario (consume créditos)"""
-    if current_app.config.get('PANEL_MODE') == 'saas':
-        flash('En modo SaaS, los usuarios se gestionan desde cada instancia.', 'warning')
-        return redirect(url_for('reseller.reseller_dashboard'))
+    server_id = request.form.get('server_id', type=int)
+    if current_app.config.get('PANEL_MODE') == 'saas' and not server_id:
+        flash('En modo SaaS solo puedes crear usuarios en servidores remotos.', 'warning')
+        return redirect(url_for('reseller.users'))
     username = request.form.get('username', '').strip()
     days = request.form.get('days', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)

@@ -217,7 +217,7 @@
                     Servidor <span class="text-muted/60 text-xs">(opcional)</span>
                 </label>
                 <select name="server_id" class="input">
-                    <option value="">Local (este servidor)</option>
+                    {% if not saas_mode %}<option value="">Local (este servidor)</option>{% endif %}
                     {% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}
                 </select>
             </div>
@@ -272,7 +272,7 @@
             <div>
                 <label class="block text-sm font-medium text-muted mb-1.5">Servidor <span class="text-muted/60 text-xs">(opcional)</span></label>
                 <select name="server_id" class="input">
-                    <option value="">Local (este servidor)</option>
+                    {% if not saas_mode %}<option value="">Local (este servidor)</option>{% endif %}
                     {% for s in servers %}<option value="{{ s.id }}">{{ s.name }}{% if s.location %} · {{ s.location }}{% endif %}</option>{% endfor %}
                 </select>
             </div>

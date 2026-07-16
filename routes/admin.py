@@ -165,9 +165,10 @@ def users():
 @admin_required
 def user_create():
     """Crea un nuevo usuario SSH"""
-    if current_app.config.get('PANEL_MODE') == 'saas':
-        flash('En modo SaaS, los usuarios se gestionan desde cada instancia.', 'warning')
-        return redirect(url_for('admin.dashboard'))
+    server_id = request.form.get('server_id', type=int)
+    if current_app.config.get('PANEL_MODE') == 'saas' and not server_id:
+        flash('En modo SaaS solo puedes crear usuarios en servidores remotos. Agrega un servidor primero.', 'warning')
+        return redirect(url_for('admin.users'))
     username = request.form.get('username', '').strip()
     days = request.form.get('days', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)
@@ -236,9 +237,10 @@ def user_create():
 @admin_required
 def user_create_demo():
     """Crea un usuario demo con duración en minutos (solo admin)"""
-    if current_app.config.get('PANEL_MODE') == 'saas':
-        flash('En modo SaaS, los usuarios se gestionan desde cada instancia.', 'warning')
-        return redirect(url_for('admin.dashboard'))
+    server_id = request.form.get('server_id', type=int)
+    if current_app.config.get('PANEL_MODE') == 'saas' and not server_id:
+        flash('En modo SaaS solo puedes crear usuarios demo en servidores remotos.', 'warning')
+        return redirect(url_for('admin.users'))
     username = request.form.get('username', '').strip()
     minutes = request.form.get('minutes', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)
