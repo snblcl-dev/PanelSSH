@@ -67,8 +67,22 @@ server {
 }
 NGINX
 
+    # Default server: devolver 404 para dominios no configurados
+    cat > /etc/nginx/sites-available/default << 'DFLT'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name _;
+    ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+    return 404;
+}
+DFLT
+    ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
     ln -sf /etc/nginx/sites-available/maestro /etc/nginx/sites-enabled/maestro
-    rm -f /etc/nginx/sites-enabled/default
+    rm -f /etc/nginx/sites-enabled/default 2>/dev/null; ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
     nginx -t && systemctl reload nginx
 
     # SSL
