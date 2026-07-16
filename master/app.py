@@ -157,12 +157,23 @@ def check_service_status(slug):
 def scan_filesystem():
     registered = {i['slug'] for i in load_instances()}
     if not INSTANCES_DIR.exists(): return
+    data = load_instances()
+    changed = False
+
+    # Agregar campos faltantes a instancias existentes
+    for inst in data:
+        if 'limits' not in inst:
+            inst['limits'] = {'max_users': -1, 'max_resellers': -1, 'max_servers': -1}
+            changed = True
+        if 'maintenance' not in inst:
+            inst['maintenance'] = False
+            inst['maintenance_msg'] = ''
+            changed = True
+
     for d in INSTANCES_DIR.iterdir():
         if d.is_dir() and d.name not in registered:
-            port = get_instance_port(d.name)
-            data = load_instances()
             data.append({
-                'slug': d.name, 'subdomain': '', 'port': port,
+                'slug': d.name, 'subdomain': '', 'port': get_instance_port(d.name),
                 'created_at': datetime.fromtimestamp(d.stat().st_ctime).isoformat(),
                 'expires_at': None, 'notes': '',
                 'limits': {'max_users': -1, 'max_resellers': -1, 'max_servers': -1},
@@ -170,7 +181,10 @@ def scan_filesystem():
                 'systemd_service': f'sshpanel-{d.name}',
                 'is_active': check_service_status(d.name),
             })
-            save_instances(data)
+            changed = True
+
+    if changed:
+        save_instances(data)
 
 def get_instance_stats(slug):
     stats = {'users': 0, 'resellers': 0, 'servers': 0, 'ram_mb': 0}
