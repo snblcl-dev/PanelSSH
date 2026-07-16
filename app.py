@@ -58,10 +58,16 @@ def create_app():
                 except Exception:
                     pass
 
-        # Redirigir raíz al login
+        # Redirigir raíz según autenticación
         @app.route('/')
         def index():
             from flask import redirect
+            from flask_login import current_user
+            if current_user.is_authenticated:
+                if current_user.__class__.__name__ == 'Admin':
+                    return redirect('/admin/')
+                else:
+                    return redirect('/reseller/')
             return redirect('/auth/login')
 
         db.create_all()
