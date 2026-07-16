@@ -139,9 +139,28 @@ chmod +x install.sh
 # http://IP:5000
 # Usuario: admin / Contraseña: admin (cambiar al entrar)
 
-# 4. SSL con Nginx (opcional)
-# Configurar Nginx + Certbot para tu dominio
-# El panel corre en puerto 5000 con Waitress
+# 4. Enlazar dominio + SSL
+cat > /etc/nginx/sites-available/panel << 'NGINX'
+server {
+    listen 80;
+    server_name tudominio.com;
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    client_max_body_size 10M;
+}
+NGINX
+
+ln -sf /etc/nginx/sites-available/panel /etc/nginx/sites-enabled/panel
+nginx -t && systemctl reload nginx
+certbot --nginx -d tudominio.com
+
+# 5. Cerrar puerto 5000 (ya no necesario)
+ufw deny 5000
 ```
 
 ## Instalación SaaS (Multi-instancia)
