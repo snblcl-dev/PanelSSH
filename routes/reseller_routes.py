@@ -2,7 +2,7 @@
 Rutas para el panel de Revendedores/Resellers
 """
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from models import db, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username, Notification
 from ssh_manager import (
@@ -117,6 +117,10 @@ def users():
 @reseller_required
 def user_create():
     """Crear usuario (consume créditos)"""
+    server_id = request.form.get('server_id', type=int)
+    if current_app.config.get('PANEL_MODE') == 'saas' and not server_id:
+        flash('En modo SaaS solo puedes crear usuarios en servidores remotos.', 'warning')
+        return redirect(url_for('reseller.users'))
     username = request.form.get('username', '').strip()
     days = request.form.get('days', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)

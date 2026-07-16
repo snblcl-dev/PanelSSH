@@ -1,0 +1,9 @@
+# Cloudflare API — Creación automática de DNS
+# Renombrar a .cloudflare y llenar con tus datos
+#
+# Zone ID: en el dashboard de Cloudflare (panel derecho, "API")
+# API Token: en https://dash.cloudflare.com/profile/api-tokens
+#   Permisos necesarios: Zone - DNS - Edit
+
+CF_API_TOKEN="tu-api-token-aqui"
+CF_ZONE_ID="tu-zone-id-aqui"

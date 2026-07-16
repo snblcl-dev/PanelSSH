@@ -110,6 +110,14 @@ def login():
 def register():
     """Registro público para revendedores"""
     if request.method == 'POST':
+        # Verificar límite de revendedores
+        from flask import current_app
+        max_resellers = current_app.config.get('MAX_RESELLERS_LIMIT', -1)
+        if max_resellers != -1:
+            current_count = Reseller.query.count()
+            if current_count >= max_resellers:
+                flash(f'No se aceptan más revendedores en este momento. Límite alcanzado.', 'danger')
+                return render_template('auth/register.html')
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         email = request.form.get('email', '').strip()
