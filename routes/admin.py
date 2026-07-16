@@ -4,7 +4,7 @@ Cubre: Dashboard, ABM Usuarios, Online, Logs, Resellers, Clientes
 """
 import json
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from models import db, Admin, Reseller, SSHUser, ActivityLog, generate_password, CreditConfig, Server, validate_username, Notification
 from ssh_manager import (
@@ -64,6 +64,15 @@ def log_action(action, description, target_user=None, target_type='ssh_user'):
     )
     db.session.add(log)
     db.session.commit()
+
+
+def saas_block():
+    """En modo SaaS, redirige si se intenta crear usuarios locales"""
+    from flask import current_app
+    if current_app.config.get('PANEL_MODE') == 'saas':
+        flash('En modo SaaS, los usuarios se gestionan desde cada instancia.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+    return None
 
 
 @admin_bp.route('/')
@@ -156,6 +165,9 @@ def users():
 @admin_required
 def user_create():
     """Crea un nuevo usuario SSH"""
+    if current_app.config.get('PANEL_MODE') == 'saas':
+        flash('En modo SaaS, los usuarios se gestionan desde cada instancia.', 'warning')
+        return redirect(url_for('admin.dashboard'))
     username = request.form.get('username', '').strip()
     days = request.form.get('days', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)
@@ -224,6 +236,9 @@ def user_create():
 @admin_required
 def user_create_demo():
     """Crea un usuario demo con duración en minutos (solo admin)"""
+    if current_app.config.get('PANEL_MODE') == 'saas':
+        flash('En modo SaaS, los usuarios se gestionan desde cada instancia.', 'warning')
+        return redirect(url_for('admin.dashboard'))
     username = request.form.get('username', '').strip()
     minutes = request.form.get('minutes', 30, type=int)
     max_connections = request.form.get('max_connections', 1, type=int)

@@ -27,21 +27,26 @@ def create_app():
         from routes.admin import admin_bp
         from routes.reseller_routes import reseller_bp
         from routes.api import api_bp
-        
+
         app.register_blueprint(auth_bp, url_prefix='/auth')
         app.register_blueprint(admin_bp, url_prefix='/admin')
         app.register_blueprint(reseller_bp, url_prefix='/reseller')
         app.register_blueprint(api_bp, url_prefix='/api')
-        
+
         # Excluir rutas API de CSRF (usadas por JS y curl)
         csrf.exempt(api_bp)
-        
+
+        # Variable global para templates
+        @app.context_processor
+        def inject_globals():
+            return {'saas_mode': app.config.get('PANEL_MODE') == 'saas'}
+
         # Redirigir raíz al login
         @app.route('/')
         def index():
             from flask import redirect
             return redirect('/auth/login')
-        
+
         db.create_all()
         init_db()
     

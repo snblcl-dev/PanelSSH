@@ -42,3 +42,6 @@ class Config:
     # CSRF Protection
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600  # 1 hora
+
+    # Modo: 'standalone' (default) o 'saas' (sin usuarios locales)
+    PANEL_MODE = os.environ.get('SSHPANEL_MODE', 'standalone')

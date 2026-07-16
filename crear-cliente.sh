@@ -85,6 +85,7 @@ User=root
 WorkingDirectory=$INSTANCE_DIR
 Environment=SSHPANEL_INSTANCE_DIR=$INSTANCE_DIR
 Environment=SSHPANEL_PORT=$PORT
+Environment=SSHPANEL_MODE=saas
 ExecStart=$INSTANCE_DIR/venv/bin/python $INSTANCE_DIR/wsgi.py
 Restart=always
 RestartSec=5
