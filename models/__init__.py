@@ -103,10 +103,21 @@ class Reseller(UserMixin, db.Model):
         needed = CreditConfig.get_config().calculate_cost(days, max_connections)
         return self.credits >= needed
 
-    def deduct_credits(self, days, max_connections):
-        """Descuenta creditos segun la config global"""
-        cost = CreditConfig.get_config().calculate_cost(days, max_connections)
-        self.credits -= cost
+    def deduct_credits(self, days=None, max_connections=None, amount=None):
+        if amount is not None:
+            cost = amount
+        else:
+            cost = CreditConfig.get_config().calculate_cost(days, max_connections)
+
+        result = db.session.execute(
+            db.text("UPDATE resellers SET credits = credits - :cost WHERE id = :id AND credits >= :cost"),
+            {"cost": cost, "id": self.id}
+        )
+        if result.rowcount == 0:
+            db.session.rollback()
+            return None
+        db.session.commit()
+        db.session.refresh(self)
         return cost
 
     def get_max_connections(self):

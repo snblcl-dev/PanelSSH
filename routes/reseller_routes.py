@@ -151,13 +151,6 @@ def user_create():
         return redirect(url_for('reseller.users'))
     max_connections = max(1, max_connections)
 
-    # Verificar creditos
-    if not current_user.can_create_user(days, max_connections):
-        config = CreditConfig.get_config()
-        needed = config.calculate_cost(days, max_connections)
-        flash(f'Creditos insuficientes. Necesitas {needed} creditos (tienes {current_user.credits})', 'danger')
-        return redirect(url_for('reseller.users'))
-    
     password = generate_password()
     expires_at = datetime.utcnow() + timedelta(days=days)
     
@@ -176,7 +169,12 @@ def user_create():
     )
     
     # Descontar créditos
-    cost = current_user.deduct_credits(days, max_connections)
+    cost = current_user.deduct_credits(days=days, max_connections=max_connections)
+    if cost is None:
+        config = CreditConfig.get_config()
+        needed = config.calculate_cost(days, max_connections)
+        flash(f'Creditos insuficientes. Necesitas {needed} creditos (tienes {current_user.credits})', 'danger')
+        return redirect(url_for('reseller.users'))
     
     db.session.add(user)
     db.session.commit()
@@ -224,12 +222,13 @@ def user_renew():
     current_max = new_max_connections if new_max_connections else user.max_connections
     cost = config.calculate_cost(extra_days, current_max)
     
-    if current_user.credits < cost:
+    deducted = current_user.deduct_credits(amount=cost)
+    if deducted is None:
         flash(f'Créditos insuficientes. Necesitas {cost} créditos (tienes {current_user.credits})', 'danger')
         return redirect(url_for('reseller.users'))
-    
+    cost = deducted
+
     user.renew(extra_days, new_max_connections)
-    current_user.credits -= cost
     db.session.commit()
     
     system_execute(user, "set_expiry", user.username, user.expires_at)
