@@ -515,6 +515,50 @@ def system_sync_expired_users():
     return count
 
 
+def sync_usuarios_db(server_id=None):
+    """Sincroniza /root/usuarios.db con max_connections de todos los usuarios de un servidor.
+    Si server_id es None, escribe localmente. Si tiene valor, escribe via SFTP al remoto."""
+    from models import SSHUser, Server
+    import os as _os
+
+    if server_id is None:
+        users = SSHUser.query.filter(SSHUser.server_id == None).all()
+    else:
+        users = SSHUser.query.filter_by(server_id=server_id).all()
+
+    lines = [f"{u.username} {u.max_connections}" for u in users]
+    content = "\n".join(lines) + "\n" if lines else ""
+
+    if server_id is None:
+        try:
+            with open("/root/usuarios.db", "w") as f:
+                f.write(content)
+        except Exception:
+            pass
+    else:
+        from models import Server
+        import paramiko
+        server = Server.query.get(server_id)
+        if not server:
+            return
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            kwargs = {'timeout': 10}
+            if server.auth_method == 'password' and server.password:
+                kwargs['password'] = server.password
+            else:
+                kwargs['key_filename'] = server.ssh_key_path or _os.path.expanduser('~/.ssh/id_rsa')
+            ssh.connect(server.host, port=server.port, username=server.ssh_user, **kwargs)
+            sftp = ssh.open_sftp()
+            with sftp.file("/root/usuarios.db", "w") as f:
+                f.write(content)
+            sftp.close()
+            ssh.close()
+        except Exception:
+            pass
+
+
 def _local_set_expiry(username, expires_at):
     _validate_username(username)
     u = shlex.quote(username)

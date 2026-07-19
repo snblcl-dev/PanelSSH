@@ -11,7 +11,7 @@ from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
     system_disconnect_user, system_set_expiry, system_execute,
-    system_get_online_all, system_sync_expired_users
+    system_get_online_all, system_sync_expired_users, sync_usuarios_db
 )
 
 admin_bp = Blueprint('admin', __name__)
@@ -234,6 +234,7 @@ def user_create():
     # Intentar crear en el sistema (local o remoto segun server_id)
     from ssh_manager import system_execute
     sys_result = system_execute(user, 'create_user', username, password, expires_at, max_connections)
+    sync_usuarios_db(server_id=user.server_id)
     
     log_action('create', f'Usuario creado: {username} ({days} días, {max_connections} conexiones)',
                target_user=username)
@@ -310,6 +311,7 @@ def user_create_demo():
 
     from ssh_manager import system_execute
     system_execute(user, 'create_user', username, password, expires_at, max_connections)
+    sync_usuarios_db(server_id=user.server_id)
 
     log_action('create_demo', f'Usuario demo creado: {username} ({minutes} minutos, {max_connections} conexiones)',
                target_user=username)
@@ -437,6 +439,7 @@ def user_renew():
     
     # Actualizar en el sistema
     system_execute(user, 'set_expiry', user.username, user.expires_at)
+    sync_usuarios_db(server_id=user.server_id)
     
     log_action('renew', f'Usuario renovado: {user.username} (+{extra_days} días, vence: {user.expires_at.strftime("%Y-%m-%d")})',
                target_user=user.username)
@@ -477,10 +480,12 @@ def user_unblock(user_id):
 def user_delete(user_id):
     user = SSHUser.query.get_or_404(user_id)
     username = user.username
+    sid = user.server_id
     
     system_execute(user, 'delete_user', username)
     db.session.delete(user)
     db.session.commit()
+    sync_usuarios_db(server_id=sid)
     
     log_action('delete', f'Usuario eliminado: {username}', target_user=username)
     flash(f'Usuario "{username}" eliminado permanentemente', 'success')
@@ -656,14 +661,19 @@ def clean_expired_run():
         return redirect(url_for('admin.clean_expired'))
     
     count = 0
+    servers_touched = set()
     for uid in user_ids:
         user = SSHUser.query.get(uid)
         if user and user.is_expired():
-            system_delete_user(user.username)
+            system_execute(user, 'delete_user', user.username)
+            servers_touched.add(user.server_id)
             db.session.delete(user)
             count += 1
     
     db.session.commit()
+    
+    for sid in servers_touched:
+        sync_usuarios_db(server_id=sid)
     
     log_action('clean_expired', f'Limpieza de expirados: {count} usuarios eliminados',
                target_type='ssh_user')
