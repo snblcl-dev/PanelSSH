@@ -466,6 +466,7 @@ def user_unblock(user_id):
         user.is_blocked = False
         db.session.commit()
         system_execute(user, 'unblock_user', user.username)
+        system_execute(user, 'set_expiry', user.username, user.expires_at)
         log_action('unblock', f'Usuario desbloqueado: {user.username}', target_user=user.username)
         flash(f'Usuario "{user.username}" desbloqueado', 'success')
     return redirect(url_for('admin.users'))
