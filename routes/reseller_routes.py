@@ -374,12 +374,12 @@ def reseller_disconnect_run():
         flash('No tienes permiso para modificar este usuario', 'danger')
         return redirect(url_for('reseller.reseller_disconnect'))
     
-    system_disconnect_user(username)
+    system_execute(user, 'disconnect_user', username)
     
     if block:
         user.is_blocked = True
         db.session.commit()
-        system_block_user(username)
+        system_execute(user, 'block_user', username)
         log_action('disconnect_block', f'Usuario desconectado y bloqueado: {username}', target_user=username)
         flash(f'Usuario "{username}" desconectado y bloqueado', 'success')
     else:
@@ -400,7 +400,7 @@ def reseller_disconnect_block_all():
     for uname in usernames:
         user = SSHUser.query.filter_by(username=uname, created_by_reseller=current_user.id).first()
         if user:
-            system_disconnect_user(uname)
+            system_execute(user, 'disconnect_user', uname)
             user.is_blocked = True
             system_block_user(uname)
             count += 1
