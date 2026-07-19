@@ -559,6 +559,43 @@ def sync_usuarios_db(server_id=None):
             pass
 
 
+def clean_checkuser_devices(usernames, server_id=None):
+    """Borra los devices de usuarios eliminados en /root/db.sqlite3 de CheckUser-Go.
+    usernames puede ser un string o una lista de strings."""
+    from models import Server
+    import os as _os
+
+    if isinstance(usernames, str):
+        usernames = [usernames]
+    if not usernames:
+        return
+
+    quoted = ", ".join(f"'{u}'" for u in usernames)
+    cmd = f"sqlite3 /root/db.sqlite3 \"DELETE FROM devices WHERE username IN ({quoted});\" 2>/dev/null"
+
+    if server_id is None:
+        _run_command(cmd, timeout=5)
+    else:
+        from models import Server
+        import paramiko
+        server = Server.query.get(server_id)
+        if not server:
+            return
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            kwargs = {'timeout': 10}
+            if server.auth_method == 'password' and server.password:
+                kwargs['password'] = server.password
+            else:
+                kwargs['key_filename'] = server.ssh_key_path or _os.path.expanduser('~/.ssh/id_rsa')
+            ssh.connect(server.host, port=server.port, username=server.ssh_user, **kwargs)
+            _execute_remote(server, cmd)
+            ssh.close()
+        except Exception:
+            pass
+
+
 def _local_set_expiry(username, expires_at):
     _validate_username(username)
     u = shlex.quote(username)

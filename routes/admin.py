@@ -11,7 +11,8 @@ from ssh_manager import (
     system_create_user, system_delete_user, system_block_user,
     system_unblock_user, system_change_password, system_get_online_users,
     system_disconnect_user, system_set_expiry, system_execute,
-    system_get_online_all, system_sync_expired_users, sync_usuarios_db
+    system_get_online_all, system_sync_expired_users, sync_usuarios_db,
+    clean_checkuser_devices
 )
 
 admin_bp = Blueprint('admin', __name__)
@@ -486,6 +487,7 @@ def user_delete(user_id):
     db.session.delete(user)
     db.session.commit()
     sync_usuarios_db(server_id=sid)
+    clean_checkuser_devices(username, sid)
     
     log_action('delete', f'Usuario eliminado: {username}', target_user=username)
     flash(f'Usuario "{username}" eliminado permanentemente', 'success')
@@ -662,11 +664,14 @@ def clean_expired_run():
     
     count = 0
     servers_touched = set()
+    usernames_by_server = {}
     for uid in user_ids:
         user = SSHUser.query.get(uid)
         if user and user.is_expired():
             system_execute(user, 'delete_user', user.username)
-            servers_touched.add(user.server_id)
+            sid = user.server_id
+            servers_touched.add(sid)
+            usernames_by_server.setdefault(sid, []).append(user.username)
             db.session.delete(user)
             count += 1
     
@@ -674,6 +679,7 @@ def clean_expired_run():
     
     for sid in servers_touched:
         sync_usuarios_db(server_id=sid)
+        clean_checkuser_devices(usernames_by_server.get(sid, []), sid)
     
     log_action('clean_expired', f'Limpieza de expirados: {count} usuarios eliminados',
                target_type='ssh_user')
