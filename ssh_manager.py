@@ -252,9 +252,9 @@ def _local_change_password(username, new_password):
 
 def _local_get_online_users():
     """Obtiene usuarios conectados vía SSH/Dropbear usando PID para correlacionar con auth.log"""
-    # Por cada conexion ESTAB a dropbear, extraer el PID y buscar en auth.log
-    cmd = """ss -tnp 2>/dev/null | grep dropbear | grep ESTAB | grep -oP 'pid=\\K[0-9]+' | sort -u | while read pid; do
-  grep -a "dropbear\\[$pid\\].*Password auth succeeded" /var/log/auth.log 2>/dev/null | tail -1 | grep -oP "for '\\K[^']+"
+    cmd = """ss -tnp 2>/dev/null | grep -E '(dropbear|sshd)' | grep ESTAB | grep -oP 'pid=\\K[0-9]+' | sort -u | while read pid; do
+  grep -a "dropbear\\[$pid\\].*Password auth succeeded for '" /var/log/auth.log 2>/dev/null | tail -1 | grep -oP "for '\\K[^']+"
+  grep -a "sshd\\[$pid\\].*Accepted password for " /var/log/auth.log 2>/dev/null | tail -1 | grep -oP "Accepted password for \\K[^ ]+"
 done | sort | uniq -c | sort -rn
 """
     r = _run_command(cmd)
@@ -409,8 +409,9 @@ def _remote_set_expiry(server, username, expires_at):
 
 def _remote_get_online_users(server):
     """Obtiene usuarios online en servidor remoto"""
-    cmd = """ss -tnp 2>/dev/null | grep dropbear | grep ESTAB | grep -oP 'pid=\\K[0-9]+' | sort -u | while read pid; do
-  grep -a "dropbear\\[$pid\\].*Password auth succeeded" /var/log/auth.log 2>/dev/null | tail -1 | grep -oP "for '\\K[^']+"
+    cmd = """ss -tnp 2>/dev/null | grep -E '(dropbear|sshd)' | grep ESTAB | grep -oP 'pid=\\K[0-9]+' | sort -u | while read pid; do
+  grep -a "dropbear\\[$pid\\].*Password auth succeeded for '" /var/log/auth.log 2>/dev/null | tail -1 | grep -oP "for '\\K[^']+"
+  grep -a "sshd\\[$pid\\].*Accepted password for " /var/log/auth.log 2>/dev/null | tail -1 | grep -oP "Accepted password for \\K[^ ]+"
 done | sort | uniq -c | sort -rn
 """
     r = _execute_remote(server, cmd)
