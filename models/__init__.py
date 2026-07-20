@@ -86,7 +86,7 @@ class Reseller(UserMixin, db.Model):
     creator = db.relationship('Admin', backref='created_resellers')
     users = db.relationship('SSHUser', backref='owner_reseller', lazy='dynamic',
                             foreign_keys='SSHUser.created_by_reseller')
-    allowed_servers = db.relationship('Server', secondary=reseller_servers,
+    allowed_servers = db.relationship('Server', secondary='reseller_servers',
                                       lazy='dynamic', backref='allowed_resellers')
 
     def get_allowed_servers(self):
