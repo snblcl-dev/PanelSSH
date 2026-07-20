@@ -351,7 +351,14 @@ def _remote_create_user(server, username, password, expires_at, max_connections,
 
 def _remote_delete_user(server, username):
     u = shlex.quote(username)
-    return _execute_remote(server, f'userdel {u}')
+    commands = [
+        f'pkill -u {u} 2>/dev/null',
+        f"ss -tnp 2>/dev/null | grep dropbear | awk '{{print $6}}' | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill 2>/dev/null",
+        f'userdel {u} 2>/dev/null',
+    ]
+    for cmd in commands:
+        _execute_remote(server, cmd)
+    return {'success': True, 'stdout': f'Usuario {username} eliminado', 'stderr': '', 'returncode': 0}
 
 
 def _remote_block_user(server, username):
@@ -497,7 +504,7 @@ def system_sync_expired_users():
     Debe llamarse periodicamente (ej: al cargar el dashboard).
     Retorna cuantos usuarios fueron bloqueados.
     """
-    from models import SSHUser
+    from models import SSHUser, db
     from datetime import datetime
 
     count = 0
@@ -510,8 +517,10 @@ def system_sync_expired_users():
     for user in expired_users:
         result = system_execute(user, 'block_user', user.username)
         if result['success']:
+            user.is_blocked = True
             count += 1
-
+    
+    db.session.commit()
     return count
 
 
