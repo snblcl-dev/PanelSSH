@@ -100,3 +100,19 @@ def icon_512():
     response = make_response(_make_png(512, 512))
     response.headers['Content-Type'] = 'image/png'
     return response
+
+
+@pwa_bp.route('/.well-known/assetlinks.json')
+def assetlinks():
+    sha256 = current_app.config.get('PWA_SHA256', '')
+    data = [{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.luxvpn.panel",
+            "sha256_cert_fingerprints": [sha256]
+        }
+    }]
+    response = make_response(data)
+    response.headers['Content-Type'] = 'application/json'
+    return response
