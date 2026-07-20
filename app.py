@@ -36,6 +36,14 @@ def create_app():
         # Excluir rutas API de CSRF (usadas por JS y curl)
         csrf.exempt(api_bp)
 
+        # Manejar errores CSRF con mensaje amigable
+        from flask_wtf.csrf import CSRFError
+        @app.errorhandler(CSRFError)
+        def handle_csrf_error(e):
+            from flask import flash, redirect, request
+            flash('La sesión expiró por inactividad. Intenta de nuevo.', 'warning')
+            return redirect(request.referrer or url_for('index'))
+
         # Variable global para templates
         @app.context_processor
         def inject_globals():
