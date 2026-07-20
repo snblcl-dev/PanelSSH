@@ -27,11 +27,13 @@ def create_app():
         from routes.admin import admin_bp
         from routes.reseller_routes import reseller_bp
         from routes.api import api_bp
+        from routes.pwa import pwa_bp
 
         app.register_blueprint(auth_bp, url_prefix='/auth')
         app.register_blueprint(admin_bp, url_prefix='/admin')
         app.register_blueprint(reseller_bp, url_prefix='/reseller')
         app.register_blueprint(api_bp, url_prefix='/api')
+        app.register_blueprint(pwa_bp)
 
         # Excluir rutas API de CSRF (usadas por JS y curl)
         csrf.exempt(api_bp)
