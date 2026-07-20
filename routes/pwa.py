@@ -1,6 +1,26 @@
 from flask import Blueprint, make_response, current_app
+import struct, zlib
 
 pwa_bp = Blueprint('pwa', __name__)
+
+
+def _make_png(width, height, color=(15, 23, 42)):
+    """Genera un PNG solido con color RGB (sin Pillow)"""
+    def _chunk(ctype, data):
+        c = ctype + data
+        crc = struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+        return struct.pack('>I', len(data)) + c + crc
+
+    header = b'\x89PNG\r\n\x1a\n'
+    ihdr = _chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0))
+
+    raw = b''
+    for _ in range(height):
+        raw += b'\x00' + bytes(color) * width
+
+    idat = _chunk(b'IDAT', zlib.compress(raw))
+    iend = _chunk(b'IEND', b'')
+    return header + ihdr + idat + iend
 
 
 @pwa_bp.route('/manifest.json')
@@ -17,12 +37,11 @@ def manifest():
         "display": "standalone",
         "background_color": bg,
         "theme_color": theme,
-        "icons": [{
-            "src": "/pwa-icon.svg",
-            "sizes": "512x512",
-            "type": "image/svg+xml",
-            "purpose": "any"
-        }]
+        "icons": [
+            {"src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+            {"src": "/pwa-icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any"}
+        ]
     }
     response = make_response(manifest)
     response.headers['Content-Type'] = 'application/manifest+json'
@@ -66,4 +85,18 @@ def icon():
 </svg>"""
     response = make_response(svg)
     response.headers['Content-Type'] = 'image/svg+xml'
+    return response
+
+
+@pwa_bp.route('/pwa-icon-192.png')
+def icon_192():
+    response = make_response(_make_png(192, 192))
+    response.headers['Content-Type'] = 'image/png'
+    return response
+
+
+@pwa_bp.route('/pwa-icon-512.png')
+def icon_512():
+    response = make_response(_make_png(512, 512))
+    response.headers['Content-Type'] = 'image/png'
     return response
