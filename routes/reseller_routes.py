@@ -410,7 +410,7 @@ def reseller_disconnect_block_all():
         if user:
             system_execute(user, 'disconnect_user', uname)
             user.is_blocked = True
-            system_block_user(uname)
+            system_execute(user, 'block_user', uname)
             count += 1
     
     db.session.commit()

@@ -603,9 +603,9 @@ def online_disconnect_block():
     
     count = 0
     for username in usernames:
-        system_disconnect_user(username)
         user = SSHUser.query.filter_by(username=username).first()
         if user:
+            system_execute(user, 'disconnect_user', username)
             user.is_blocked = True
             system_execute(user, 'block_user', username)
             count += 1

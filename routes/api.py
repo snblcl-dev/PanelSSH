@@ -4,14 +4,37 @@ API REST para operaciones desde el frontend (JS).
 from datetime import datetime, timedelta
 from collections import defaultdict
 from flask import Blueprint, jsonify, request
-from flask_login import login_required
-from models import db, SSHUser, ActivityLog
-from ssh_manager import system_get_online_users
+from flask_login import login_required, current_user
+from models import db, SSHUser, ActivityLog, Reseller
+from ssh_manager import system_get_online_users, system_get_online_all
 
 api_bp = Blueprint('api', __name__)
 
 # Rate limiting en memoria
 _rate_limits = defaultdict(list)
+
+
+def _is_reseller():
+    return current_user.__class__.__name__ == 'Reseller'
+
+
+def _ssh_user_query():
+    """Query base de SSHUser filtrada por rol"""
+    q = SSHUser.query
+    if _is_reseller():
+        q = q.filter_by(created_by_reseller=current_user.id)
+    return q
+
+
+def _activity_log_query():
+    """Query base de ActivityLog filtrada por rol"""
+    q = ActivityLog.query
+    if _is_reseller():
+        q = q.filter(
+            ActivityLog.performed_by == current_user.username,
+            ActivityLog.performed_by_type == 'reseller'
+        )
+    return q
 
 def rate_limit(max_requests=30, window_seconds=60):
     """Decorador: limita peticiones por IP. 429 si excede."""
@@ -37,21 +60,22 @@ def rate_limit(max_requests=30, window_seconds=60):
 def api_stats():
     """Estadísticas en JSON para el dashboard"""
     now = datetime.utcnow()
+    q = _ssh_user_query()
     
-    total = SSHUser.query.count()
-    active = SSHUser.query.filter(
+    total = q.count()
+    active = q.filter(
         SSHUser.is_blocked == False,
         SSHUser.expires_at > now
     ).count()
-    blocked = SSHUser.query.filter_by(is_blocked=True).count()
-    expired = SSHUser.query.filter(SSHUser.expires_at <= now).count()
+    blocked = q.filter_by(is_blocked=True).count()
+    expired = q.filter(SSHUser.expires_at <= now).count()
     
     # Creados esta semana
     week_ago = now - timedelta(days=7)
-    weekly = SSHUser.query.filter(SSHUser.created_at >= week_ago).count()
+    weekly = q.filter(SSHUser.created_at >= week_ago).count()
     
     # Próximos a vencer (7 días)
-    expiring = SSHUser.query.filter(
+    expiring = q.filter(
         SSHUser.is_blocked == False,
         SSHUser.expires_at > now,
         SSHUser.expires_at <= now + timedelta(days=7)
@@ -76,12 +100,14 @@ def api_stats():
 @rate_limit(30, 60)
 def api_online():
     """Lista de usuarios online en JSON"""
-    online_data = system_get_online_users()
-    users = online_data.get('users', [])
+    online_data = system_get_online_all()
+    users = online_data if isinstance(online_data, list) else online_data.get('users', [])
     
     result = []
     for ou in users:
         user_db = SSHUser.query.filter_by(username=ou['username']).first()
+        if _is_reseller() and (not user_db or user_db.created_by_reseller != current_user.id):
+            continue
         result.append({
             'username': ou['username'],
             'connections': ou['connections'],
@@ -97,7 +123,7 @@ def api_online():
 @rate_limit(20, 60)
 def api_recent_logs():
     """Últimos 20 logs en JSON"""
-    logs = ActivityLog.query.order_by(ActivityLog.created_at.desc()).limit(20).all()
+    logs = _activity_log_query().order_by(ActivityLog.created_at.desc()).limit(20).all()
     return jsonify([{
         'id': l.id,
         'action': l.action,

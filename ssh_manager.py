@@ -188,6 +188,7 @@ def _local_delete_user(username):
     u = shlex.quote(username)
     commands = [
         f'pkill -u {u} 2>/dev/null',
+        f"ss -tnp 2>/dev/null | grep dropbear | awk '{{print $6}}' | grep -o 'pid=[0-9]*' | cut -d= -f2 | xargs -r kill 2>/dev/null",
         f'userdel {u} 2>/dev/null',
     ]
     for cmd in commands:
@@ -379,6 +380,7 @@ def _remote_unblock_user(server, username):
     commands = [
         f'passwd -u {u}',
         f'usermod -e -1 {u}',
+        f'usermod -s /bin/false {u} 2>/dev/null',
     ]
     for cmd in commands:
         _execute_remote(server, cmd)
