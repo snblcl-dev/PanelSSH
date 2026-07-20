@@ -845,12 +845,35 @@ def reseller_edit(reseller_id):
                 flash('La contrasena debe tener al menos 6 caracteres', 'warning')
                 return redirect(url_for('admin.reseller_edit', reseller_id=reseller.id))
             reseller.set_password(new_password)
+
+        # Servidores permitidos
+        reseller.can_create_local = request.form.get('can_create_local') == 'on'
+        allowed_ids = request.form.getlist('allowed_server_ids', type=int)
+        current_ids = {s.id for s in reseller.allowed_servers}
+        new_ids = set(allowed_ids)
+
+        # Remover servidores desmarcados
+        for sid in current_ids - new_ids:
+            db.session.execute(
+                db.text("DELETE FROM reseller_servers WHERE reseller_id = :rid AND server_id = :sid"),
+                {"rid": reseller.id, "sid": sid}
+            )
+        # Agregar servidores marcados
+        for sid in new_ids - current_ids:
+            db.session.execute(
+                db.text("INSERT OR IGNORE INTO reseller_servers (reseller_id, server_id) VALUES (:rid, :sid)"),
+                {"rid": reseller.id, "sid": sid}
+            )
+
         db.session.commit()
         log_action('reseller_edit', 'Revendedor editado: ' + reseller.username,
                    target_user=reseller.username, target_type='reseller')
         flash('Revendedor actualizado', 'success')
         return redirect(url_for('admin.resellers'))
-    return render_template('admin/reseller_edit.html', reseller=reseller)
+    assigned_ids = [s.id for s in reseller.allowed_servers]
+    servers = Server.query.filter_by(is_active=True).all()
+    return render_template('admin/reseller_edit.html', reseller=reseller,
+                          servers=servers, assigned_ids=assigned_ids)
 
 
 @admin_bp.route('/resellers/detail/<int:reseller_id>')
@@ -873,7 +896,8 @@ def reseller_detail(reseller_id):
     return render_template('admin/reseller_detail.html',
                           reseller=reseller, users=users, logs=logs,
                           credit_logs=credit_logs,
-                          active=active, blocked=blocked, expired=expired)
+                          active=active, blocked=blocked, expired=expired,
+                          allowed_servers=reseller.get_allowed_servers())
 
 
 @admin_bp.route('/resellers/reassign/<int:reseller_id>', methods=['POST'])

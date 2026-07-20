@@ -14,6 +14,13 @@
         </div>
     </div>
 
+    {% if allowed_servers %}
+    <div class="card p-4 mb-5">
+        <h3 class="text-white font-semibold text-sm mb-2"><i class="fas fa-server text-accent mr-2"></i>Servidores Permitidos</h3>
+        <div class="flex flex-wrap gap-2">{% for s in allowed_servers %}<span class="badge badge-info text-[11px]">{{ s.label }}</span>{% endfor %}</div>
+    </div>
+    {% endif %}
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="card p-5"><h3 class="text-white font-semibold text-sm mb-3"><i class="fas fa-users text-accent mr-2"></i>Usuarios ({{ users|length }})</h3><div class="space-y-1">{% for u in users %}<div class="flex items-center justify-between p-2 rounded hover:bg-white/[0.03]"><span class="text-sm">{{ u.username }}</span><span class="badge {% if u.is_blocked %}badge-danger{% elif u.is_expired() %}badge-warning{% else %}badge-success{% endif %} text-[10px]">{{ 'Bloqueado' if u.is_blocked else ('Expirado' if u.is_expired() else 'Activo') }}</span></div>{% else %}<p class="text-sm text-muted text-center py-4">Sin usuarios</p>{% endfor %}</div></div>
         <div class="card p-5"><h3 class="text-white font-semibold text-sm mb-3"><i class="fas fa-history text-accent mr-2"></i>Actividad Reciente</h3><div class="space-y-2">{% for log in logs %}<div class="text-sm"><span class="badge {% if log.action in ('create','renew') %}badge-success{% elif log.action in ('delete','block') %}badge-danger{% else %}badge-info{% endif %} text-[10px] mr-2">{{ log.action|replace('_',' ')|title }}</span><span class="text-muted text-xs font-mono">{{ log.created_at.strftime('%d/%m %H:%M') }}</span></div>{% else %}<p class="text-sm text-muted text-center py-4">Sin actividad</p>{% endfor %}</div></div>

@@ -77,6 +77,7 @@ class Reseller(UserMixin, db.Model):
     total_credits_received = db.Column(db.Integer, default=0)
     login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
+    can_create_local = db.Column(db.Boolean, default=False)
 
     def get_id(self):
         return f'r_{self.id}'
@@ -85,6 +86,23 @@ class Reseller(UserMixin, db.Model):
     creator = db.relationship('Admin', backref='created_resellers')
     users = db.relationship('SSHUser', backref='owner_reseller', lazy='dynamic',
                             foreign_keys='SSHUser.created_by_reseller')
+    allowed_servers = db.relationship('Server', secondary=reseller_servers,
+                                      lazy='dynamic', backref='allowed_resellers')
+
+    def get_allowed_servers(self):
+        """Devuelve servidores asignados + opcion local si tiene permiso"""
+        result = []
+        if self.can_create_local:
+            result.append({'id': None, 'label': 'Local'})
+        for s in self.allowed_servers.filter_by(is_active=True).all():
+            result.append({'id': s.id, 'label': s.name})
+        return result
+
+    def is_server_allowed(self, server_id):
+        """Verifica si un server_id esta en sus servidores permitidos"""
+        if server_id is None:
+            return self.can_create_local
+        return self.allowed_servers.filter_by(id=server_id, is_active=True).count() > 0
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -323,6 +341,13 @@ class Server(db.Model):
             return False, str(e)
 
 
+# Tabla de asociacion: servidores permitidos por reseller
+reseller_servers = db.Table('reseller_servers',
+    db.Column('reseller_id', db.Integer, db.ForeignKey('resellers.id'), primary_key=True),
+    db.Column('server_id', db.Integer, db.ForeignKey('servers.id'), primary_key=True)
+)
+
+
 def generate_password(length=12):
     """Genera una contraseña aleatoria segura y compatible con SSH"""
     # Solo caracteres seguros: sin $ % " & que dan problemas en shells y clientes SSH
@@ -401,6 +426,33 @@ def init_db():
                 db.session.execute(db.text('ALTER TABLE resellers ADD COLUMN %s %s' % (
                     col, 'VARCHAR(20)' if col == 'credit_mode' else 'INTEGER')))
         db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    # Migracion: can_create_local en Reseller
+    try:
+        inspector = inspect(db.engine)
+        reseller_columns = [c['name'] for c in inspector.get_columns('resellers')]
+        if 'can_create_local' not in reseller_columns:
+            db.session.execute(db.text("ALTER TABLE resellers ADD COLUMN can_create_local BOOLEAN DEFAULT 0"))
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    # Migracion: tabla reseller_servers
+    try:
+        inspector = inspect(db.engine)
+        if 'reseller_servers' not in inspector.get_table_names():
+            db.session.execute(db.text("""
+                CREATE TABLE IF NOT EXISTS reseller_servers (
+                    reseller_id INTEGER NOT NULL,
+                    server_id INTEGER NOT NULL,
+                    PRIMARY KEY (reseller_id, server_id),
+                    FOREIGN KEY (reseller_id) REFERENCES resellers (id),
+                    FOREIGN KEY (server_id) REFERENCES servers (id)
+                )
+            """))
+            db.session.commit()
     except Exception:
         db.session.rollback()
     

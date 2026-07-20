@@ -10,6 +10,21 @@
             <div><label class="block text-sm font-medium text-muted mb-1.5">Email</label><input type="email" name="email" class="input" value="{{ reseller.email or '' }}"></div>
             <div><label class="block text-sm font-medium text-muted mb-1.5">Nueva Contraseña <span class="text-muted/60 text-xs">(dejar vacío para no cambiar)</span></label><input type="password" name="password" class="input" placeholder="Mínimo 6 caracteres" minlength="6"></div>
             <div><label class="block text-sm font-medium text-muted mb-1.5">Notas</label><textarea name="notes" class="input" rows="3">{{ reseller.notes or '' }}</textarea></div>
+            <div class="border-t border-white/10 pt-4">
+                <label class="block text-sm font-medium text-white mb-2"><i class="fas fa-server text-accent mr-1.5"></i>Servidores Permitidos</label>
+                {% if not saas_mode %}
+                <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" name="can_create_local" class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-accent focus:ring-accent" {% if reseller.can_create_local %}checked{% endif %}>
+                    <span class="text-sm text-slate-200">Local</span>
+                </label>
+                {% endif %}
+                {% for s in servers %}
+                <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" name="allowed_server_ids" value="{{ s.id }}" class="w-4 h-4 rounded border-slate-600 bg-slate-700 text-accent focus:ring-accent" {% if s.id in assigned_ids %}checked{% endif %}>
+                    <span class="text-sm text-slate-200">{{ s.name }} <span class="text-muted">({{ s.host }})</span></span>
+                </label>
+                {% endfor %}
+            </div>
             <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1.5"></i>Guardar Cambios</button>
         </form>
     </div>

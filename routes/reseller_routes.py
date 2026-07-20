@@ -82,7 +82,7 @@ def reseller_dashboard():
         credits=current_user.credits,
         recent_logs=recent_logs,
         credit_config=CreditConfig.get_config(),
-        servers=Server.query.filter_by(is_active=True).all()
+        servers=current_user.get_allowed_servers()
     )
 
 
@@ -110,7 +110,7 @@ def users():
                           search=search, status_filter=status_filter,
                           max_connections=current_user.get_max_connections(),
                           credit_config=CreditConfig.get_config(),
-                          servers=Server.query.filter_by(is_active=True).all())
+                           servers=current_user.get_allowed_servers())
 
 
 @reseller_bp.route('/users/create', methods=['POST'])
@@ -128,6 +128,11 @@ def user_create():
     
     if not username:
         flash('Nombre de usuario requerido', 'danger')
+        return redirect(url_for('reseller.users'))
+
+    # Validar servidor permitido
+    if not current_user.is_server_allowed(server_id):
+        flash('No tienes permiso para crear usuarios en este servidor', 'danger')
         return redirect(url_for('reseller.users'))
 
     # Validar formato de username
