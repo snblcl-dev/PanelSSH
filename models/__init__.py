@@ -11,6 +11,12 @@ from cryptography.fernet import Fernet, InvalidToken
 
 db = SQLAlchemy()
 
+# Tabla de asociacion: servidores permitidos por reseller
+reseller_servers = db.Table('reseller_servers',
+    db.Column('reseller_id', db.Integer, db.ForeignKey('resellers.id'), primary_key=True),
+    db.Column('server_id', db.Integer, db.ForeignKey('servers.id'), primary_key=True)
+)
+
 
 def get_fernet():
     from flask import current_app
@@ -339,13 +345,6 @@ class Server(db.Model):
             return True, 'Conexion exitosa'
         except Exception as e:
             return False, str(e)
-
-
-# Tabla de asociacion: servidores permitidos por reseller
-reseller_servers = db.Table('reseller_servers',
-    db.Column('reseller_id', db.Integer, db.ForeignKey('resellers.id'), primary_key=True),
-    db.Column('server_id', db.Integer, db.ForeignKey('servers.id'), primary_key=True)
-)
 
 
 def generate_password(length=12):
