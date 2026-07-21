@@ -43,6 +43,9 @@ class Config:
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 28800  # 8 horas
 
+    # Sesion persistente (recuerdame)
+    REMEMBER_COOKIE_DURATION = 7 * 24 * 60 * 60  # 7 dias
+
     # Modo: 'standalone' (default) o 'saas' (sin usuarios locales)
     PANEL_MODE = os.environ.get('SSHPANEL_MODE', 'standalone')
 

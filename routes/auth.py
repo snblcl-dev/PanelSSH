@@ -79,7 +79,7 @@ def login():
         if user and user.check_password(password):
             _reset_login_attempts(user)
             db.session.commit()
-            login_user(user)
+            login_user(user, remember=True)
 
             log = ActivityLog(
                 action='login',
