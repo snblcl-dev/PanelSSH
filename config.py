@@ -46,8 +46,9 @@ class Config:
     # Modo: 'standalone' (default) o 'saas' (sin usuarios locales)
     PANEL_MODE = os.environ.get('SSHPANEL_MODE', 'standalone')
 
-    # Limites de plan (SaaS) — leidos de .limits en dir de instancia
-    _limits_file = Path(INSTANCE_DIR) / '.limits'
+    # PWA / Trusted Web Activity
+    PWA_SHA256 = os.environ.get('PWA_SHA256', '')
+    PWA_PACKAGE_NAME = os.environ.get('PWA_PACKAGE_NAME', 'com.luxvpn.panel')
     _limits = {}
     if _limits_file.exists():
         try:
