@@ -49,6 +49,9 @@ class Config:
     # PWA / Trusted Web Activity
     PWA_SHA256 = os.environ.get('PWA_SHA256', '')
     PWA_PACKAGE_NAME = os.environ.get('PWA_PACKAGE_NAME', 'com.luxvpn.panel')
+
+    # Limites de plan (SaaS) — leidos de .limits en dir de instancia
+    _limits_file = Path(INSTANCE_DIR) / '.limits'
     _limits = {}
     if _limits_file.exists():
         try:
