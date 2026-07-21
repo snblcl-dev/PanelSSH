@@ -104,8 +104,9 @@ def icon_512():
 
 @pwa_bp.route('/.well-known/assetlinks.json')
 def assetlinks():
-    sha256 = current_app.config.get('PWA_SHA256', '')
-    package = current_app.config.get('PWA_PACKAGE_NAME', 'com.luxvpn.panel')
+    import os as _os
+    sha256 = _os.environ.get('PWA_SHA256', '')
+    package = _os.environ.get('PWA_PACKAGE_NAME', 'com.luxvpn.panel')
     data = [{
         "relation": ["delegate_permission/common.handle_all_urls"],
         "target": {
