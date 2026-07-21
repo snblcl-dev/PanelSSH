@@ -1,11 +1,54 @@
 from flask import Blueprint, make_response, current_app
-import struct, zlib
+import struct, zlib, math
 
 pwa_bp = Blueprint('pwa', __name__)
 
+# Colores
+BG = (0x0f, 0x17, 0x2a)      # slate-900
+ACCENT = (0x38, 0xbd, 0xf8)   # cyan-400
+WHITE = (0xf1, 0xf5, 0xf9)    # slate-100
+DARK = (0x1e, 0x29, 0x3b)     # slate-800
 
-def _make_png(width, height, color=(15, 23, 42)):
-    """Genera un PNG solido con color RGB (sin Pillow)"""
+
+def _make_png(width, height, draw_func):
+    """Genera un PNG del tamaño dado usando draw_func(pixels, w, h)"""
+    pixels = [list(BG) for _ in range(width * height)]
+
+    def set_pixel(x, y, c):
+        if 0 <= x < width and 0 <= y < height:
+            pixels[y * width + x] = list(c)
+
+    def draw_rect(x, y, rw, rh, c, radius=0):
+        for py in range(rh):
+            for px in range(rw):
+                set_pixel(x + px, y + py, c)
+
+    def draw_circle(cx, cy, r, c):
+        for py in range(cy - r, cy + r + 1):
+            for px in range(cx - r, cx + r + 1):
+                if (px - cx) ** 2 + (py - cy) ** 2 <= r ** 2:
+                    set_pixel(px, py, c)
+
+    def draw_line(x1, y1, x2, y2, c, thick=1):
+        dx, dy = abs(x2 - x1), abs(y2 - y1)
+        sx = 1 if x1 < x2 else -1
+        sy = 1 if y1 < y2 else -1
+        err = dx - dy
+        while True:
+            for t in range(-thick // 2, thick // 2 + 1):
+                set_pixel(x1 + t, y1 + t, c)
+            if x1 == x2 and y1 == y2:
+                break
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x1 += sx
+            if e2 < dx:
+                err += dx
+                y1 += sy
+
+    draw_func(set_pixel, draw_rect, draw_circle, draw_line, width, height)
+
     def _chunk(ctype, data):
         c = ctype + data
         crc = struct.pack('>I', zlib.crc32(c) & 0xffffffff)
@@ -13,14 +56,42 @@ def _make_png(width, height, color=(15, 23, 42)):
 
     header = b'\x89PNG\r\n\x1a\n'
     ihdr = _chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0))
-
     raw = b''
-    for _ in range(height):
-        raw += b'\x00' + bytes(color) * width
-
+    for py in range(height):
+        raw += b'\x00'
+        for px in range(width):
+            r, g, b = pixels[py * width + px]
+            raw += bytes([r, g, b])
     idat = _chunk(b'IDAT', zlib.compress(raw))
     iend = _chunk(b'IEND', b'')
     return header + ihdr + idat + iend
+
+
+def _draw_icon(set_pixel, rect, circle, line, w, h):
+    """Dibuja un icono tipo terminal/SSH"""
+    margin = w // 10
+    # Rectangulo principal (ventana terminal)
+    rect(margin, margin + h // 10, w - margin * 2, h - margin * 2 - h // 5, DARK)
+    # Barra de titulo
+    rect(margin, margin, w - margin * 2, h // 10, ACCENT)
+    # Botones de ventana
+    circle(margin + w // 16, margin + h // 20, max(3, w // 40), WHITE)
+    circle(margin + w // 8, margin + h // 20, max(3, w // 40), WHITE)
+    circle(margin + w // 6 + w // 16, margin + h // 20, max(3, w // 40), WHITE)
+    # Lineas de texto
+    text_x = margin + w // 15
+    text_w = w - margin * 2 - w // 8
+    lh = max(4, h // 25)
+    line(text_x, margin + h // 4, text_x + text_w - w // 3, margin + h // 4, ACCENT, lh)
+    line(text_x, margin + h // 4 + lh * 3, text_x + text_w, margin + h // 4 + lh * 3, WHITE, lh)
+    line(text_x, margin + h // 4 + lh * 6, text_x + text_w - w // 5, margin + h // 4 + lh * 6, WHITE, lh)
+    # Circulo + (SSH)
+    cx, cy = w * 3 // 4, h - margin - h // 6
+    cr = max(10, w // 10)
+    circle(cx, cy, cr, ACCENT)
+    cross = max(3, cr // 3)
+    line(cx - cr // 2, cy, cx + cr // 2, cy, WHITE, cross)
+    line(cx, cy - cr // 2, cx, cy + cr // 2, WHITE, cross)
 
 
 @pwa_bp.route('/manifest.json')
@@ -90,14 +161,14 @@ def icon():
 
 @pwa_bp.route('/pwa-icon-192.png')
 def icon_192():
-    response = make_response(_make_png(192, 192))
+    response = make_response(_make_png(192, 192, _draw_icon))
     response.headers['Content-Type'] = 'image/png'
     return response
 
 
 @pwa_bp.route('/pwa-icon-512.png')
 def icon_512():
-    response = make_response(_make_png(512, 512))
+    response = make_response(_make_png(512, 512, _draw_icon))
     response.headers['Content-Type'] = 'image/png'
     return response
 
