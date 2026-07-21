@@ -281,6 +281,8 @@
                     <i class="fas fa-chart-pie"></i><span class="sidebar-text">Dashboard</span></a>
                 <a href="{{ url_for('reseller.users') }}" class="sidebar-link {% if request.endpoint and 'reseller.users' in request.endpoint %}active{% endif %}">
                     <i class="fas fa-users"></i><span class="sidebar-text">Mis Usuarios</span></a>
+                <a href="{{ url_for('reseller.reseller_clients') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_clients' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-id-card"></i><span class="sidebar-text">Clientes</span></a>
                 <a href="{{ url_for('reseller.reseller_online') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_online' in request.endpoint %}active{% endif %}">
                     <i class="fas fa-wifi"></i><span class="sidebar-text">Online</span></a>
                 <a href="{{ url_for('reseller.reseller_disconnect') }}" class="sidebar-link {% if request.endpoint and 'reseller.reseller_disconnect' in request.endpoint %}active{% endif %}">

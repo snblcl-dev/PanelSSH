@@ -472,6 +472,18 @@ def reseller_clean_expired_run():
     return redirect(url_for('reseller.reseller_clean_expired'))
 
 
+@reseller_bp.route('/clients')
+@reseller_required
+def reseller_clients():
+    """Vista de clientes del reseller"""
+    search = request.args.get('search', '').strip()
+    query = SSHUser.query.filter_by(created_by_reseller=current_user.id)
+    if search:
+        query = query.filter(SSHUser.username.contains(search))
+    users_list = query.order_by(SSHUser.created_at.desc()).all()
+    return render_template('reseller/clients.html', users=users_list, search=search)
+
+
 # ============ NOTIFICACIONES ============
 
 @reseller_bp.route('/notifications')
