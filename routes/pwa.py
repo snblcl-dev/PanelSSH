@@ -104,17 +104,17 @@ def icon_512():
 
 @pwa_bp.route('/.well-known/assetlinks.json')
 def assetlinks():
-    import os as _os
-    sha256 = _os.environ.get('PWA_SHA256', '')
-    package = _os.environ.get('PWA_PACKAGE_NAME', 'com.luxvpn.panel')
-    data = [{
+    import os
+    sha256 = os.environ.get('PWA_SHA256', '')
+    package = os.environ.get('PWA_PACKAGE_NAME', 'com.luxvpn.panel')
+    result = [{
         "relation": ["delegate_permission/common.handle_all_urls"],
         "target": {
             "namespace": "android_app",
             "package_name": package,
             "sha256_cert_fingerprints": [sha256]
         }
-    }] if sha256 else []
-    response = make_response(data)
+    }]
+    response = make_response(result)
     response.headers['Content-Type'] = 'application/json'
     return response
